@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(npm run:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "WebSearch(*)",
+      "WebFetch(https://github.com:*)",
+      "WebFetch(https://raw.githubusercontent.com:*)",
+      "Skill(beautiful-mermaid:*)",
+      "Skill(code-review:*)"
+    ],
+    "deny": []
+  }
+}

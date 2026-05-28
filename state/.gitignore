@@ -1,0 +1,7 @@
+# Ignore all runtime state files
+*
+
+# But keep this schema doc and the directory structure
+!SCHEMA.md
+!.gitignore
+!session-handoffs/.gitkeep
