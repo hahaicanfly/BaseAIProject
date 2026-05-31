@@ -79,14 +79,34 @@ SOURCE   (填入來源 lesson 日期)
 
 ## INV-SEC-* — Security / Secrets
 
-> 填入專案的安全 invariants，例如：
+### INV-SEC-001 — 禁止硬編碼 API key / token / password
 
 ```
-INV-SEC-001  禁止硬編碼 API key / token / password
-  CHECK    grep -rn 'API_KEY\s*=\s*["\'][A-Za-z0-9_-]{20,}["\']' src/
-  HOOK     post-edit-lint.py（sentinel）
-  SOURCE   (填入來源)
+RULE     任何原始碼檔案中不得出現明文 API key 或 token 賦值
+CHECK    grep -rEn 'api[_-]?key\s*=\s*["\'][A-Za-z0-9_\-]{20,}["\']' src/
+HOOK     post-edit-lint.py（sentinel）
+SOURCE   通用安全最佳實踐
 ```
+
+### INV-SEC-002 — 禁止 token / secret 出現在 log / print 語句
+
+```
+RULE     logger.debug/info/warn/error 及 print/console.log 中不得包含 token、key、password、secret 等敏感字
+CHECK    grep -rEn '(print|console\.log|logger\.\w+)\s*\(.*\b(token|api_key|secret|password)\b' src/
+HOOK     post-edit-lint.py（sentinel）
+SOURCE   通用安全最佳實踐
+```
+
+### INV-SEC-003 — 禁止敏感檔案出現在 git staging
+
+```
+RULE     .env、*.pem、*.key、*.keystore、*secret* 不得被 git add
+CHECK    git diff --cached --name-only | grep -E '\.(env|pem|key|keystore|p12)$|secret|credential'
+HOOK     pre-tool-use-guard.py（enforce — hard guard）
+SOURCE   通用安全最佳實踐
+```
+
+> **採用此模板時**：把 `src/` 替換為你的實際原始碼目錄，並將 INV-SEC-001 / INV-SEC-002 的 pattern 複製到 `post-edit-lint.py` 的 `QUICK_CHECKS`。
 
 ---
 

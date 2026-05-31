@@ -240,6 +240,84 @@ def append_to_pending(findings: list[dict]) -> int:
     return len(new_findings)
 
 
+def _detect_git_commits(transcript_path: str) -> list[str]:
+    """Scan transcript for Bash tool calls that ran 'git commit'.
+
+    Returns list of commit message snippets found (may be empty).
+    Used by the PR_RETRO_HOOK to suggest running /pr-retro.
+    """
+    p = Path(transcript_path)
+    if not p.is_file():
+        return []
+    try:
+        text = p.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return []
+
+    commits: list[str] = []
+    commit_re = re.compile(r'"git commit[^"]{0,200}"', re.DOTALL)
+    for m in commit_re.finditer(text):
+        snippet = m.group(0)[:80].replace("\n", " ")
+        commits.append(snippet)
+    return commits
+
+
+def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
+    """Append a /pr-retro reminder to ERRORS.md Pending Review.
+
+    # PR_RETRO_HOOK — extend this function to trigger full pr-retro analysis.
+    Currently only writes a lightweight reminder. To enable full automation:
+    1. Call /pr-retro skill logic here (or invoke as sub-process).
+    2. Pass git diff output as input to the retro analysis.
+    3. Write Case B/C/D candidates directly to Pending Review.
+    """
+    if not ERRORS_MD.is_file():
+        return
+    try:
+        text = ERRORS_MD.read_text(encoding="utf-8")
+    except Exception:
+        return
+
+    iso = now_iso()
+    reminder_hash = hashlib.sha1(
+        f"retro-reminder|{session_id}|{iso}".encode("utf-8"),
+        usedforsecurity=False,
+    ).hexdigest()[:10]
+
+    existing = existing_pending_hashes()
+    if reminder_hash in existing:
+        return
+
+    header_re = re.compile(rf"^{re.escape(PENDING_SECTION_HEADER)}\s*$", re.MULTILINE)
+    header_match = header_re.search(text)
+    if not header_match:
+        return
+
+    block = (
+        f"<!-- harvest:{reminder_hash} -->\n"
+        f"- [{iso}] [PR_RETRO] **本 session 有 {commit_count} 個 git commit，"
+        f"建議執行 `/pr-retro` 萃取教訓**\n"
+        f"  Session: {session_id or 'unknown'}\n"
+    )
+
+    section_start = header_match.start()
+    next_re = re.compile(r"^## ", re.MULTILINE)
+    next_match = next_re.search(text, header_match.end())
+    next_section = next_match.start() if next_match else len(text)
+    section = text[section_start:next_section]
+
+    if PENDING_SECTION_FALLBACK in section:
+        section = section.replace(PENDING_SECTION_FALLBACK, block)
+    else:
+        section = section.rstrip() + "\n\n" + block + "\n"
+
+    new_text = text[:section_start] + section + text[next_section:]
+    try:
+        ERRORS_MD.write_text(new_text, encoding="utf-8")
+    except Exception:
+        pass
+
+
 def main() -> int:
     payload = read_stdin_json()
     transcript_path = payload.get("transcript_path", "")
@@ -251,6 +329,18 @@ def main() -> int:
 
     findings = harvest_markers(transcript_path)
     appended = append_to_pending(findings)
+
+    # PR_RETRO_HOOK: detect git commits this session → suggest /pr-retro
+    commits = _detect_git_commits(transcript_path)
+    if commits:
+        _append_retro_suggestion(session_id, len(commits))
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="pr-retro-suggested",
+            session=session_id,
+            commit_count=len(commits),
+        )
 
     log_event(
         HOOK_NAME,

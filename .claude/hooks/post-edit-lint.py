@@ -58,7 +58,30 @@ HOOK_NAME = "post-edit-lint"
 #     ),
 # ]
 # ──────────────────────────────────────────────────────────────────────────
-QUICK_CHECKS: list[tuple[str, re.Pattern, str]] = []
+QUICK_CHECKS: list[tuple[str, re.Pattern, str]] = [
+    # INV-SEC-001: hardcoded API key/token (generic — adapt src/ path as needed)
+    (
+        "INV-SEC-001",
+        re.compile(r'api[_-]?key\s*=\s*["\'][A-Za-z0-9_\-]{20,}["\']', re.IGNORECASE),
+        "Possible hardcoded API key — use environment variable instead",
+    ),
+    # INV-SEC-002: token/secret leak in log/print statements
+    (
+        "INV-SEC-002",
+        re.compile(
+            r'(print|console\.log|logger\.\w+)\s*\(.*\b(token|api_key|secret|password)\b',
+            re.IGNORECASE,
+        ),
+        "Possible secret leak in log/print — remove sensitive value from output",
+    ),
+    # TODO: Add project-specific checks below, referencing INV-* in invariants.md
+    # Example:
+    # (
+    #     "INV-ARC-001",
+    #     re.compile(r'import.*from.*\.\.\/\.\.\/infra', re.IGNORECASE),
+    #     "ui layer must not import infra directly — use api layer",
+    # ),
+]
 
 
 def quick_invariant_scan(file_path: Path) -> list[tuple[str, str]]:

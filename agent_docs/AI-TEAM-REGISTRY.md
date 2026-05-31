@@ -85,6 +85,15 @@
 | **beautiful-mermaid** | `.claude/skills/beautiful-mermaid/` | `/beautiful-mermaid` | ⚠️ Stub — 生成高品質 Mermaid 圖表 |
 | **skill-creator** | `.claude/skills/skill-creator/` | `/skill-creator` | ⚠️ Stub — 協助建立新 skill |
 
+### Harness Optimization（SkillOpt Loop）
+
+| Skill | 目錄 | 觸發方式 | 描述 |
+|-------|------|---------|------|
+| **harness-eval** | `.claude/skills/harness-eval/` | `/harness-eval [path]` | 掃描 repo，輸出 Harness 成熟度分數（0–100）+ 改善路線圖 |
+| **pr-review-cycle-mob** | `.claude/skills/pr-review-cycle-mob/` | `/pr-review-cycle-mob [PR]` | Cascade 三層 PR Review（haiku→sonnet→opus），平衡 cost/speed/quality |
+| **pr-retro** | `.claude/skills/pr-retro/` | `/pr-retro [PR描述]` | PR 後自動萃取教訓 → ERRORS.md Pending Review（SkillOpt rejected-edit buffer） |
+| **spectra-amplifier** | `.claude/skills/spectra-amplifier/` | `/spectra-amplifier [spec]` | 5 層放大薄 spec → 強 spec，含 AC + Verification Matrix |
+
 ---
 
 ## Commands（常用 `/` 指令）
