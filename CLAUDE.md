@@ -109,3 +109,17 @@
 → 下一步：[接下來要做什麼]
 ⚠ 注意：[需要用戶知道的風險或問題]
 ```
+
+## Antigravity (agy) 橋接協議
+
+> **如果你是 Antigravity agent**，在讀完本檔後還必須：
+
+1. 確認已讀 `GEMINI.md`（agy 啟動協議）
+2. 使用 `/harness-workflow` skill 載入完整 agy 工作流規則
+3. 所有 `.claude/agents/*.md` 的規則**完整適用**於 agy subagent
+4. 所有 `.claude/skills/*/SKILL.md` 的 skill 可透過 `invoke_subagent` 或 agy 原生 skill 機制觸發
+5. Python hooks（`settings.json`）在 agy 環境不自動執行，**必須手動遵守等效規則**
+
+agy skill 觸發對應：
+- Claude Code `@.claude/agents/pm.md` → agy `invoke_subagent(TypeName="research")` + 讀 pm.md 指令
+- Claude Code `/feature-pipeline` → agy `/harness-workflow` + `.claude/skills/feature-pipeline/SKILL.md`
