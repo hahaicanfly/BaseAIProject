@@ -34,6 +34,8 @@
 | BRANCH + PR | 嚴禁直接 commit master；feat/<slug> 從 master 開出 |
 | CODE-REVIEWER BEFORE PR | 跑 `@.claude/agents/code-reviewer.md` 修完 Blocker + Warning |
 | HANDOFF MARKER | sub-agent final response 必有 `[HANDOFF:*]` / `[VERIFY_FAILED:*]` / `[HUMAN_ATTENTION_REQUIRED:*]` |
+| PHASE HANDOFF GATE | 階段完成（功能 / Phase N / Mx）進下一任務前先查 context 用量；>50% 必跑 `/last-word` 產出 `SESSION-HANDOFF.md` → `/clear` → 讀檔內交接 prompt 以新 session 續接 |
+
 
 | NEVER | 說明 |
 |-------|------|

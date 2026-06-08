@@ -1,6 +1,7 @@
 主動 Context 收尾工作流。在 context usage 接近上限前，主動做一次高品質歸檔，確保下次 session 能無痛續接。
 
 觸發時機：context usage 約 40%、使用者準備離開 session、或一個大任務階段性完成。
+**硬性門檻（CLAUDE.md MUST: PHASE HANDOFF GATE）**：階段完成（功能 / Phase N / Mx）進下一任務前，若 context 用量 >50%，**必須**先跑本指令產出 `SESSION-HANDOFF.md`，再 `/clear`，然後讀檔以新 session 續接。
 
 > **Phase D 升級**：本指令已對齊 harness 架構。教訓不再寫進 CLAUDE.md，而是分流到 `docs/learnings/ERRORS.md`、`docs/architecture/invariants.md` 與 active ExecPlan。Auto-memory 仍可保留**短期 session 狀態**，但**長期脈絡走 ExecPlan**。
 
@@ -48,12 +49,18 @@
 
 如果整個 session 都不在 ExecPlan 範疇（純探索 / 純文件 / hot-fix < 3 檔案），跳過此步驟。
 
-## Step 4: Starter Prompt（給下一個 session）
+## Step 4: 交接 prompt → 寫入 `SESSION-HANDOFF.md`（給下一個 session）
 
-如果 session 結束時還有未完成工作，輸出 starter prompt 供使用者下次貼回：
+如果 session 結束時還有未完成工作，**用 Write 工具把下列交接 prompt 寫入專案根目錄的 `SESSION-HANDOFF.md`**（覆寫舊內容，此檔為單一 session 的暫態交接區，不累積）。這是「階段交接門檻」（CLAUDE.md MUST: PHASE HANDOFF GATE）的落地產物——使用者 `/clear` 後會直接讀此檔以新 session 續接。
+
+`SESSION-HANDOFF.md` 內容範本：
 
 ```
-## Starter Prompt（直接貼上即可續接）
+# SESSION-HANDOFF — <YYYY-MM-DD HH:MM>
+
+> 由 /last-word 產出。`/clear` 後請讀本檔續接；續接完成後本檔可刪或被下次 /last-word 覆寫。
+
+## 交接 prompt（直接貼上即可續接）
 
 我正在進行 [F-NNN — 功能名]（ExecPlan: docs/plans/active/F-NNN-<slug>.md）。
 
@@ -74,9 +81,14 @@
 - Branch: `feat/<slug>`（最新 commit: <hash>）
 - Linked PR: #<NNN> 或 (尚未開 PR)
 - 相關 invariants：INV-... / INV-...
+
+## 本次歸檔摘要
+- invariants.md 新增：INV-... × N
+- ERRORS.md Pending Review 新增：N 條
+- ExecPlan 更新：F-NNN（§6 + §9）
 ```
 
-如果所有工作都已完成，跳過此步驟並改輸出「無待續事項」。
+寫檔後在對話中回報 `SESSION-HANDOFF.md` 路徑。如果所有工作都已完成，跳過此步驟、**不產生** `SESSION-HANDOFF.md`，並改輸出「無待續事項」。
 
 ## Step 5: GitHub Issue / PR 整理
 
