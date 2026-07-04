@@ -2,7 +2,7 @@
 """PreToolUse guard — enforces hard invariants by blocking tool calls.
 
 Per ADR-0001 D5 this is the ONLY hook that runs in enforce mode in
-Phase D. It blocks (exit 1) the small set of operations that are
+Phase D. It blocks (exit 2) the small set of operations that are
 unambiguously dangerous on this repo, with no expected false positives:
 
   INV-GIT-002  git commit on master/main
@@ -17,7 +17,9 @@ subprocess (cached via current_branch helper, 2s timeout).
 
 Exit codes:
   0  — pass through, no issue
-  1  — BLOCK the tool call; stderr message returned to Agent
+  2  — BLOCK the tool call; stderr message returned to Agent
+       (Claude Code hook protocol: exit 2 = blocking error;
+        exit 1 = non-blocking, the tool call would STILL RUN)
 """
 from __future__ import annotations
 
@@ -210,7 +212,7 @@ def main() -> int:
                 f"Command preview: {command[:200]}\n"
                 f"See docs/architecture/invariants.md for details.\n"
             )
-            return 1
+            return 2
 
     # 2) dynamic: git commit on master/main
     hit = check_git_commit_on_master(command)
@@ -226,7 +228,7 @@ def main() -> int:
             f"[harness/{HOOK_NAME}] BLOCKED ({code}): {reason}\n"
             f"Command preview: {command[:200]}\n"
         )
-        return 1
+        return 2
 
     log_event(HOOK_NAME, "pass", tool=tool, command_preview=command[:80])
     return 0
