@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}} — 累積教訓 (Lessons Learned)
 
 > **角色**：本檔為 harness 體系的長期記憶，承接原 `CLAUDE.md` 的「累積教訓」區段。
-> **總數**：6 條（3 條 seed + 3 條 2026-07-04 harness 制度化 session 實戰教訓）
+> **總數**：7 條（3 條 seed + 4 條 2026-07-04 harness 制度化 session 實戰教訓）
 > **格式約定**：`- [YYYY-MM-DD] [<分類>] 錯誤描述 → 正確做法`
 > 每次 AI 犯錯被糾正後，**必須**主動提議追加到 `## Pending Review`（由人類週審 promote 到 `## Active Lessons`）。
 > `stop-retro-logger.py`（Phase D 啟用後）會自動把 session 內的 `[VERIFY_FAILED:*]` 收割到 Pending Review 區。
@@ -18,7 +18,7 @@
 | Git / Branch / PR | 1 | INV-GIT-* |
 | Architecture | 2 | INV-ARC-* |
 | Build / Dependencies | 0 | INV-BLD-* |
-| Hooks / Harness | 3 | INV-HOOK-* |
+| Hooks / Harness | 4 | INV-HOOK-* |
 
 ---
 
@@ -27,11 +27,15 @@
 > 此區由 `stop-retro-logger.py` 自動 append 新 lesson candidate（Phase D 後）。
 > 人類於每週收尾時手動 review，promote 到下方 `## Active Lessons`，或直接刪除無關的 noise。
 
-（空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方）
+（空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
+
+- [2026-07-04] [Hooks / Harness] 驗收 subagent 超出指派範圍執行 `git checkout --` 與 `rm` 未追蹤檔案，誤刪使用者檔案（幸主對話 context 留有全文得以重建） → 派工 prompt 通用規範必須明文禁止對非指派檔案執行任何還原/刪除指令；驗收類 agent 原則上唯讀
+  - **Why**：「只改指派檔案」的正面表述擋不住「為了測試而清理現場」的合理化；破壞性指令需要顯式黑名單
+  - **How to apply**：delegation-templates.md 通用規範已加黑名單；未追蹤的使用者檔案不受 git 保護，刪除即永久
 
 - [2026-07-04] [Hooks / Harness] hooks 部署後從未實測，雙重失效（無執行權限 + guard 用 exit 1）長期無人發現 → 任何 hook 新增/修改後必須跑黑箱煙霧測試：block 情境期望 exit 2、pass 情境期望 exit 0
   - **Why**：Claude Code hook 協議中 exit 1 只是警告、指令照跑；「文件宣稱有防線」與「防線存在」是兩回事，唯一的證據是實測 exit code

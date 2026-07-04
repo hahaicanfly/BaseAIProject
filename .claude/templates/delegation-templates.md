@@ -12,6 +12,7 @@
 - 超過 40 行的產物寫入檔案，回報只給路徑
 - 如實回報失敗：卡在哪、試過什麼；禁止回報「大致完成」
 - 最後一行必須是 [HANDOFF: main] 或 [VERIFY_FAILED: <原因>] 或 [HUMAN_ATTENTION_REQUIRED: <原因>]（`main` = 回報主對話，已列入 handoff-protocol.md 白名單）
+- 破壞性指令黑名單：禁止對「非指派檔案」執行 rm、git checkout --、git restore、git clean、mv 覆蓋——即使是為了測試清理。未追蹤檔案不受 git 保護，刪了就是永久（教訓：ERRORS.md 2026-07-04 誤刪事故）
 ```
 
 ---
