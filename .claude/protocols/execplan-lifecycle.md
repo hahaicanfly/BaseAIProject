@@ -79,7 +79,7 @@
 
 ### Phase 5 — IN_PROGRESS（執行）
 
-**Owner**：`tech-lead` 或 dev path subagent。
+**Owner**：`dev`（主對話 + 具 Bash 的實作 subagent）。`tech-lead` 僅負責 review/規範檢查，不執行 commit（tech-lead frontmatter 為唯讀工具，無 Bash）。
 **Action**：每完成一步 §4 → 立即 commit → append 一行到 §6 Progress Log。
 **鐵律**：
 - 每次 commit 前 `git branch --show-current`（INV-GIT-001）
@@ -153,6 +153,8 @@
 ---
 
 ## Trace 示例
+
+> 以下 INV-id（INV-API-001、INV-TEST-001）為範例 id，實際引用時請以 `docs/architecture/invariants.md` 現行清單為準。
 
 ```
 [2026-05-08 10:00] pm Created F-042-export-history.md, marked [HANDOFF: architect]

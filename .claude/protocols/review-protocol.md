@@ -31,6 +31,8 @@
 4. `agent_docs/TECHNICAL-REFERENCE.md`：相關章節（從 ExecPlan §2 Context 找路徑）
 5. `git diff master...HEAD`：本次變更的完整 diff
 
+> **執行者**：第 5 項等 git 指令，由主對話或具 Bash 的 agent（code-reviewer / qa-engineer）執行；無 Bash 的 agent（如 security-reviewer）不自行跑 git 指令，以主對話提供的 diff/context 為準。
+
 ---
 
 ## Severity Levels
@@ -57,7 +59,7 @@
 □ commit 是否能獨立編譯通過
 □ 有無硬編碼 secret（grep API_KEY / TOKEN / PASSWORD）
 □ 有無 debug print / log 殘留
-□ 新加的功能模組有對應 test？（見 INV-TEST-001）
+□ 新加的功能模組有對應 test？（見 INV-TEST-*，依 invariants.md 現行清單）
 □ 新加 interface method 是否所有 fake/mock 都更新
 □ 文件同步（TECHNICAL-REFERENCE.md / diagrams）
 □ 涉及 enum 或 sealed class 是否所有 case 都補全
@@ -68,7 +70,7 @@
 ## Security Reviewer 額外 Checklist
 
 ```
-□ 所有 INV-AUTH-* 相關規則過檢
+□ 所有 INV-SEC-*（Security/Auth/Secrets）相關規則過檢
 □ 敏感資料不寫入 log
 □ API key / token 不硬編碼
 □ 敏感 UI 畫面是否需要保護（截圖防護等）
@@ -84,7 +86,7 @@
 
 ```
 □ Unit test 覆蓋核心分支（含 negative case）
-□ Test fake / mock 與 production interface 同步（INV-TEST-001）
+□ Test fake / mock 與 production interface 同步（INV-TEST-*，依 invariants.md 現行清單）
 □ Coroutine / async test 使用正確的 test dispatcher
 □ Polling / timer 測試可注入時間參數
 □ 所有 loading / error / empty state 有測試覆蓋
@@ -107,7 +109,7 @@
 ### Blockers
 - [SEC] <description>
   - File: `path/to/file:NN`
-  - Violates: INV-AUTH-001
+  - Violates: INV-SEC-001（範例 id，依專案 invariants.md 現行清單實填）
   - Fix: <具體修復步驟>
 
 ### Warnings
