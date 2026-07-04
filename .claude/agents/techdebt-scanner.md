@@ -38,7 +38,7 @@ context_firewall: true
 
 ### 3. 測試覆蓋
 ```
-□ 有 src/ 但無對應 test/ 的模組
+□ 有原始碼但無對應測試目錄的模組（原始碼/測試目錄依專案結構）
 □ 核心業務邏輯缺乏測試
 □ 被跳過的測試（@skip / .skip / @Ignore）
 ```
@@ -54,11 +54,12 @@ context_firewall: true
 ## 掃描指令參考
 
 ```bash
+# <SRC_DIR> = 專案原始碼目錄（依專案結構，如 src/、app/、lib/）
 # TODO/FIXME 標記
-grep -rn "TODO\|FIXME\|HACK\|WORKAROUND\|XXX" --include="*.ts" --include="*.js" --include="*.py" src/
+grep -rn "TODO\|FIXME\|HACK\|WORKAROUND\|XXX" --include="*.ts" --include="*.js" --include="*.py" <SRC_DIR>
 
 # 硬編碼值
-grep -rn "http://\|localhost\|127.0.0.1" --include="*.ts" --include="*.js" src/
+grep -rn "http://\|localhost\|127.0.0.1" --include="*.ts" --include="*.js" <SRC_DIR>
 ```
 
 ## 輸出格式

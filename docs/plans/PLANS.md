@@ -210,7 +210,7 @@ _(空，待 §4 執行中或 review 時補)_
 
 ## 8. 反模式（不要這樣寫 ExecPlan）
 
-- ❌ 把 8 段拼成一段散文 → 後續 agent 無法快速定位資訊
+- ❌ 把 9 段拼成一段散文 → 後續 agent 無法快速定位資訊
 - ❌ §3 Constraints 寫 "follow best practice" → 必須引用具體 INV-id
 - ❌ §4 Step-by-step 全部一句話 → 必須細到能 verify
 - ❌ §6 Progress Log 用「完成」 → 必須具體說做了什麼
