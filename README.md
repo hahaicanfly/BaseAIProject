@@ -20,9 +20,10 @@
 - **累積教訓（ERRORS.md）** — AI 犯錯後自動收割
 - **State Schema** — Runtime 狀態格式（gitignored，但有 SCHEMA.md 說明）
 
-### UI/UX 系統
+### UI/UX 系統（可選）
 - **3 階段工作流** — Wireframe → Critique → Implementation
 - **規則、Style Spec 模板、Prompt 模板**
+- 無前端的專案可整組刪除 `.claude/uiux/` 與 `ui-ux-designer`/`uiux-agent` 兩個 agent，避免常駐無用內容
 
 ---
 

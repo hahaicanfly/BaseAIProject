@@ -32,16 +32,10 @@
 
 > 完成一項就從這裡刪掉（不留墓碑）。動紅級檔案前先問使用者（見 harness-maintenance.md §1）。
 
-1. **修 stop-retro-logger dedup**（紅級，需同意）：`.claude/hooks/stop-retro-logger.py` 的 dedup hash 含 timestamp → 永不判重。修法：hash 計算排除時間欄位。修完清 ERRORS.md 既有 7 條重複 PR_RETRO 條目，並煙霧測試。
-2. **Agent 工具與職責矛盾**（黃級）：pm、security-reviewer 無 Bash 卻被 review-protocol.md 要求跑 git 指令；tech-lead 唯讀卻被 execplan-lifecycle.md:82 指派 commit。修 frontmatter tools 或改 SOP，二選一要一致。（agent 檔內的自檢樣板已於 2026-07-04 移除，剩 SOP 端待改）
-3. **死引用清理**：ADR-0001 不存在但被 7 處引用（PLANS.md:4、invariants.md:57、execplan-lifecycle.md:5、handoff-protocol.md:5、3 個 hook docstring）→ 建議補寫一份簡短 ADR-0001 記錄 harness 採納決議（紅級）；`scripts/*.sh`（parallel-worktree.md）、`src/`（techdebt 兩處）、INV-AUTH-*/INV-COR-*（handoff/review-protocol 引用但 invariants 未定義）。
-4. **security/cost 詳版收斂**（黃級）：agent_docs/security-policy.md 與 rules/security.md、agent_docs/cost-optimization.md 與 rules 版仍重複，收斂為「rules=常駐精簡、agent_docs=詳版教學」且互相引用。
-5. **GEMINI.md 重述收斂**（黃級）：:87-98、:101-114、:119-128 重述 handoff/invariants/CLAUDE.md，改為引用。
-6. **README.md 計數與章節引用修正**（黃級）：「11 Skill Stubs」實 15、引用 CLAUDE.md 已不存在的章節。注意：「4 Hooks」是**對的**（4 個 hook + `_lib.py` 共用庫，settings.json 只註冊 4 個），不要改成 5。
-7. **uiux/ 1,147 行評估**：對無前端專案是 dormant weight，考慮 fork 時可選安裝（移到 optional/ 或文件說明）。
-8. **值得從 Menu-Android 移植**：gen-app-map skill 模板化、F-CANARY 驗收 SOP 改寫為「新專案 harness 驗收流程」、ERRORS.md 分類索引對映 INV-* 的表頭格式、guard hook 的 regex 防回歸註解（泛化時被刪，見 pre-tool-use-guard.py.bak 對照）。
-9. **Menu-Android guard 修復**（跨專案，需使用者同意）：煙霧測試已做（2026-07-04）——執行權限正常，但 `pre-tool-use-guard.py:257、:273` 用 `return 1`，黑箱實測 block 情境 exit=1 → **enforce 從未真正攔截**。修法與 Base 相同：兩處改 `return 2` + 煙霧測試（參照 harness-maintenance.md §4）。
-10. **`.bak` 清理**（需使用者確認改動後）：本次共產生約 46 個 `.bak` 備份（agents ×14、skills ×16、rules/protocols/docs 等）；使用者驗收後可批次刪除。
+1. **Menu-Android guard 修復**（跨專案，需在該專案的 session 內執行）：診斷已完成（2026-07-04）——執行權限正常，但 `pre-tool-use-guard.py:258、:274` 附近兩處 `return 1`，黑箱實測 block 情境 exit=1 → **enforce 從未真正攔截**。修法與 Base 相同：兩處改 `return 2` + 煙霧測試（參照 Base 的 harness-maintenance.md §4）。本 session 嘗試跨 repo 修復被權限拒絕，屬正確防線。
+2. **人類週審 ERRORS.md**：Pending Review 有一條 PR_RETRO 待處理（/pr-retro 或刪除）；這是 dedup 修復後管線的第一次真實運轉，值得順手驗證整條升級管線。
+
+> 2026-07-04 第二批已完成並通過隔離驗證（詳見 §四）：dedup 修復、SOP 工具權限一致化、ADR-0001 追認、全部死引用清理、security/cost/GEMINI 收斂、guard 註解回補、NEW-PROJECT-VALIDATION.md、gen-app-map 模板化、uiux 可選安裝說明、.bak 已清（git 為備份）。
 
 ## 四、本次 session 已完成（供考古）
 
