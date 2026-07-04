@@ -1,3 +1,9 @@
+---
+name: parallel-worktree
+description: 多 agent 並行開發時的 git worktree 隔離規則
+always: true
+---
+
 # Parallel Worktree Development Rules
 
 ## Overview
