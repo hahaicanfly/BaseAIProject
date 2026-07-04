@@ -37,16 +37,22 @@ from _lib import (  # noqa: E402
 HOOK_NAME = "pre-tool-use-guard"
 
 # Verbs that read file content. Word boundary is applied at the verb level.
+# `source` and `.` (dot) are env-loading variants — note the dot variant
+# must be matched as a standalone token (we do this by requiring its leading
+# context separately in _DOT_SOURCE_LEAD).
 _READ_VERBS_RE = (
     r"(?:cat|less|more|head|tail|grep|egrep|fgrep|zgrep|"
     r"awk|gawk|sed|gsed|xxd|od|hexdump|strings|tee|cp|mv|rsync|"
     r"python\d*|ruby|perl|node|deno|"
     r"source)"
 )
-# Standalone "." as a shell builtin (POSIX dot-source).
+# Standalone "." as a shell builtin (POSIX dot-source). Must be a token,
+# i.e. preceded by start/space/`;` and followed by space.
 _DOT_SOURCE = r"(?:^|[\s;&|`])\.\s+"
 
-# Filename patterns for sensitive files.
+# Filename patterns for sensitive files. The leading "/" is optional so both
+# "cat ./.env" and "cat /etc/.env" hit. .env.local / .env.production are
+# caught by the optional dotted suffix.
 _SECRET_FILES = [
     (r"\.env(?:\.[A-Za-z0-9_-]+)?", "READ_DOTENV", ".env (含密鑰)"),
     (r"local\.properties", "READ_LOCAL_PROPERTIES", "local.properties"),
@@ -61,12 +67,26 @@ _SECRET_FILES = [
     (r"[\w.-]*[Cc]redential[\w.-]*", "READ_CREDENTIAL_FILE", "*credential* file"),
 ]
 
+# Filename appears after a path-safe leading char (start-of-string, whitespace,
+# `<`, `=`, `(`, `;`, quotes, etc.). Quotes are included so `python -c
+# 'open(".env")'` is detected.
 _FILE_LEAD = r"(?:^|[\s<>|;&=`(\"'])"
 _PATH_PREFIX = r"(?:[\w./-]*?/)?"
+# Trailing position: end of string or any shell metachar / whitespace.
 _FILE_TRAIL = r"(?=[\s<>|;&)\"'`,]|$)"
 
 
 def _build_secret_deny_patterns() -> list[tuple[re.Pattern, str, str]]:
+    """Synthesize secret-read deny patterns covering many shell verbs.
+
+    Two families per file:
+    1. `<verb> ... <file>` — explicit read commands.
+    2. `<file>` after `<` redirect — stdin redirect (any consumer).
+    Both also catch `source <file>` / `. <file>` env-loading.
+
+    Word-boundary issues: `.env` starts with non-word `.` so we cannot use
+    `\\b` before the dot; we anchor on shell metachars via _FILE_LEAD.
+    """
     patterns: list[tuple[re.Pattern, str, str]] = []
     for fpat, code, desc in _SECRET_FILES:
         rx_verb = re.compile(
