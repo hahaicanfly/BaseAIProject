@@ -41,6 +41,8 @@
 2. 人類週審：promote 到正式分類或刪除
 3. 可機械化的（能寫成 regex/檢查）→ 提案寫進 `invariants.md` 與 guard hook（紅級，需同意）
 
+清 Pending 條目時不需保留 hash 註解（`<!-- harvest:HASH -->`）——已寫過的 hash 由 `state/retro-hashes.jsonl` 帳本記錄，不會重生。
+
 ## 4. 變更安全程序
 
 **改任何黃/紅級檔案的固定流程**：

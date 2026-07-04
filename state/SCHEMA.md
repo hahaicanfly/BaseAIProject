@@ -75,13 +75,38 @@
 
 **性質**：JSON Lines（每行一筆，append-only）。
 **寫入者**：每個 hook 自身寫入第一行。
-**輪替策略**：30 天 rotate（`stop-retro-logger.py` 在每次 stop 時清理）。
+**輪替策略**：30 天 rotate，每日至多執行一次（`stop-retro-logger.py` 的 `rotate_state_if_due()`，由 `state/.last-rotate` 的 mtime 判斷是否已過 24 小時；失敗靜默跳過，不會讓 hook 崩潰）。
 
 ### Schema (per line)
 
 ```json
 { "ts": "ISO 8601", "hook": "pre-tool-use-guard|post-edit-lint|pre-compact-snapshot|stop-retro-logger", "tool": "<tool name if applicable>", "result": "pass|fail|sentinel|enforced_block", "reason": "<short msg>" }
 ```
+
+---
+
+## 3a. `state/retro-hashes.jsonl` — 週審墓碑帳本
+
+**性質**：JSON Lines，append-only。
+**寫入者**：`.claude/hooks/stop-retro-logger.py` 每次成功 append 一筆 finding/reminder 到 `ERRORS.md` `## Pending Review` 後，同步把該 hash 寫入本檔。
+**用途**：判重時取「`ERRORS.md` 現存 hash ∪ 本帳本 hash」的聯集 —— 人類週審把 `## Pending Review` 條目刪掉後，該 hash 仍留在帳本中，下次 Stop 事件不會把同一 finding 重新 append（同 hash 對應同一 transcript 內容永遠不變）。
+**輪替策略**：90 天 rotate，同 `.last-rotate` 閘門與 `hook-events.jsonl` 共用。
+**檔案不存在時**：hook 自動建立（首次 append 時）。
+
+### Schema (per line)
+
+```json
+{ "hash": "<10 hex chars>", "ts": "ISO 8601" }
+```
+
+---
+
+## 3b. `state/.last-rotate` — Rotate 節流時間戳
+
+**性質**：單一時間戳字串（非 JSON），純覆寫（每次 rotate 執行後重寫整檔）。
+**寫入者**：`.claude/hooks/stop-retro-logger.py` 的 `rotate_state_if_due()`。
+**用途**：用檔案 mtime（或內容，兩者皆為同次寫入的 ISO 時間）判斷距上次 rotate 是否已超過 24 小時；未超過則本次 Stop 事件跳過 rotate，避免每次 session 結束都掃描整個 jsonl。
+**內容**：`now_iso()` 的輸出，例如 `2026-07-04T12:46:33+0000`。
 
 ---
 
