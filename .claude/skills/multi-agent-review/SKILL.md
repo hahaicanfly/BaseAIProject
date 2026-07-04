@@ -1,3 +1,8 @@
+---
+name: multi-agent-review
+description: 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查；當使用者要對高風險變更、核心邏輯或 PR 進行綜合審查時觸發。
+---
+
 # Skill: multi-agent-review
 
 > **用途**：並行啟動三個 reviewer（code-reviewer + security-reviewer + qa-engineer）做全方位審查。

@@ -1,3 +1,8 @@
+---
+name: pr-review-cycle-mob
+description: 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程；當使用者要審查 PR 或提及「review cycle」「cascade review」時觸發。
+---
+
 # Skill: pr-review-cycle-mob
 
 > **用途**：AI 寫完程式後的最佳 PR Review 流程——用 Cascade（梯級）策略平衡 cost / speed / quality。

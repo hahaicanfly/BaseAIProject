@@ -1,3 +1,8 @@
+---
+name: security-audit
+description: 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 OWASP 標準檢查；當使用者要做安全稽核、弱點掃描或提及「安全審查」「security audit」時觸發。
+---
+
 # Skill: security-audit
 
 > **用途**：完整安全審查，涵蓋 auth / secret / 依賴漏洞。

@@ -1,3 +1,8 @@
+---
+name: feature-pipeline
+description: 大型新功能的端對端開發流水線，從需求分析、架構設計、UI/UX 到多代理審查一次串接；當使用者要開發新功能、跨模組變更或提及「新功能」「完整開發流程」時觸發。
+---
+
 # Skill: feature-pipeline
 
 > **用途**：大型新功能的完整開發流程（PM → Architect → Plan Review → Dev → Code Review）。

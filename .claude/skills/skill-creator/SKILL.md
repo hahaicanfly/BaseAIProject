@@ -1,3 +1,8 @@
+---
+name: skill-creator
+description: 從重複操作中識別並封裝新 Skill、優化既有 Skill 描述與觸發準確度，並可執行 eval 衡量效能；當使用者要建立、修改或評測 Skill 時觸發。
+---
+
 # Skill: skill-creator
 
 > **用途**：從重複操作中識別並封裝新的 Skill，減少未來 prompt 冗餘。

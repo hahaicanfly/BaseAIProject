@@ -1,3 +1,8 @@
+---
+name: frontend-design
+description: 以字體、色彩、動效、空間構成等設計哲學為核心，產出高品質 UI 元件與視覺設計指引；當使用者要設計介面、美化畫面或建立設計系統時觸發。
+---
+
 # Skill: frontend-design
 
 > **用途**：以設計哲學（Typography, Color, Motion, Spatial Composition）為核心，產生高品質 UI 元件。

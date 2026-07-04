@@ -1,3 +1,8 @@
+---
+name: pr-retro
+description: 每次 PR merge 後自動萃取教訓並寫入 ERRORS.md Pending Review，驅動 skill 文件持續優化；當 PR 合併後或使用者提及「複盤」「retro」時觸發。
+---
+
 # Skill: pr-retro
 
 > **用途**：每次 PR merge 後自動萃取教訓，寫入 ERRORS.md Pending Review，驅動 SkillOpt 式的 skill document 持續改善。

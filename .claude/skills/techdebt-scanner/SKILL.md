@@ -1,3 +1,8 @@
+---
+name: techdebt-scanner
+description: 系統性掃描專案技術債（TODO/FIXME、複雜函式、重複程式碼等），產出分級優先報告；當使用者要分析代碼健康度或提及「技術債」「techdebt」時觸發。
+---
+
 # Skill: techdebt-scanner
 
 > **用途**：系統性掃描技術債，產出優先級報告。

@@ -1,3 +1,8 @@
+---
+name: beautiful-mermaid
+description: 生成美觀、清晰的 Mermaid 圖表（架構圖、流程圖、序列圖、類別圖、ER 圖、狀態圖），可輸出終端 ASCII 藝術或 SVG 檔案；當使用者要求畫圖表、視覺化架構或繪製流程圖時觸發。
+---
+
 # Skill: beautiful-mermaid
 
 > **用途**：生成美觀、清晰的 Mermaid 圖表（架構圖、流程圖、序列圖、ER 圖）。
