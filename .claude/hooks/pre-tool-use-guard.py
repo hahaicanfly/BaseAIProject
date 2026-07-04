@@ -79,13 +79,24 @@ _FILE_TRAIL = r"(?=[\s<>|;&)\"'`,]|$)"
 def _build_secret_deny_patterns() -> list[tuple[re.Pattern, str, str]]:
     """Synthesize secret-read deny patterns covering many shell verbs.
 
-    Two families per file:
+    Four families per file:
     1. `<verb> ... <file>` — explicit read commands.
     2. `<file>` after `<` redirect — stdin redirect (any consumer).
-    Both also catch `source <file>` / `. <file>` env-loading.
+    3. `. <file>` / `source <file>` env-loading.
+    4. `git add ... <file>` — staging a secret file (INV-SEC-003).
 
     Word-boundary issues: `.env` starts with non-word `.` so we cannot use
     `\\b` before the dot; we anchor on shell metachars via _FILE_LEAD.
+
+    Family 4 design note: we cannot practically shell out to `git diff
+    --cached --name-only` here — the hook must stay a pure, fast regex pass
+    (no subprocess budget beyond the one cached `git branch --show-current`
+    call), and PreToolUse only ever sees the literal command string, not the
+    resulting index state. So we match on the command text itself
+    (`git add ... <secret-file>`); this only catches secrets named on the
+    command line, not e.g. `git add -A` sweeping one in incidentally. That
+    residual gap is accepted and covered by code-reviewer + human review
+    before merge, per INV-SEC-003's HOOK note in invariants.md.
     """
     patterns: list[tuple[re.Pattern, str, str]] = []
     for fpat, code, desc in _SECRET_FILES:
@@ -98,9 +109,13 @@ def _build_secret_deny_patterns() -> list[tuple[re.Pattern, str, str]]:
         rx_redir = re.compile(
             rf"<\s*{_PATH_PREFIX}{fpat}{_FILE_TRAIL}"
         )
+        rx_gitadd = re.compile(
+            rf"\bgit\s+(?:[^|;&\n]+\s+)?add\b[^|;&\n]*?{_FILE_LEAD}{_PATH_PREFIX}{fpat}{_FILE_TRAIL}"
+        )
         patterns.append((rx_verb, code, f"禁止讀取 {desc}"))
         patterns.append((rx_dot, f"{code}_DOT", f"禁止以 . (dot-source) 載入 {desc}"))
         patterns.append((rx_redir, f"{code}_REDIR", f"禁止以 stdin 重導向讀取 {desc}"))
+        patterns.append((rx_gitadd, f"{code}_GITADD", f"禁止 git add {desc}（INV-SEC-003）"))
     return patterns
 
 
