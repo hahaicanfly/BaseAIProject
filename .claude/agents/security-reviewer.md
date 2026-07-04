@@ -88,19 +88,6 @@ bearer, token, auth[_-]?token, private[_-]?key
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **必讀**：對應 `docs/plans/active/F-NNN-*.md`
-2. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-詳見 `.claude/protocols/review-protocol.md`
-
-## 自我驗證指令
-
-- [ ] 讀 `docs/architecture/invariants.md` 並列出本次 task 涉及的 INV-id
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。另見 `.claude/protocols/review-protocol.md`。
