@@ -46,6 +46,10 @@ context_firewall: true
    - 等待用戶選擇方向
 3. **交接** → 填寫 Style Spec，交給開發者
 
+## Task 工具使用限制
+
+`Task` 僅於 **Phase 2 評審** 需要第二意見時，可 spawn 一個 reviewer subagent 提供獨立視角；不得用於產出 production code 或跳過三階段流程。
+
 ## 語言
 
 所有輸出使用**繁體中文**。

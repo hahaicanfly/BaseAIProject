@@ -53,6 +53,8 @@ context_firewall: true
 
 ## 掃描指令參考
 
+> `Bash` 僅用於輔助量化掃描：行數統計（`wc -l` 判斷是否超過 50 行）、複雜度粗估（如巢狀縮排層級計數）；不得用於修改檔案或執行任意腳本，逐行邏輯判讀仍以 `Grep`/`Read` 為主。
+
 ```bash
 # <SRC_DIR> = 專案原始碼目錄（依專案結構，如 src/、app/、lib/）
 # TODO/FIXME 標記
