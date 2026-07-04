@@ -7,7 +7,7 @@
 ### 架構系統
 - **CLAUDE.md 憲法** — AI agent 行為規範（含 `{{PROJECT_NAME}}` 等佔位符）
 - **14 個 Virtual Agent** — PM、Architect、Tech Lead、QA、Security、UI/UX 等完整虛擬團隊
-- **11 個 Skill Stubs** — code-review、multi-agent-review、feature-pipeline 等工作流技能
+- **15 個 Skills** — code-review、multi-agent-review、feature-pipeline、harness-eval 等工作流技能（清單見 `agent_docs/AI-TEAM-REGISTRY.md`）
 
 ### 工程流程
 - **ExecPlan 系統** — 10 階段 state machine，跨 session 結構化交接
@@ -32,7 +32,7 @@
 
 - [ ] **全域搜尋替換 `{{PROJECT_NAME}}`** → 你的專案名稱
 - [ ] **全域搜尋替換 `{{PROJECT_TAGLINE}}`** → 一句話描述
-- [ ] **`CLAUDE.md`**：填入可讀目錄（`## 可讀區`）、禁讀目錄（`## 禁讀區`）
+- [ ] **`CLAUDE.md`**：填入 Quick Commands 的建構/測試指令、Tech Stack / Project Relations 節
 - [ ] **`agent_docs/TECHNICAL-REFERENCE.md`**：填入技術棧（§2）、架構圖（§3）
 - [ ] **`.claude/settings.local.json.template`** → 複製為 `.claude/settings.local.json`，填入 allowed paths
 
@@ -123,7 +123,7 @@ BaseAIProject/
 | INV-* | 可機械驗證的硬規則，hook 自動攔截 | `docs/architecture/invariants.md` |
 | Handoff Marker | 每次 agent 結束時的結構化交接標記 | `.claude/protocols/handoff-protocol.md` |
 | Virtual Team | 14 個專業 sub-agent | `agent_docs/AI-TEAM-REGISTRY.md` |
-| 3 層 Context | index → wiki → raw，Token 預算策略 | `CLAUDE.md §Token 預算策略` |
+| 常駐規則面 | `.claude/rules/*`（`always: true`）每 session 自動載入，須保持精簡 | `.claude/protocols/harness-maintenance.md` §5 |
 
 ---
 
