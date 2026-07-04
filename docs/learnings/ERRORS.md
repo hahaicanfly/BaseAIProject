@@ -27,9 +27,10 @@
 > 此區由 `stop-retro-logger.py` 自動 append 新 lesson candidate（Phase D 後）。
 > 人類於每週收尾時手動 review，promote 到下方 `## Active Lessons`，或直接刪除無關的 noise。
 
-_(空)_
-
----
+<!-- harvest:f18510c79c -->
+- [2026-07-04T11:35:51+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: b9560b7b-5b3b-4431-9e48-f7cf920e4a8d
+  再犯：2026-07-04（dedup hash 修復前誤含時間戳，同主體共重複寫入 59 次，已收斂為本條；細節見 ADR-0001 與 stop-retro-logger.py:282-289 註解）
 
 ## Active Lessons
 

@@ -279,8 +279,12 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
         return
 
     iso = now_iso()
+    # NOTE: hash must NOT include the timestamp, or every Stop event (which
+    # always has a fresh `iso`) produces a unique hash and dedup never fires.
+    # Keep only event-essence fields: kind, session (source), commit_count
+    # (message body driver).
     reminder_hash = hashlib.sha1(
-        f"retro-reminder|{session_id}|{iso}".encode("utf-8"),
+        f"retro-reminder|{session_id}|{commit_count}".encode("utf-8"),
         usedforsecurity=False,
     ).hexdigest()[:10]
 
