@@ -26,7 +26,7 @@
 
 | 判斷條件 | 歸檔位置 | 操作 |
 |---------|---------|------|
-| 可機械驗證（grep / lint pattern 可寫） | `docs/architecture/invariants.md` | 加一條 INV-`<NS>`-`<NNN>`，標 CHECK / HOOK / SOURCE |
+| 可機械驗證（grep / lint pattern 可寫） | `docs/architecture/invariants.md` | 加一條 INV-`<NS>`-`<NNN>`，標 CHECK / HOOK / SOURCE（invariants.md 屬紅級，見 `harness-maintenance.md` §1，寫入前需提示使用者確認） |
 | 不可機械驗證但通用（design-level） | `docs/learnings/ERRORS.md` `## Pending Review` | 用 `<!-- harvest:HASH -->` 包，等下週 promote |
 | 與**特定 feature 設計決策**有關 | 對應 `docs/plans/active/F-NNN.md` §7 Decision Log | 一行 summary + 必要時升級為 ADR |
 | 已在 git commit / GitHub issue 追蹤 | **不存** | 避免重複噪音 |
@@ -106,6 +106,7 @@
 | `docs/learnings/ERRORS.md` `## Pending Review` 區 | promote 已驗證可用的 lesson 到 `## Active Lessons`；刪除 noise |
 | `docs/plans/active/` | 已停滯 > 4 週的 ExecPlan 標記 BLOCKED 或移到 completed/ + 加 Rejection Reason |
 | Auto-memory | 移除 ExecPlan 已記載 / git 已追蹤的 暫態 |
+| Claude Code 原生 memory（專案 memory 目錄） | 已 promote 進 ERRORS.md/invariants 的內容，從 memory 檔刪除、只留指標 |
 
 **禁止**清理 `docs/architecture/invariants.md` —— 一條 INV 一旦立過就保留。
 **禁止**動 CLAUDE.md —— 該檔已是壓縮地圖，內容由 ADR 流程管控。
@@ -172,3 +173,9 @@ git branch --show-current
 - `docs/plans/PLANS.md` — ExecPlan 9 段規格
 - `docs/learnings/ERRORS.md` — Pending Review 區規範
 - `docs/architecture/invariants.md` — INV-* 條目格式
+
+### 自動快照 vs 本命令的分工
+
+- `pre-compact-snapshot.py` → `state/session-handoffs/`：**自動快照**，PreCompact 時觸發，機器可讀，不需人介入。
+- `/last-word` → `SESSION-HANDOFF.md`：**手動交接**，人主動觸發，含可直接貼上續接的 prompt，供下個 session 的人類/agent 讀。
+- 兩者互補：自動快照保底（compact 隨時可能發生），手動交接才有結構化的續接 prompt。

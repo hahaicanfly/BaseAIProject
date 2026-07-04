@@ -1,6 +1,6 @@
 ---
 name: multi-agent-review
-description: 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查；當使用者要對高風險變更、核心邏輯或 PR 進行綜合審查時觸發。
+description: 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查；當使用者要對高風險變更、核心邏輯或 PR 進行綜合審查時觸發。高風險/核心邏輯變更，需要三專家並行時用；一般 PR 用 code-review。
 ---
 
 # Skill: multi-agent-review
@@ -17,6 +17,8 @@ description: 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位
    - qa-engineer：測試覆蓋/edge case
 2. 每個 reviewer 各自讀 ExecPlan + invariants
 3. Aggregate：匯總三份 Report 到 ExecPlan §7
+
+每次派工必須照 `.claude/templates/delegation-templates.md` 三件套（目標動機/驗收條件/回報格式）。
 
 ## 並行注意事項
 

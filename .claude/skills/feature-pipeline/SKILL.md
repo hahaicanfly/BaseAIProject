@@ -19,6 +19,8 @@ description: 大型新功能的端對端開發流水線，從需求分析、架�
 6. **[Code-reviewer]** VERIFYING，補 §7 Decision Log
 7. **[Human gate]** PR review → merge
 
+每次派工必須照 `.claude/templates/delegation-templates.md` 三件套（目標動機/驗收條件/回報格式）。
+
 ## ExecPlan 路徑
 
 `docs/plans/active/F-NNN-<slug>.md`

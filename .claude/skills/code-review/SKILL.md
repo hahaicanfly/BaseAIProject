@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: 對 PR diff 進行標準代碼審查，涵蓋安全性、品質與架構合規；當使用者要求審查代碼、PR review、品質稽核或提及「審查」「檢查代碼」時觸發。
+description: 對 PR diff 進行標準代碼審查，涵蓋安全性、品質與架構合規；當使用者要求審查代碼、PR review、品質稽核或提及「審查」「檢查代碼」時觸發。單一 PR 的標準審查。
 ---
 
 # Skill: code-review

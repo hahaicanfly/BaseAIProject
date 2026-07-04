@@ -112,7 +112,7 @@ pr-retro 的任務：把這些 signal 轉化成 ERRORS.md 的候選 lesson。
 
 ### Step 5：自動更新追蹤
 
-- append 到 `ops/log.md`：`## [日期] retro | [PR slug]`
+- append 到 `docs/learnings/ERRORS.md` `## Pending Review`：`## [日期] retro | [PR slug]`
 - 若 Case B/C/D 有內容 → 在 session 末段提醒人類「週審 ERRORS.md 有 N 條 pending」
 
 ---
@@ -129,14 +129,8 @@ pr-retro 的任務：把這些 signal 轉化成 ERRORS.md 的候選 lesson。
 
 ---
 
-## 自動觸發（stop-retro-logger 整合）
+## 與 stop-retro-logger 的關係
 
-在 `stop-retro-logger.py` 末段加入以下邏輯（參見 `stop-retro-logger.py` 的擴充點）：
-
-```python
-# 若偵測到本 session 有 git commit 活動
-# 則額外調用 pr-retro 的 Case B/D 分析
-# 並 append 到 ERRORS.md Pending Review
-```
+`stop-retro-logger.py` 僅在 session 結束時 append 一則執行提醒（純文字 reminder），**不會**執行 Case A/B/C/D 的分類分析。分類分析必須由人工觸發本 skill（`/pr-retro`）才會發生。
 
 詳見 `.claude/hooks/stop-retro-logger.py` 的 `# PR_RETRO_HOOK` 標記。

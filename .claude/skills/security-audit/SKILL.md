@@ -11,7 +11,7 @@ description: 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 
 
 ## 執行步驟
 
-1. 讀 `docs/architecture/invariants.md` INV-AUTH-* 相關規則
+1. 讀 `docs/architecture/invariants.md` INV-SEC-*（依 invariants.md 現行清單；無對應 INV 時自行列出 auth 風險項）相關規則
 2. 掃描代碼中的硬編碼 secret：
    ```bash
    grep -rn "API_KEY\|TOKEN\|PASSWORD\|SECRET" --include="*.ts" --include="*.js" --include="*.py" src/
@@ -37,4 +37,4 @@ description: 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 
 ## 參考
 
 - `.claude/agents/security-reviewer.md`
-- `docs/architecture/invariants.md` INV-AUTH-*
+- `docs/architecture/invariants.md` INV-SEC-*（依 invariants.md 現行清單；無對應 INV 時自行列出 auth 風險項）

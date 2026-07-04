@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: 產出完整設計系統，涵蓋色彩調色盤、字體配對、UI 風格與 UX 準則，支援多種前端技術棧；當使用者要規劃、設計或檢視 UI/UX 時觸發。
+description: 產出完整設計系統，涵蓋色彩調色盤、字體配對、UI 風格與 UX 準則，支援多種前端技術棧；當使用者要規劃、設計或檢視 UI/UX 時觸發。（stub，尚無完整實作）
 ---
 
 # Skill: ui-ux-pro-max

@@ -1,6 +1,6 @@
 ---
 name: pr-review-cycle-mob
-description: 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程；當使用者要審查 PR 或提及「review cycle」「cascade review」時觸發。
+description: 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程；當使用者要審查 PR 或提及「review cycle」「cascade review」時觸發。需要成本分級 cascade 策略時用。
 ---
 
 # Skill: pr-review-cycle-mob
@@ -10,6 +10,8 @@ description: 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 
 > **核心洞察**：不是找「一個甜蜜點」，而是三層過濾——便宜的先跑，只有需要時才升級。
 
 ---
+
+> 此為風險分級 cascade，與 `model-dispatch.md` 的失敗升級是兩套獨立機制，勿混用。
 
 ## Cascade 架構
 
@@ -157,7 +159,11 @@ Agent(security-reviewer, "審查安全性", background=true)
 Agent(qa-engineer, "審查可測試性與測試覆蓋", background=true)
 ```
 
+每次派工必須照 `.claude/templates/delegation-templates.md` 三件套（目標動機/驗收條件/回報格式）。
+
 整合三個結果，按嚴重度排序，輸出統一 Mob Review 報告。
+
+**最終輸出需映射到 `review-protocol.md` 詞彙**：`PASS` → `Pass`、`FLAG` → `Conditional Pass`、`HIGH_RISK` / `CRITICAL` → `Block`。
 
 ---
 
