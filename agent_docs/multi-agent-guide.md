@@ -105,22 +105,7 @@ Agent(
 
 ## 代理角色一覽
 
-| 代理 | 檔案 | 專長 | 觸發詞 |
-|------|------|------|--------|
-| PM | `pm.md` | 需求分析、用戶故事 | 需求、規劃、PRD |
-| Architect | `architect.md` | 系統設計、API 設計 | 架構、設計、API |
-| UI/UX Designer | `ui-ux-designer.md` | 界面設計、用戶流程 | UI、UX、設計、界面 |
-| Tech Lead | `tech-lead.md` | Code Review、規範 | Review、檢查、重構 |
-| QA Engineer | `qa-engineer.md` | 測試、Bug 分析 | 測試、Debug、Bug |
-| Security Reviewer | `security-reviewer.md` | 安全審計、漏洞 | 安全、審計、漏洞 |
-| Plan Reviewer | `plan-reviewer.md` | ExecPlan 審查 | 計畫審查、review plan |
-| Data Analyst | `data-analyst.md` | 數據分析、指標 | 分析、數據 |
-| Market Researcher | `market-researcher.md` | 市場調查 | 市場、競品 |
-| Competitive Analyst | `competitive-analyst.md` | 競品分析 | 競品、競爭 |
-| TechDebt Scanner | `techdebt-scanner.md` | 技術債掃描 | 技術債、debt |
-| Workflow Optimizer | `workflow-optimizer.md` | 流程優化 | 流程、workflow |
-
-> 完整列表與觸發策略詳見 `agent_docs/AI-TEAM-REGISTRY.md`。
+> 完整代理清單與觸發詞詳見 `agent_docs/AI-TEAM-REGISTRY.md`。
 
 ## 實作機制
 
@@ -151,13 +136,7 @@ Agent(qa-engineer, "審查可測試性", background=true)
 
 ## 成本優化
 
-| 任務類型 | 推薦模型 | 原因 |
-|----------|----------|------|
-| 安全掃描 | sonnet | 需要準確的模式匹配 |
-| 代碼品質 | sonnet | 需要理解設計模式 |
-| 需求分析 | haiku | 相對簡單的任務 |
-| 架構設計 | opus | 需要深度分析 |
-| 測試建議 | sonnet | 中等複雜度 |
+> 模型選用表詳見 `.claude/rules/model-dispatch.md`。
 
 ## 最佳實踐
 

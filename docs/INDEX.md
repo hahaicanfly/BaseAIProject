@@ -55,6 +55,18 @@
 
 ---
 
+## 知識地圖（誰寫誰讀、何時流動）
+
+| 層 | 位置 | 誰寫 | 誰讀 | 流動規則 |
+|----|------|------|------|----------|
+| 教訓 | `docs/learnings/ERRORS.md` | hook 自動 append + 模型手動 append；人週審 promote | 所有 agent | 可機械化者晉升 invariants |
+| 硬規則 | `docs/architecture/invariants.md` | 人（紅級） | hooks 與所有 agent | 由 ERRORS 晉升 |
+| 架構決策 | `docs/decisions/ADR-*.md` | 人核可 | 規劃類 agent | 不回流 |
+| Session 快照 | `state/session-handoffs/` | pre-compact-snapshot.py 自動 | 續接 session | 唯讀不回流 |
+| 原生 memory | `~/.claude/projects/<proj>/memory/` | Claude Code 自動 | 下個 session 的 Claude | **只准存跨 session 指標與個人偏好；教訓一律走 ERRORS.md，promote 後從 memory 刪全文留指標** |
+
+---
+
 ## 引用此檔的位置
 
 - `CLAUDE.md`：文件地圖（"文件總索引"）
