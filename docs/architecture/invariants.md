@@ -36,7 +36,7 @@ INV-<NS>-<NNN>  <一句話規則>
 RULE     每次 commit / 啟動 subagent / PR merge 後必須確認 branch
 CHECK    git symbolic-ref HEAD | grep -E 'refs/heads/(master|main)$'
 HOOK     pre-tool-use-guard.py（攔截 git commit on master）
-SOURCE   (填入來源 lesson 日期)
+SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
 ```
 
 ### INV-GIT-002 — 禁止 `git commit` 直接到 master / main
@@ -45,7 +45,7 @@ SOURCE   (填入來源 lesson 日期)
 RULE     不得在 master/main 直接 commit
 CHECK    git symbolic-ref HEAD | grep -E 'refs/heads/(master|main)$'
 HOOK     pre-tool-use-guard.py（enforce — hard guard）
-SOURCE   (填入來源 lesson 日期)
+SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
 ```
 
 ### INV-GIT-003 — 禁止 `git push --force` 到 master / main
@@ -63,7 +63,7 @@ SOURCE   ADR-0001 D5
 RULE     fast-forward 失敗時改用 git rebase origin/master
 CHECK    grep -E 'git reset --hard origin/(master|main)'
 HOOK     pre-tool-use-guard.py（enforce）
-SOURCE   (填入來源 lesson 日期)
+SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
 ```
 
 ### INV-GIT-005 — 新功能 branch 必須從 master 開出
@@ -72,7 +72,7 @@ SOURCE   (填入來源 lesson 日期)
 RULE     git checkout -b feat/xxx 前必須在 master pull 完最新
 CHECK    PR 建立前確認 base branch
 HOOK     code-reviewer agent（手動）
-SOURCE   (填入來源 lesson 日期)
+SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
 ```
 
 ---
@@ -102,7 +102,7 @@ SOURCE   通用安全最佳實踐
 ```
 RULE     .env、*.pem、*.key、*.keystore、*secret* 不得被 git add
 CHECK    git diff --cached --name-only | grep -E '\.(env|pem|key|keystore|p12)$|secret|credential'
-HOOK     pre-tool-use-guard.py（enforce — hard guard）
+HOOK     pre-tool-use-guard.py（enforce：攔截 git add 敏感檔，指令字面比對；已 staged 內容不在覆蓋範圍，靠 code-reviewer 與人審）
 SOURCE   通用安全最佳實踐
 ```
 
@@ -118,7 +118,7 @@ SOURCE   通用安全最佳實踐
 INV-TEST-001  新增 interface method 後必須補所有 fakes/mocks
   CHECK    grep -rn ': InterfaceName' --include='*.ts' | grep -i 'fake\|mock'
   HOOK     code-reviewer agent（手動，列入 ExecPlan checklist）
-  SOURCE   (填入來源)
+  SOURCE   （範例條目，無來源 lesson）
 ```
 
 ---

@@ -1,3 +1,8 @@
+---
+name: tdd-workflow
+description: 執行 Red → Green → Refactor 的測試驅動開發流程，用於核心業務邏輯與高可靠性需求；當使用者要 TDD 開發或提及「測試驅動」「先寫測試」時觸發。
+---
+
 # Skill: tdd-workflow
 
 > **用途**：測試驅動開發流程（Red → Green → Refactor）。

@@ -46,23 +46,16 @@ context_firewall: true
    - 等待用戶選擇方向
 3. **交接** → 填寫 Style Spec，交給開發者
 
+## Task 工具使用限制
+
+`Task` 僅於 **Phase 2 評審** 需要第二意見時，可 spawn 一個 reviewer subagent 提供獨立視角；不得用於產出 production code 或跳過三階段流程。
+
 ## 語言
 
 所有輸出使用**繁體中文**。
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **必讀**：對應 `docs/plans/active/F-NNN-*.md`
-2. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-## 自我驗證指令
-
-- [ ] 讀 `docs/architecture/invariants.md`
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。

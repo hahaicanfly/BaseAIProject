@@ -1,3 +1,8 @@
+---
+name: spectra-amplifier
+description: 將薄弱的需求描述或 PRD 草稿強化為每項需求皆附可驗證 acceptance criteria 的完整規格；當使用者要補強 spec 或提及「spectra-amplifier」「acceptance criteria」時觸發。
+---
+
 # Skill: spectra-amplifier
 
 > **用途**：接收薄的 spec（需求描述、PRD 草稿、feature 想法），輸出強化版 spec——每個需求有 acceptance criteria，每個 AC 對應一個可驗證條目。

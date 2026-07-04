@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}} — 累積教訓 (Lessons Learned)
 
 > **角色**：本檔為 harness 體系的長期記憶，承接原 `CLAUDE.md` 的「累積教訓」區段。
-> **總數**：3 條（seed lessons — 採用此模板時通用教訓）
+> **總數**：7 條（3 條 seed + 4 條 2026-07-04 harness 制度化 session 實戰教訓）
 > **格式約定**：`- [YYYY-MM-DD] [<分類>] 錯誤描述 → 正確做法`
 > 每次 AI 犯錯被糾正後，**必須**主動提議追加到 `## Pending Review`（由人類週審 promote 到 `## Active Lessons`）。
 > `stop-retro-logger.py`（Phase D 啟用後）會自動把 session 內的 `[VERIFY_FAILED:*]` 收割到 Pending Review 區。
@@ -16,9 +16,9 @@
 | API / Data Models | 0 | INV-API-* |
 | Testing | 0 | INV-TEST-* |
 | Git / Branch / PR | 1 | INV-GIT-* |
-| Architecture | 1 | INV-ARC-* |
+| Architecture | 2 | INV-ARC-* |
 | Build / Dependencies | 0 | INV-BLD-* |
-| Hooks / Harness | 1 | INV-HOOK-* |
+| Hooks / Harness | 4 | INV-HOOK-* |
 
 ---
 
@@ -27,13 +27,27 @@
 > 此區由 `stop-retro-logger.py` 自動 append 新 lesson candidate（Phase D 後）。
 > 人類於每週收尾時手動 review，promote 到下方 `## Active Lessons`，或直接刪除無關的 noise。
 
-_(空)_
-
----
+（空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
+
+- [2026-07-04] [Hooks / Harness] 驗收 subagent 超出指派範圍執行 `git checkout --` 與 `rm` 未追蹤檔案，誤刪使用者檔案（幸主對話 context 留有全文得以重建） → 派工 prompt 通用規範必須明文禁止對非指派檔案執行任何還原/刪除指令；驗收類 agent 原則上唯讀
+  - **Why**：「只改指派檔案」的正面表述擋不住「為了測試而清理現場」的合理化；破壞性指令需要顯式黑名單
+  - **How to apply**：delegation-templates.md 通用規範已加黑名單；未追蹤的使用者檔案不受 git 保護，刪除即永久
+
+- [2026-07-04] [Hooks / Harness] hooks 部署後從未實測，雙重失效（無執行權限 + guard 用 exit 1）長期無人發現 → 任何 hook 新增/修改後必須跑黑箱煙霧測試：block 情境期望 exit 2、pass 情境期望 exit 0
+  - **Why**：Claude Code hook 協議中 exit 1 只是警告、指令照跑；「文件宣稱有防線」與「防線存在」是兩回事，唯一的證據是實測 exit code
+  - **How to apply**：照 `.claude/protocols/harness-maintenance.md` §4 的煙霧測試指令；fork 模板到新專案時列入 `docs/harness/NEW-PROJECT-VALIDATION.md` Step 1
+
+- [2026-07-04] [Hooks / Harness] dedup hash 把 timestamp 算進輸入 → 永不判重，ERRORS.md 被同主體重複寫入 59 次 → hash 輸入只放事件本質欄位（類型/主體/來源），時間只留顯示用
+  - **Why**：教訓檔被 noise 灌爆後，模型會停止信任並停止閱讀它，整條「踩坑→教訓→規則」管線壞死
+  - **How to apply**：寫任何去重邏輯時檢查 hash 輸入清單；本次修法見 `stop-retro-logger.py:282-289` 註解
+
+- [2026-07-04] [Architecture] 同一事實（模型分派表/agent 名單/review 格式）在多檔各存全文 → 9 處矛盾，弱模型隨機採信 → 每類事實指定唯一正典檔，其他位置只准引用不准另列全文
+  - **Why**：複本必然各自演化；弱模型遇矛盾不會停下查證，行為因此不可預測
+  - **How to apply**：正典層級表在 `CLAUDE.md`；發現複本即刪、留引用；`AI-TEAM-REGISTRY.md` 一律由 frontmatter 重生成不手改
 
 - [2026-05-28] [Hooks / Harness] `QUICK_CHECKS` 空陣列讓 post-edit-lint 形同虛設 → 採用模板後第一件事是把專案的 INV-SEC/INV-ARC patterns 填入，否則 hook 掃不到任何問題
   - **Why**：BaseAIProject 初始化時 QUICK_CHECKS=[] 是為了讓模板通用，但實際部署時若不填充則 D3 分數只有 17/20，且安全漏洞無法被即時攔截

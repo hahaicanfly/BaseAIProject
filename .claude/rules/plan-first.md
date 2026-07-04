@@ -1,6 +1,6 @@
 ---
 name: plan-first
-description: 所有非瑣碎任務必須先進入 Plan Mode
+description: 非瑣碎任務先進 Plan Mode（ExecPlan 範圍除外，見 CLAUDE.md 決策樹）
 always: true
 ---
 
@@ -10,12 +10,12 @@ always: true
 
 **執行任何非瑣碎任務前，必須先進入 Plan Mode，撰寫計劃供用戶審查。**
 
+> 入口以 CLAUDE.md「動手前決策樹」為準：跨模組／API 變更／大規模重構走 **ExecPlan**（`docs/plans/PLANS.md`，需人類核可），不適用本檔；本檔涵蓋其餘非瑣碎任務。
+
 ## 適用情境
 
-以下情境必須先寫計劃：
+以下情境必須先寫計劃（已落入 ExecPlan 範圍者走 ExecPlan，不重複做）：
 - 新功能實作
-- 架構變更
-- 大規模重構
 - 影響多個檔案的修改
 - 涉及安全或成本的決策
 - 刪除或移動檔案

@@ -1,3 +1,9 @@
+---
+name: parallel-worktree
+description: 多 agent 並行開發時的 git worktree 隔離規則
+always: true
+---
+
 # Parallel Worktree Development Rules
 
 ## Overview
@@ -24,12 +30,12 @@ Agent(
 ```
 Claude Code manages the worktree lifecycle automatically.
 
-### Option B: Helper Script (Multi-Session / Manual)
+### Option B: Manual git worktree (Multi-Session / Manual)
 
 ```bash
-./scripts/new-agent-worktree.sh <TASK_ID> [BASE_BRANCH]
+git worktree add ../<project>-worktrees/<TASK_ID> -b agent/<TASK_ID> [BASE_BRANCH]
 ```
-Creates worktree at `../<project>-worktrees/<TASK_ID>/` with branch `agent/<TASK_ID>`.
+Creates worktree at `../<project>-worktrees/<TASK_ID>/` with branch `agent/<TASK_ID>` (defaults to branching from current HEAD if `BASE_BRANCH` omitted).
 
 ## Code Modification Safety
 
@@ -76,12 +82,12 @@ Adapt to your project's build system:
 
 After PR is merged:
 ```bash
-# Manual
 git worktree remove ../<project>-worktrees/<TASK_ID>
 git branch -d agent/<TASK_ID>
 
-# Batch cleanup of all merged agent worktrees
-./scripts/cleanup-agent-worktrees.sh
+# Batch cleanup: list all worktrees, then remove each merged one manually
+git worktree list
+git worktree prune
 ```
 
 ## When to Use Worktree Mode

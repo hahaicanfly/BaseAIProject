@@ -1,3 +1,8 @@
+---
+name: harness-eval
+description: 掃描目標 repo，評估 Harness Engineering 成熟度並輸出 0–100 分數、缺口清單與優先改善建議；當使用者要評估工程基礎設施成熟度或提及「harness eval」時觸發。
+---
+
 # Skill: harness-eval
 
 > **用途**：掃描目標 repo，輸出 Harness Engineering 成熟度分數（0–100）、各維度缺口清單、優先改善建議。
@@ -111,9 +116,9 @@
 [是否具備自動改善能力的前提條件分析]
 ```
 
-### Step 5：寫回 Atlas/QA（若在 Life-Vault 環境）或寫到 docs/
+### Step 5：寫回外部知識庫或寫到 docs/
 
-- 若 `Atlas/QA/` 存在 → 寫入 `Atlas/QA/[日期]-harness-eval-[repo-slug].md`
+- （若專案有外部知識庫，寫回該處；否則略過）
 - 否則 → 輸出到 `docs/harness-eval-[日期].md`
 
 ---

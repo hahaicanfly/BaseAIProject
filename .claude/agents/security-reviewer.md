@@ -51,25 +51,30 @@ bearer, token, auth[_-]?token, private[_-]?key
 
 ## 輸出格式
 
+嚴重度採用 `.claude/protocols/review-protocol.md` 正典分級（Blocker/Warning/Suggestion/Praise）。內部風險評級對映如下：Critical/High → Blocker，Medium → Warning，Low → Suggestion。
+
 ```markdown
 ## 安全審計報告：[範圍/日期]
 
 ### 風險摘要
 | 嚴重度 | 數量 |
 |--------|------|
-| Critical | X |
-| High | X |
-| Medium | X |
-| Low | X |
+| Blocker | X |
+| Warning | X |
+| Suggestion | X |
 
 ### 發現問題
 
-#### [CRITICAL] 問題標題
+#### [Blocker] 問題標題
 - **位置**：`path/to/file:line`
 - **描述**：[問題詳述]
 - **風險**：[可能造成的影響]
 - **修復建議**：[具體修復方式]
 - **參考**：[CWE/OWASP 編號]
+
+## Decision
+
+- **Pass / Block / Conditional Pass**
 
 ### 結論
 [整體安全狀態評估]
@@ -88,19 +93,6 @@ bearer, token, auth[_-]?token, private[_-]?key
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **必讀**：對應 `docs/plans/active/F-NNN-*.md`
-2. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-詳見 `.claude/protocols/review-protocol.md`
-
-## 自我驗證指令
-
-- [ ] 讀 `docs/architecture/invariants.md` 並列出本次 task 涉及的 INV-id
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。另見 `.claude/protocols/review-protocol.md`。

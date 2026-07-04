@@ -38,7 +38,7 @@ context_firewall: true
 
 ### 3. 測試覆蓋
 ```
-□ 有 src/ 但無對應 test/ 的模組
+□ 有原始碼但無對應測試目錄的模組（原始碼/測試目錄依專案結構）
 □ 核心業務邏輯缺乏測試
 □ 被跳過的測試（@skip / .skip / @Ignore）
 ```
@@ -53,12 +53,15 @@ context_firewall: true
 
 ## 掃描指令參考
 
+> `Bash` 僅用於輔助量化掃描：行數統計（`wc -l` 判斷是否超過 50 行）、複雜度粗估（如巢狀縮排層級計數）；不得用於修改檔案或執行任意腳本，逐行邏輯判讀仍以 `Grep`/`Read` 為主。
+
 ```bash
+# <SRC_DIR> = 專案原始碼目錄（依專案結構，如 src/、app/、lib/）
 # TODO/FIXME 標記
-grep -rn "TODO\|FIXME\|HACK\|WORKAROUND\|XXX" --include="*.ts" --include="*.js" --include="*.py" src/
+grep -rn "TODO\|FIXME\|HACK\|WORKAROUND\|XXX" --include="*.ts" --include="*.js" --include="*.py" <SRC_DIR>
 
 # 硬編碼值
-grep -rn "http://\|localhost\|127.0.0.1" --include="*.ts" --include="*.js" src/
+grep -rn "http://\|localhost\|127.0.0.1" --include="*.ts" --include="*.js" <SRC_DIR>
 ```
 
 ## 輸出格式
@@ -95,15 +98,6 @@ grep -rn "http://\|localhost\|127.0.0.1" --include="*.ts" --include="*.js" src/
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-## 自我驗證指令
-
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。

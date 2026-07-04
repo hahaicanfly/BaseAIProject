@@ -14,11 +14,9 @@
 
 `CLAUDE.md` 是本專案的操作地圖，包含：
 - Quick Commands（常用指令）
-- 不可違反的 Invariants（INV-*）
-- MUST / NEVER 規則摘要
-- Harness 體系路徑對照表
-- Virtual Team（14 agents）清單
-- Multi-Agent Skills 清單
+- 正典層級與動手前決策樹（含硬防線、INV-* 規則入口）
+- 常駐規則、交接與 Session 管理
+- 文件地圖（Virtual Team／Multi-Agent Skills 清單見 `agent_docs/AI-TEAM-REGISTRY.md`）
 - Tech Stack 與 Project Relations
 
 **在未讀完 `CLAUDE.md` 前，禁止執行任何檔案修改操作。**
@@ -86,46 +84,26 @@ Step 5: 讀 state/feature-list.json     <- 確認是否有 in_progress task
 
 ## Handoff 標記（agy agents 必須遵守）
 
-agy 的每個 subagent（invoke_subagent）完成任務時，**final response 必須**以下列三者之一結尾：
-
-```
-[HANDOFF: <next-agent-or-state>]
-[VERIFY_FAILED: <INV-id-or-reason>]
-[HUMAN_ATTENTION_REQUIRED: <reason>]
-```
-
-這不只是 Claude Code 的規範，而是**本專案的硬性要求**，適用於所有在此專案執行的 AI agents。
+agy 的每個 subagent（invoke_subagent）完成任務時，final response 必須符合正典 `.claude/protocols/handoff-protocol.md` 定義的三種 marker 之一。這不只是 Claude Code 的規範，而是**本專案的硬性要求**，適用於所有在此專案執行的 AI agents。
 
 ---
 
 ## Git 規則（agy 必須主動遵守，無 hook 自動攔截）
 
-由於 Antigravity 環境沒有 Claude Code 的 Python hooks 自動攔截，
-**agy agents 必須在每次 git 操作前主動確認**：
+Antigravity 環境沒有 Claude Code 的 Python hooks 自動攔截，**agy agents 必須在每次 git 操作前主動確認**：
 
 ```bash
 # 每次 git commit 前必做
 git branch --show-current   # 確認不是 master/main
-
-# 禁止的指令
-git commit (在 master/main 上)    # INV-GIT-002
-git push --force origin master   # INV-GIT-003
-git reset --hard origin/master   # INV-GIT-004
 ```
+
+禁止指令的完整清單（INV-GIT-002/003/004）見正典 `docs/architecture/invariants.md`；hook 不會攔截，違反與否全靠 agy 自律。
 
 ---
 
 ## 輸出語言與格式
 
-- 繁體中文回應
-- 代碼註解可英文
-- Git commit message 英文，格式：`type(scope): message`
-
-```
-完成：[具體做了什麼]
-下一步：[接下來要做什麼]
-注意：[需要用戶知道的風險或問題]
-```
+輸出語言、commit message 規範與回報格式，完整遵循正典 `CLAUDE.md` 的 Communication Style 一節，agy 無特例。
 
 ---
 

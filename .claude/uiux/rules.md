@@ -150,7 +150,7 @@ switch (state) {
 </button>
 
 <!-- 圖片必須有 alt -->
-<img src="menu.jpg" alt="菜單照片" />
+<img src="photo.jpg" alt="範例照片" />
 
 <!-- 表單欄位必須關聯 label -->
 <label for="email">電子郵件</label>

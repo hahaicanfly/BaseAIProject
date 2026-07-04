@@ -38,11 +38,12 @@
 | `human-approval` | ExecPlan §1-§5 已完成，等人類核可 |
 | `human-pr-review` | code-review 通過，等人類審 PR |
 | `done` | task 全部完成（merged）|
+| `main` | 回報主對話（指揮官）— 派工 subagent（見 `.claude/templates/delegation-templates.md`）完成子任務時使用 |
 | `pending` | 尚未確定下一個（極少用，多半搭配 Open Questions） |
 
-**範例**：
+**範例**（INV id 為示意，實填依 `docs/architecture/invariants.md` 現行清單）：
 ```
-✓ Plan 完成，§3 Constraints 引用 INV-COR-001 / INV-API-002
+✓ Plan 完成，§3 Constraints 引用 INV-GIT-002 / INV-SEC-001
 → 下一步：等待 plan-reviewer 審查
 [HANDOFF: plan-reviewer]
 ```
@@ -53,7 +54,7 @@
 
 **用途**：執行中發現驗證失敗（lint / test / hook 攔截 / invariant 違反）。
 **Reason 格式**：
-- 如果違反某條 invariant：`INV-COR-001` / `INV-AUTH-002` 等
+- 如果違反某條 invariant：填該條 INV id（如 `INV-GIT-002`，依 `docs/architecture/invariants.md` 現行清單）
 - 如果是其他原因：簡短一句話（≤80 字元）
 
 **規則**：
@@ -61,11 +62,11 @@
 - 連續 3 次 `[VERIFY_FAILED:]` → 必須升級為 `[HUMAN_ATTENTION_REQUIRED:]`
 - `stop-retro-logger.py`（Phase D）會把所有 `[VERIFY_FAILED:]` 與其前 5 行 context 收割到 `docs/learnings/ERRORS.md` Pending Review
 
-**範例**：
+**範例**（INV id 為示意，依專案 invariants 實填）：
 ```
-✗ post-edit-lint 攔截：INV-COR-001 catch 區塊未先處理 CancellationException
-→ 修復方案：加 catch (e: CancellationException) { throw e }
-[VERIFY_FAILED: INV-COR-001]
+✗ post-edit-lint 攔截：INV-SEC-001 diff 中偵測到疑似硬編碼金鑰
+→ 修復方案：改讀環境變數並更新 .env.example
+[VERIFY_FAILED: INV-SEC-001]
 ```
 
 ---
@@ -87,9 +88,9 @@
 - 必須輸出**結構化問題清單**讓人類能快速回覆
 - 與 ExecPlan §8 Open Questions 同步
 
-**範例**：
+**範例**（INV id 為示意，依專案 invariants 實填）：
 ```
-⚠ 偵測到 Request data class 缺 deviceId field，違反 INV-AUTH-002
+⚠ 偵測到 Request data class 缺 deviceId field，違反 INV-SEC-002
    修復方案有兩種：
    a) 加 default null，相容舊 client
    b) 加 non-null 必填 → 所有呼叫點要同步改

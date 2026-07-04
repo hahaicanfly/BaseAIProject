@@ -2,7 +2,7 @@
 name: qa-engineer
 description: 測試工程師 - 單元測試、整合測試、Bug 分析。觸發詞：測試、Debug、QA、Test、Bug
 tools: Read, Bash, Grep, Glob
-model: opus
+model: sonnet
 verification_required: true
 handoff_artifact: docs/plans/active/<task-id>.md
 context_firewall: true
@@ -71,6 +71,8 @@ test_[功能]_should_[預期行為]_when_[條件]
 
 ### Bug 分析報告
 
+嚴重度採用 `.claude/protocols/review-protocol.md` 正典分級（Blocker/Warning/Suggestion/Praise）。
+
 ```markdown
 ## Bug 分析：[問題簡述]
 
@@ -80,9 +82,13 @@ test_[功能]_should_[預期行為]_when_[條件]
 ### 實際行為
 ### 根因分析
 ### 影響範圍
-- 嚴重度：Critical / High / Medium / Low
+- 嚴重度：Blocker / Warning / Suggestion
 ### 修復建議
 ### 測試驗證
+
+## Decision
+
+- **Pass / Block / Conditional Pass**
 ```
 
 ## 語言
@@ -91,21 +97,6 @@ test_[功能]_should_[預期行為]_when_[條件]
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **必讀**：對應 `docs/plans/active/F-NNN-*.md`
-2. **進度同步**：每完成一步 §4 → append 一行到 §6 Progress Log
-3. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-詳見 `.claude/protocols/review-protocol.md`
-
-## 自我驗證指令
-
-- [ ] 讀 `docs/architecture/invariants.md` 並列出本次 task 涉及的 INV-id
-- [ ] 跑 ExecPlan §5 Verification Strategy 的至少一個指令
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。另見 `.claude/protocols/review-protocol.md`。

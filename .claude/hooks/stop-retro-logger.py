@@ -21,17 +21,31 @@ import hashlib
 import json
 import re
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _lib import (  # noqa: E402
     ERRORS_MD,
+    HOOK_EVENTS,
+    STATE_DIR,
+    append_jsonl,
+    ensure_state_dirs,
     log_event,
     now_iso,
     read_stdin_json,
 )
 
 HOOK_NAME = "stop-retro-logger"
+
+# Tombstone ledger: every hash ever appended to Pending Review is recorded
+# here so that a human deleting the ERRORS.md entry during weekly review
+# does not cause the same finding to be re-harvested (it's still present
+# in the transcript on the next Stop event).
+RETRO_HASHES_LEDGER = STATE_DIR / "retro-hashes.jsonl"
+LAST_ROTATE_FILE = STATE_DIR / ".last-rotate"
+HOOK_EVENTS_ROTATE_DAYS = 30
+RETRO_HASHES_ROTATE_DAYS = 90
 
 MARKER_RE = re.compile(
     r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
@@ -178,15 +192,51 @@ def harvest_markers(transcript_path: str) -> list[dict]:
     return _harvest_plain_text(lines)
 
 
-def existing_pending_hashes() -> set[str]:
-    """Scan ERRORS.md Pending Review section and return existing harvest hashes."""
-    if not ERRORS_MD.is_file():
+def _ledger_hashes() -> set[str]:
+    """Return all hashes ever recorded in the tombstone ledger."""
+    if not RETRO_HASHES_LEDGER.is_file():
         return set()
+    out: set[str] = set()
     try:
-        text = ERRORS_MD.read_text(encoding="utf-8")
+        with RETRO_HASHES_LEDGER.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except Exception:
+                    continue
+                h = obj.get("hash")
+                if h:
+                    out.add(h)
     except Exception:
-        return set()
-    return set(re.findall(r"<!--\s*harvest:([0-9a-f]{10})\s*-->", text))
+        pass
+    return out
+
+
+def _ledger_record(hashes: list[str]) -> None:
+    """Append hashes to the tombstone ledger. Best-effort; silent on failure."""
+    if not hashes:
+        return
+    iso = now_iso()
+    for h in hashes:
+        append_jsonl(RETRO_HASHES_LEDGER, {"hash": h, "ts": iso})
+
+
+def existing_pending_hashes() -> set[str]:
+    """Return hashes already written: current ERRORS.md content UNION the
+    tombstone ledger. The union means a hash stays "seen" even after a
+    human deletes its ERRORS.md entry during weekly review.
+    """
+    errors_hashes: set[str] = set()
+    if ERRORS_MD.is_file():
+        try:
+            text = ERRORS_MD.read_text(encoding="utf-8")
+            errors_hashes = set(re.findall(r"<!--\s*harvest:([0-9a-f]{10})\s*-->", text))
+        except Exception:
+            pass
+    return errors_hashes | _ledger_hashes()
 
 
 def append_to_pending(findings: list[dict]) -> int:
@@ -237,6 +287,7 @@ def append_to_pending(findings: list[dict]) -> int:
         ERRORS_MD.write_text(new_text, encoding="utf-8")
     except Exception:
         return 0
+    _ledger_record([f["hash"] for f in new_findings])
     return len(new_findings)
 
 
@@ -279,8 +330,12 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
         return
 
     iso = now_iso()
+    # NOTE: hash must NOT include the timestamp, or every Stop event (which
+    # always has a fresh `iso`) produces a unique hash and dedup never fires.
+    # Keep only event-essence fields: kind, session (source), commit_count
+    # (message body driver).
     reminder_hash = hashlib.sha1(
-        f"retro-reminder|{session_id}|{iso}".encode("utf-8"),
+        f"retro-reminder|{session_id}|{commit_count}".encode("utf-8"),
         usedforsecurity=False,
     ).hexdigest()[:10]
 
@@ -315,10 +370,63 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
     try:
         ERRORS_MD.write_text(new_text, encoding="utf-8")
     except Exception:
+        return
+    _ledger_record([reminder_hash])
+
+
+def _rotate_jsonl(path: Path, days: int) -> None:
+    """Drop lines whose `ts` is older than `days`. Best-effort; silent on
+    any failure (malformed lines are kept rather than dropped, to avoid
+    accidental data loss from a parsing edge case).
+    """
+    if not path.is_file():
+        return
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        kept: list[str] = []
+        with path.open("r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    obj = json.loads(stripped)
+                    ts = obj.get("ts")
+                    dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z")
+                    if dt < cutoff:
+                        continue
+                except Exception:
+                    pass  # keep unparseable lines rather than risk data loss
+                kept.append(stripped)
+        path.write_text(("\n".join(kept) + "\n") if kept else "", encoding="utf-8")
+    except Exception:
+        pass
+
+
+def rotate_state_if_due() -> None:
+    """At most once per day, rotate hook-events.jsonl (30d) and
+    retro-hashes.jsonl (90d). Gated by state/.last-rotate mtime.
+    Sentinel hook: never raises.
+    """
+    try:
+        if not HOOK_EVENTS.is_file():
+            return
+        now = datetime.now(timezone.utc)
+        if LAST_ROTATE_FILE.is_file():
+            last = datetime.fromtimestamp(LAST_ROTATE_FILE.stat().st_mtime, tz=timezone.utc)
+            if (now - last).total_seconds() < 86400:
+                return
+        _rotate_jsonl(HOOK_EVENTS, HOOK_EVENTS_ROTATE_DAYS)
+        _rotate_jsonl(RETRO_HASHES_LEDGER, RETRO_HASHES_ROTATE_DAYS)
+        ensure_state_dirs()
+        LAST_ROTATE_FILE.write_text(now_iso(), encoding="utf-8")
+    except Exception:
         pass
 
 
 def main() -> int:
+    rotate_state_if_due()
+
     payload = read_stdin_json()
     transcript_path = payload.get("transcript_path", "")
     session_id = payload.get("session_id") or payload.get("sessionId") or ""

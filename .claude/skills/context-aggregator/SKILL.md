@@ -1,3 +1,8 @@
+---
+name: context-aggregator
+description: 聚合 MCP 記憶、Git 歷史、本地檔案等多來源資訊，產出結構化摘要以利 session 交接與工作延續；當使用者要整理上下文、寫交接報告或提及「聚合」「摘要」「交接」時觸發。
+---
+
 # Skill: context-aggregator
 
 > **用途**：接手他人工作時，快速聚合所有必要 context，冷啟動無縫銜接。

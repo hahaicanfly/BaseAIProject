@@ -1,7 +1,9 @@
 # SkillOpt Loop Protocol
 
+> ⚠ 狀態：未接線設計草案（design draft, not wired）。無任何 hook/cron 實際執行本迴圈；不得被其他文件當作生效規則援引。是否接線或刪除，待人類決定。
+
 > **角色**：定義 Harness 系統的「自我改善迴圈」——如何把 PR 中的 failure signal 轉化為更好的 skill document。
-> **理論依據**：SkillOpt: Optimizing Agent Skills as External Text State（Microsoft Research 等機構，2026-05）
+> **理論依據**：SkillOpt: Optimizing Agent Skills as External Text State（Microsoft Research 等機構，2026-05）【未確認：無法驗證此來源存在】
 > **核心洞察**：Agent skill document = 凍結模型的可訓練外部狀態，用 MLOps 紀律訓練文字而非模型權重。
 
 ---
@@ -93,7 +95,7 @@ Promote 前問以下 3 個問題：
 
 | 文件 | Protected 區段 | 原因 |
 |------|--------------|------|
-| `CLAUDE.md` | `## 禁止事項`、`## 隱私規則` | 核心安全約束，不能頻繁變動 |
+| `CLAUDE.md` | `## 硬防線` | 核心安全約束，不能頻繁變動 |
 | `docs/architecture/invariants.md` | `INV-GIT-*` | Git 規則已穩定，輕易改動風險大 |
 | `.claude/hooks/pre-tool-use-guard.py` | enforce 邏輯 | 誤改可能導致安全漏洞 |
 
@@ -136,8 +138,4 @@ D8 = 5 分 → Harness 達到 Level 5 SkillOpt-Ready。
 
 ## 引用此檔的位置
 
-- `docs/plans/PLANS.md` §6 Integration（新增 skillopt-loop 行）
-- `agent_docs/AI-TEAM-REGISTRY.md`（workflow-optimizer agent 引用）
-- `CLAUDE.md`（在週回顧工作流中引用）
-- `.claude/skills/pr-retro/SKILL.md`（step 5）
-- `.claude/skills/harness-eval/SKILL.md`（D8 說明）
+（尚無任何檔案引用本協議）

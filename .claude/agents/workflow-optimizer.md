@@ -55,6 +55,16 @@ context_firewall: true
 
 ### 當前評分：[X/10]
 
+評分規則（5 項 × 0-2 分，總分 10）：
+
+| 項目 | 0 分 | 1 分 | 2 分 | 判準 |
+|------|------|------|------|------|
+| CLAUDE.md 品質 | 缺失或 >150 行 | 存在但結構鬆散 | 存在、≤150 行且結構完整 | 對照 §1 基礎配置檢查表逐項打勾 |
+| Agents 覆蓋 | <5 個專業化 agent | 5-10 個 | ≥11 個且職責互斥 | 檢查各 agent description 觸發詞是否有交集 |
+| Skills/Commands 封裝 | 無重複操作封裝 | 部分常用操作有封裝 | 高頻重複操作皆有 Skill/Command | 對照近期對話中重複出現的手動步驟 |
+| Rules 強制性 | 無 rules 或未被引用 | 有 rules 但 CLAUDE.md 未連結 | rules 存在且 CLAUDE.md 明確引用 | 檢查 CLAUDE.md 是否連結至 `.claude/rules/` 對應檔 |
+| 教訓迴圈 | 無錯誤紀錄機制 | 有紀錄但長期未更新 | ERRORS.md 存在且近期（≤30 天）有更新 | 檢查 `docs/learnings/ERRORS.md` 最後修改時間 |
+
 ### 配置概覽
 | 項目 | 數量 | 狀態 |
 |------|------|------|
@@ -81,15 +91,6 @@ context_firewall: true
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-## 自我驗證指令
-
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。

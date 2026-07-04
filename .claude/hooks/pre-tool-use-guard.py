@@ -2,7 +2,7 @@
 """PreToolUse guard — enforces hard invariants by blocking tool calls.
 
 Per ADR-0001 D5 this is the ONLY hook that runs in enforce mode in
-Phase D. It blocks (exit 1) the small set of operations that are
+Phase D. It blocks (exit 2) the small set of operations that are
 unambiguously dangerous on this repo, with no expected false positives:
 
   INV-GIT-002  git commit on master/main
@@ -17,7 +17,9 @@ subprocess (cached via current_branch helper, 2s timeout).
 
 Exit codes:
   0  — pass through, no issue
-  1  — BLOCK the tool call; stderr message returned to Agent
+  2  — BLOCK the tool call; stderr message returned to Agent
+       (Claude Code hook protocol: exit 2 = blocking error;
+        exit 1 = non-blocking, the tool call would STILL RUN)
 """
 from __future__ import annotations
 
@@ -35,16 +37,22 @@ from _lib import (  # noqa: E402
 HOOK_NAME = "pre-tool-use-guard"
 
 # Verbs that read file content. Word boundary is applied at the verb level.
+# `source` and `.` (dot) are env-loading variants — note the dot variant
+# must be matched as a standalone token (we do this by requiring its leading
+# context separately in _DOT_SOURCE_LEAD).
 _READ_VERBS_RE = (
     r"(?:cat|less|more|head|tail|grep|egrep|fgrep|zgrep|"
     r"awk|gawk|sed|gsed|xxd|od|hexdump|strings|tee|cp|mv|rsync|"
     r"python\d*|ruby|perl|node|deno|"
     r"source)"
 )
-# Standalone "." as a shell builtin (POSIX dot-source).
+# Standalone "." as a shell builtin (POSIX dot-source). Must be a token,
+# i.e. preceded by start/space/`;` and followed by space.
 _DOT_SOURCE = r"(?:^|[\s;&|`])\.\s+"
 
-# Filename patterns for sensitive files.
+# Filename patterns for sensitive files. The leading "/" is optional so both
+# "cat ./.env" and "cat /etc/.env" hit. .env.local / .env.production are
+# caught by the optional dotted suffix.
 _SECRET_FILES = [
     (r"\.env(?:\.[A-Za-z0-9_-]+)?", "READ_DOTENV", ".env (含密鑰)"),
     (r"local\.properties", "READ_LOCAL_PROPERTIES", "local.properties"),
@@ -59,12 +67,37 @@ _SECRET_FILES = [
     (r"[\w.-]*[Cc]redential[\w.-]*", "READ_CREDENTIAL_FILE", "*credential* file"),
 ]
 
+# Filename appears after a path-safe leading char (start-of-string, whitespace,
+# `<`, `=`, `(`, `;`, quotes, etc.). Quotes are included so `python -c
+# 'open(".env")'` is detected.
 _FILE_LEAD = r"(?:^|[\s<>|;&=`(\"'])"
 _PATH_PREFIX = r"(?:[\w./-]*?/)?"
+# Trailing position: end of string or any shell metachar / whitespace.
 _FILE_TRAIL = r"(?=[\s<>|;&)\"'`,]|$)"
 
 
 def _build_secret_deny_patterns() -> list[tuple[re.Pattern, str, str]]:
+    """Synthesize secret-read deny patterns covering many shell verbs.
+
+    Four families per file:
+    1. `<verb> ... <file>` — explicit read commands.
+    2. `<file>` after `<` redirect — stdin redirect (any consumer).
+    3. `. <file>` / `source <file>` env-loading.
+    4. `git add ... <file>` — staging a secret file (INV-SEC-003).
+
+    Word-boundary issues: `.env` starts with non-word `.` so we cannot use
+    `\\b` before the dot; we anchor on shell metachars via _FILE_LEAD.
+
+    Family 4 design note: we cannot practically shell out to `git diff
+    --cached --name-only` here — the hook must stay a pure, fast regex pass
+    (no subprocess budget beyond the one cached `git branch --show-current`
+    call), and PreToolUse only ever sees the literal command string, not the
+    resulting index state. So we match on the command text itself
+    (`git add ... <secret-file>`); this only catches secrets named on the
+    command line, not e.g. `git add -A` sweeping one in incidentally. That
+    residual gap is accepted and covered by code-reviewer + human review
+    before merge, per INV-SEC-003's HOOK note in invariants.md.
+    """
     patterns: list[tuple[re.Pattern, str, str]] = []
     for fpat, code, desc in _SECRET_FILES:
         rx_verb = re.compile(
@@ -76,9 +109,13 @@ def _build_secret_deny_patterns() -> list[tuple[re.Pattern, str, str]]:
         rx_redir = re.compile(
             rf"<\s*{_PATH_PREFIX}{fpat}{_FILE_TRAIL}"
         )
+        rx_gitadd = re.compile(
+            rf"\bgit\s+(?:[^|;&\n]+\s+)?add\b[^|;&\n]*?{_FILE_LEAD}{_PATH_PREFIX}{fpat}{_FILE_TRAIL}"
+        )
         patterns.append((rx_verb, code, f"禁止讀取 {desc}"))
         patterns.append((rx_dot, f"{code}_DOT", f"禁止以 . (dot-source) 載入 {desc}"))
         patterns.append((rx_redir, f"{code}_REDIR", f"禁止以 stdin 重導向讀取 {desc}"))
+        patterns.append((rx_gitadd, f"{code}_GITADD", f"禁止 git add {desc}（INV-SEC-003）"))
     return patterns
 
 
@@ -210,7 +247,7 @@ def main() -> int:
                 f"Command preview: {command[:200]}\n"
                 f"See docs/architecture/invariants.md for details.\n"
             )
-            return 1
+            return 2
 
     # 2) dynamic: git commit on master/main
     hit = check_git_commit_on_master(command)
@@ -226,7 +263,7 @@ def main() -> int:
             f"[harness/{HOOK_NAME}] BLOCKED ({code}): {reason}\n"
             f"Command preview: {command[:200]}\n"
         )
-        return 1
+        return 2
 
     log_event(HOOK_NAME, "pass", tool=tool, command_preview=command[:80])
     return 0

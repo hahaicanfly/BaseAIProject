@@ -69,7 +69,7 @@ context_firewall: true
 ```markdown
 ## Code Review Report: [PR 標題 / 功能名稱]
 
-**整體結論**: APPROVE / APPROVE WITH COMMENTS / REQUEST CHANGES
+**Decision**: Pass / Block / Conditional Pass
 
 ---
 
@@ -97,20 +97,6 @@ context_firewall: true
 
 ---
 
-## Harness 交接協議
+## 交接協議
 
-完成任務時必須遵守：
-
-1. **必讀**：對應 `docs/plans/active/F-NNN-*.md` §3 Constraints + §5 Verification
-2. **交接標記**：final response 必須以下列三者之一結尾：
-   - `[HANDOFF: <next-agent>]`
-   - `[VERIFY_FAILED: <INV-id-or-reason>]`
-   - `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-
-詳見 `.claude/protocols/review-protocol.md`
-
-## 自我驗證指令
-
-- [ ] 讀 `docs/architecture/invariants.md` 並列出本次 task 涉及的 INV-id
-- [ ] 跑 ExecPlan §5 Verification Strategy 的所有指令
-- [ ] 確認 `git branch --show-current` 不為 master/main
+交接 marker、自檢與 invariants 檢查規範見 `.claude/protocols/handoff-protocol.md`。final response 最後一行必須是 [HANDOFF: <target>] / [VERIFY_FAILED: <原因>] / [HUMAN_ATTENTION_REQUIRED: <原因>] 之一。另見 `.claude/protocols/review-protocol.md`。
