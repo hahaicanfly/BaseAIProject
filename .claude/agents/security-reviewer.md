@@ -51,25 +51,30 @@ bearer, token, auth[_-]?token, private[_-]?key
 
 ## 輸出格式
 
+嚴重度採用 `.claude/protocols/review-protocol.md` 正典分級（Blocker/Warning/Suggestion/Praise）。內部風險評級對映如下：Critical/High → Blocker，Medium → Warning，Low → Suggestion。
+
 ```markdown
 ## 安全審計報告：[範圍/日期]
 
 ### 風險摘要
 | 嚴重度 | 數量 |
 |--------|------|
-| Critical | X |
-| High | X |
-| Medium | X |
-| Low | X |
+| Blocker | X |
+| Warning | X |
+| Suggestion | X |
 
 ### 發現問題
 
-#### [CRITICAL] 問題標題
+#### [Blocker] 問題標題
 - **位置**：`path/to/file:line`
 - **描述**：[問題詳述]
 - **風險**：[可能造成的影響]
 - **修復建議**：[具體修復方式]
 - **參考**：[CWE/OWASP 編號]
+
+## Decision
+
+- **Pass / Block / Conditional Pass**
 
 ### 結論
 [整體安全狀態評估]

@@ -69,7 +69,7 @@ context_firewall: true
 ```markdown
 ## Code Review Report: [PR 標題 / 功能名稱]
 
-**整體結論**: APPROVE / APPROVE WITH COMMENTS / REQUEST CHANGES
+**Decision**: Pass / Block / Conditional Pass
 
 ---
 

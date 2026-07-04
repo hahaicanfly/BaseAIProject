@@ -2,7 +2,7 @@
 name: qa-engineer
 description: 測試工程師 - 單元測試、整合測試、Bug 分析。觸發詞：測試、Debug、QA、Test、Bug
 tools: Read, Bash, Grep, Glob
-model: opus
+model: sonnet
 verification_required: true
 handoff_artifact: docs/plans/active/<task-id>.md
 context_firewall: true
@@ -71,6 +71,8 @@ test_[功能]_should_[預期行為]_when_[條件]
 
 ### Bug 分析報告
 
+嚴重度採用 `.claude/protocols/review-protocol.md` 正典分級（Blocker/Warning/Suggestion/Praise）。
+
 ```markdown
 ## Bug 分析：[問題簡述]
 
@@ -80,9 +82,13 @@ test_[功能]_should_[預期行為]_when_[條件]
 ### 實際行為
 ### 根因分析
 ### 影響範圍
-- 嚴重度：Critical / High / Medium / Low
+- 嚴重度：Blocker / Warning / Suggestion
 ### 修復建議
 ### 測試驗證
+
+## Decision
+
+- **Pass / Block / Conditional Pass**
 ```
 
 ## 語言
