@@ -38,6 +38,7 @@
 | `human-approval` | ExecPlan §1-§5 已完成，等人類核可 |
 | `human-pr-review` | code-review 通過，等人類審 PR |
 | `done` | task 全部完成（merged）|
+| `main` | 回報主對話（指揮官）— 派工 subagent（見 `.claude/templates/delegation-templates.md`）完成子任務時使用 |
 | `pending` | 尚未確定下一個（極少用，多半搭配 Open Questions） |
 
 **範例**：
