@@ -1,12 +1,12 @@
 ---
 name: skill-creator
-description: 從重複操作中識別並封裝新 Skill、優化既有 Skill 描述與觸發準確度，並可執行 eval 衡量效能；當使用者要建立、修改或評測 Skill 時觸發。
+description: （基礎版，已被 skill-creator-plus 取代）僅在使用者明確輸入 /skill-creator 指令時使用；任何「建立/優化/評測 skill」的需求一律改用 skill-creator-plus。
 ---
 
 # Skill: skill-creator
 
-> **用途**：從重複操作中識別並封裝新的 Skill，減少未來 prompt 冗餘。
-> **觸發**：`/skill-creator`
+> ⚠ 本檔為基礎版存根：完整流程（意圖捕捉、互斥檢查、機械驗證、觸發測試、eval 迭代）在 `.claude/skills/skill-creator-plus/SKILL.md`，請改用該版。
+> **觸發**：`/skill-creator`（僅顯式指令）
 > **Agent**：workflow-optimizer（sonnet）
 
 ## 觸發條件

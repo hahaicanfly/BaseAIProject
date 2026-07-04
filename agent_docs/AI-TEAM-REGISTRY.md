@@ -29,7 +29,7 @@
 
 ---
 
-## Skills — 16
+## Skills — 17
 
 | Skill | 一句話描述 |
 |-------|-----------|
@@ -44,7 +44,8 @@
 | `pr-retro` | 每次 PR merge 後自動萃取教訓並寫入 ERRORS.md Pending Review，驅動 skill 文件持續優化 |
 | `pr-review-cycle-mob` | 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程。需要成本分級 cascade 策略時用 |
 | `security-audit` | 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 OWASP 標準檢查 |
-| `skill-creator` | 從重複操作中識別並封裝新 Skill、優化既有 Skill 描述與觸發準確度，並可執行 eval 衡量效能 |
+| `skill-creator` | （基礎版存根，已被 skill-creator-plus 取代）僅在使用者明確輸入 /skill-creator 指令時使用；任何建立/優化/評測 skill 的需求一律改用 skill-creator-plus |
+| `skill-creator-plus` | 引導完整的 skill 建立流程——意圖捕捉、重疊檢查、撰寫、機械驗證、觸發測試到 registry 登記，含 eval 迭代方法。取代基礎版 skill-creator |
 | `spectra-amplifier` | 將薄弱的需求描述或 PRD 草稿強化為每項需求皆附可驗證 acceptance criteria 的完整規格 |
 | `tdd-workflow` | 執行 Red → Green → Refactor 的測試驅動開發流程，用於核心業務邏輯與高可靠性需求 |
 | `techdebt-scanner` | 系統性掃描專案技術債（TODO/FIXME、複雜函式、重複程式碼等），產出分級優先報告 |
