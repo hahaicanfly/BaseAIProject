@@ -1,0 +1,6 @@
+# Backup copies created by harness-maintenance protocol (§4); git history is the real backup
+*.bak
+*.bak2
+
+# macOS
+.DS_Store
