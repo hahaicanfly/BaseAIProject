@@ -1,72 +1,34 @@
 # 安全政策
 
-> **適用範圍**：所有 agent 在處理機敏資訊、提交代碼、執行 shell 命令時必須遵守本政策。
+> 常駐硬規則見 `.claude/rules/security.md` 與 `docs/architecture/invariants.md` INV-SEC-*；本檔只放延伸說明與範例。
 > **更新策略**：當發現新類型的安全問題時，同步更新 `docs/architecture/invariants.md` 的 INV-SEC-* 區塊。
 
 ---
 
-## 機敏資訊保護
+## 金鑰管理策略（延伸範例）
 
-### 絕對禁止
-
-1. **硬編碼金鑰 / 密碼 / Token**
-
-   ```
-   # ❌ 禁止
-   API_KEY = "sk-ant-api03-xxxxx"
-   DB_PASSWORD = "my_secret_password"
-
-   # ✅ 正確：從環境變數或設定檔讀取
-   API_KEY = os.environ["API_KEY"]
-   DB_PASSWORD = config.get("database", "password")
-   ```
-
-2. **提交敏感檔案**（`pre-tool-use-guard.py` 強制阻擋）
-   - `.env`
-   - `*.pem`, `*.key`, `*.keystore`, `*.p12`
-   - `*secret*`, `*credential*`, `*password*`
-   - `local.properties`（如果包含 API key）
-   - `google-services.json`（若包含金鑰）
-
-3. **日誌洩漏**
-
-   ```
-   # ❌ 禁止
-   logger.debug(f"Request with key: {api_key}")
-
-   # ✅ 正確
-   logger.debug("Request sent")
-   ```
-
-### 金鑰管理策略
-
-#### 開發環境
+### 開發環境
 ```bash
 # .env（不提交，加入 .gitignore）
 API_KEY=your_key_here
 DB_PASSWORD=your_password_here
 ```
 
-#### 範本檔案
+### 範本檔案
 ```bash
 # .env.template（提交）
 API_KEY=your_api_key_here
 DB_PASSWORD=your_password_here
 ```
 
-#### CI/CD 環境
+### CI/CD 環境
 - 使用平台 Secrets（GitHub Secrets、GitLab CI Variables 等）
 - 使用環境變數注入
 - 不在 workflow / pipeline 配置檔中明文存放
 
 ---
 
-## 代碼安全
-
-### 輸入驗證
-- 驗證所有外部輸入（使用者輸入、API 回應、檔案上傳）
-- 限制上傳檔案大小（防止 DoS）
-- JSON 解析必須有錯誤處理
+## 代碼安全延伸
 
 ### API 安全
 - 所有對外通訊使用 HTTPS
@@ -74,10 +36,10 @@ DB_PASSWORD=your_password_here
 - 錯誤回應不洩漏內部資訊（stack trace、DB schema 等）
 - 實作 rate limiting
 
-### 依賴管理
-- 定期更新依賴（建議使用 Dependabot / Renovate）
-- 新增依賴前審查授權與安全性
-- 鎖定依賴版本（lock file 入版控）
+### 依賴管理範例
+基本原則見 `.claude/rules/security.md`；工具實務：
+- 使用 Dependabot / Renovate 自動化更新提醒
+- Lock file 入版控以鎖定依賴版本
 
 ---
 
@@ -119,10 +81,9 @@ curl ... | python
 
 ---
 
-## 發現安全問題時
+## 發現安全問題時（延伸步驟）
 
-1. 立即通知用戶（`[HUMAN_ATTENTION_REQUIRED: security issue found]`）
-2. 不執行可能造成洩漏的操作
-3. 建議具體修復方案
-4. 若已洩漏，建議立即輪換金鑰
-5. 記錄到 `docs/learnings/ERRORS.md` 的 Security / Auth 分類
+基本流程見 `.claude/rules/security.md`；額外要求：
+1. 若已洩漏，建議立即輪換金鑰
+2. 記錄到 `docs/learnings/ERRORS.md` 的 Security / Auth 分類
+3. 以 `[HUMAN_ATTENTION_REQUIRED: security issue found]` 通知用戶
