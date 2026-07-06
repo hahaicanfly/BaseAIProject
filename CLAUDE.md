@@ -12,7 +12,7 @@
 ## Quick Commands
 
 ```bash
-# {{填入專案建構/測試/lint 指令}}
+# {{填入專案建構/測試/lint 指令}} ← fork 後第一批必填（可執行驗證指令是成功率最大槓桿）；環境初始化範本：.claude/templates/init.sh.template
 git branch --show-current   # 動手前確認不在 master/main
 ```
 
@@ -30,7 +30,8 @@ git branch --show-current   # 動手前確認不在 master/main
 1. 跨模組 / API 變更 / 大規模重構 → 建 ExecPlan（`docs/plans/active/`，規格見 `docs/plans/PLANS.md`），**等人類核可**
 2. 其餘非瑣碎任務（新功能、多檔修改、刪檔）→ Plan Mode 提計劃，同意後執行
 3. 單檔 < 20 行、已定位的 bug 修復、格式調整 → 直接做
-4. 永遠適用：改檔前必先 Read；未經驗證不得宣稱完成
+4. 驗收條件無法機械化（品味／商業判斷）→ 產出候選＋trade-off 交人選（judgment-rubrics §6），不進實作迴圈
+5. 永遠適用：改檔前必先 Read；未經驗證不得宣稱完成
 
 ## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）
 
