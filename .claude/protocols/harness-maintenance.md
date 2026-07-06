@@ -73,6 +73,28 @@
 
 **精簡的方法**是概念抽象化：5 條同類具體教訓 → 1 條規則 + 1 個代表範例；禁止用「刪掉舊的」代替「合併同類」。
 
-## 6. 本協議自身
+## 6. 新增／修改 agent 或 skill 的品質關卡
+
+- **Skill** → 走 `.claude/skills/skill-creator-plus/SKILL.md` 全流程（重疊檢查、雙向觸發測試、baseline 對照 eval 都在裡面，本節不重複）。
+- **Agent**（`.claude/agents/*.md`）→ 三關，證據附在該次 commit/PR 描述：
+  1. **前置重複審查**：動手前核對 `agent_docs/AI-TEAM-REGISTRY.md` 與 `.claude/agents/`——職責重疊者擴充既有檔，不另建新檔（防「同角色不同名字」堆積，= 腐化表「正典再分裂」的事前攔截）
+  2. **雙向觸發測試**：列 8-10 個「應觸發」＋ 8-10 個「不應觸發」情境逐一核對 description/觸發詞；與既有 agent 觸發詞衝突視為 FAIL，加互斥限定詞後重測
+  3. **Baseline 對照**（改動行為指引時）：先用改動前版本跑一個代表性任務記錄失敗模式，改後重跑同任務逐項對照有改善；觀察到的規避話術補進 judgment-rubrics §7 候選（經 ERRORS.md 管線，不直接改紅級檔）
+
+## 7. Harness 體檢五維度（`/harness-eval` 與季度稽核的檢查框架）
+
+五個子系統缺一即不完整（來源：walkinglabs/learn-harness-engineering；實驗顯示 Feedback 是成功率最大槓桿）：
+
+| 維度 | 檢查問題 | 本專案對應 |
+|------|---------|-----------|
+| Instructions | CLAUDE.md ≤100 行、無死引用、正典無矛盾 | CLAUDE.md＋`.claude/rules/` |
+| Tools | agent 權限最小夠用，不因噎廢食關掉 shell | agents frontmatter `tools` |
+| Environment | 環境自描述可重現：init 腳本可跑、依賴有 lockfile | `.claude/templates/init.sh.template` 填實版 |
+| State | 長任務有進度檔、session 首尾讀寫交接 | ExecPlan＋SESSION-HANDOFF＋`state/` |
+| Feedback | 可執行驗證指令已填實且真的被跑 | CLAUDE.md Quick Commands＋驗證不自驗 |
+
+定位弱點用**失敗歸因**（這次失敗是任務不清？context 不足？環境不可重現？驗證缺失？狀態壞掉？），把票投給出現最多次的維度；不是憑感覺加規則。
+
+## 8. 本協議自身
 
 本檔屬紅級。發現本協議有錯或不合用：記入 ERRORS.md 並在回報中提出，不要自行修改。
