@@ -72,7 +72,7 @@ grep -l "關鍵觸發詞" .claude/skills/*/SKILL.md   # 誰已經搶了這些詞
 ## Step 4：機械驗證 + 觸發測試（驗證不自驗）
 
 1. 跑 `python3 .claude/skills/skill-creator-plus/scripts/validate_skill.py .claude/skills/<name>`，全綠才繼續。
-2. 派一個 **fresh-context subagent**（照 `.claude/templates/delegation-templates.md` §6），只給它「使用者會說的觸發句」，驗收條件：它回報會選用哪個 skill 及理由。病因鑑別：should-trigger 句沒中 → description 缺原話觸發詞，加詞；should-not 句誤中 → 缺互斥限定詞，加限定。改完重測。
+2. 派一個 **fresh-context subagent**（照 `.claude/templates/delegation-templates.md` §6），只給它「使用者會說的觸發句」——**雙向各 8-10 條**：should-trigger（含口語與 typo 變體）＋ should-not（相鄰 skill 的觸發句、字面相似但用途不同的句子）。驗收條件：它回報會選用哪個 skill 及理由，雙向全數正確才算過。病因鑑別：should-trigger 句沒中 → description 缺原話觸發詞，加詞；should-not 句誤中 → 缺互斥限定詞，加限定。改完重測。
 3. 若輸出客觀可驗證：跑一輪最小 eval——同 turn 平行派兩個 subagent（一個給 skill 全文、一個不給）做同一任務，對照輸出。詳細方法（assertions、near-miss 負例、停止條件）見 `references/eval-loop.md`。
 
 ## Step 5：落地登記
