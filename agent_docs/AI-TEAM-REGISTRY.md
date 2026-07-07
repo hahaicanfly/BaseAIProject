@@ -37,7 +37,7 @@
 | `code-review` | 對 PR diff 進行標準代碼審查，涵蓋安全性、品質與架構合規。單一 PR 的標準審查 |
 | `context-aggregator` | 聚合 MCP 記憶、Git 歷史、本地檔案等多來源資訊，產出結構化摘要以利 session 交接與工作延續 |
 | `feature-pipeline` | 大型新功能的端對端開發流水線，從需求分析、架構設計、UI/UX 到多代理審查一次串接 |
-| `frontend-design` | 以字體、色彩、動效、空間構成等設計哲學為核心，產出高品質 UI 元件與視覺設計指引（stub，尚無完整實作） |
+| `frontend-design` | 以字體、色彩、動效、空間構成等設計哲學為核心，產出高品質 UI 元件與視覺設計指引 |
 | `gen-app-map` | 掃描專案的進入點、路由、資料層與狀態管理，產出 app-map.json（AI 可讀 context primer）與 app-map.html（人類可讀視覺化），作為新 debug/重構 session 的輕量專案地圖。技術棧無關模板，fork 後需依專案填實掃描目標表 |
 | `harness-eval` | 掃描目標 repo，評估 Harness Engineering 成熟度並輸出 0–100 分數、缺口清單與優先改善建議 |
 | `multi-agent-review` | 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查。高風險/核心邏輯變更，需要三專家並行時用；一般 PR 用 code-review |
@@ -49,7 +49,7 @@
 | `spectra-amplifier` | 將薄弱的需求描述或 PRD 草稿強化為每項需求皆附可驗證 acceptance criteria 的完整規格 |
 | `tdd-workflow` | 執行 Red → Green → Refactor 的測試驅動開發流程，用於核心業務邏輯與高可靠性需求 |
 | `techdebt-scanner` | 系統性掃描專案技術債（TODO/FIXME、複雜函式、重複程式碼等），產出分級優先報告 |
-| `ui-ux-pro-max` | 產出完整設計系統，涵蓋色彩調色盤、字體配對、UI 風格與 UX 準則，支援多種前端技術棧（stub，尚無完整實作） |
+| `ui-ux-pro-max` | 產出完整設計系統，涵蓋色彩調色盤、字體配對、UI 風格與 UX 準則，支援多種前端技術棧 |
 
 ---
 
