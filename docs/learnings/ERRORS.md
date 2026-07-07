@@ -29,6 +29,12 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-07] 模板抽取時 10 個 skill 被靜默大綱化，其中 2 個標 stub、8 個無任何標記
+- 情境：使用者發現多個 skills 內容空泛，回查母專案 Menu-Android 比對
+- 錯誤：抽取模板時 10 個 SKILL.md 從 97-394 行砍到 31-47 行（如 security-audit 302→40），附檔（security-audit references ×4、ui-ux-pro-max scripts+data ×27）完全遺漏；僅 frontend-design/ui-ux-pro-max 標了 stub，其餘 8 個看起來像完整 skill，實為空殼——「文件說有能力 ≠ 有能力」的 skill 版
+- 教訓：抽取/移植文件集時產出「來源 vs 目標行數對照表」附在 commit，行數低於來源 70% 的每一檔必須標註原因（刻意精簡/待補/stub）；無標記的縮水視為遺漏
+- 建議去向：留在 ERRORS；若 fork 流程文件化，把「對照表」寫進 NEW-PROJECT-VALIDATION.md 檢查項
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
