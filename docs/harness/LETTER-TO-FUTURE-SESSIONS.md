@@ -35,6 +35,7 @@
 1. **skillopt-loop.md 去留決策**（需使用者決定）：已標為「未接線設計草案」並清除虛構引用（2026-07-04 第三輪）。選項：(a) 保留為草案備將來接線 (b) 刪除（紅級刪檔需同意）。
 2. **session-handoffs 首次運轉驗證**（觀察項）：`state/session-handoffs/` 目前為空——本 session 從未觸發 PreCompact。下次發生 compaction 時，核實該目錄出現新快照檔；若沒有，pre-compact-snapshot.py 可能有同構失效（參照 hooks 煙霧測試教訓）。
 3. **Menu-Android guard 修復已完成但未 commit**（2026-07-04）：exit 2 修復與煙霧測試通過，改動留在該 repo `feat/ga-event-tracking` working tree，隨該分支一起 commit 即可。
+4. **rules 常駐總量超線**（需使用者決定）：2026-07-06 機制吸收後 rules 合計 663 行 > 600 觸發線（maintenance §5）。提案：`modularity.md`（104 行，代碼設計指引，非首決策必需）降為非常駐移入 agent_docs/。紅級，等同意後執行。
 
 > 2026-07-04 三輪優化全部完成（詳見 §四），26 個原子 commit 在 feat/harness-institution，未 push。
 
@@ -44,3 +45,4 @@ A 診斷書（docs/harness/DIAGNOSIS.md）、B 重寫 CLAUDE.md（舊版 .bak）
 後續批次（同日，workflow 執行、fresh-context 驗收 PASS）：14 agent 檔樣板收斂（每檔 -9~-20 行）、15 個 SKILL.md 補 YAML frontmatter、AI-TEAM-REGISTRY.md 由 frontmatter 重生成（修 9 處模型矛盾、補 code-reviewer、計數 14 agents/15 skills）、Life-Vault 與 menu.jpg 殘留清除。
 第三輪（同日，三路深度審計→六路實作→隔離驗收 PASS）：四個 review agent 輸出統一至 review-protocol 詞彙；tech-lead 重定位為架構顧問（不做 PR gating）；研究三人組觸發詞互斥化＋輸出模板；ui-ux-designer 併入三階段 Phase 3；模型再平衡 opus 10→4（architect/pm/security-reviewer/plan-reviewer 留 opus）；skillopt-loop 降級為未接線草案（虛構引用清除）；guard 新增 INV-SEC-003 staging 攔截（實測 4/4）；retro 墓碑帳本 state/retro-hashes.jsonl + 30/90 天 rotate；知識地圖五層表（INDEX.md）；multi-agent-guide 去重；TECHNICAL-REFERENCE 最小填寫清單。
 同日事故與修復：驗收 subagent 超範圍誤刪未追蹤的《AI 基礎架構優化目標說明.md》，已從主對話 context 逐字重建；教訓進 ERRORS.md，delegation-templates 補破壞性指令黑名單。
+第四輪（2026-07-06，外部 harness 研究吸收）：並行研究 7 個外部 repo（fable-commander／obra-superpowers／revfactory-harness／walkinglabs 教程／everything-claude-code／aden-hive／deer-flow，星數與內容均實地查證），吸收九項機制：派工範圍宣告＋終止條件（delegation-templates）、驗收 FAIL 限客觀條件＋非阻斷建議欄（model-dispatch §5）、gate-softening 禁令與無改善熔斷與 Red Flags 話術表（judgment-rubrics §2/§3/§7）、agent/skill 品質關卡與五維度體檢（harness-maintenance §6/§7）、init.sh.template、CLAUDE.md 決策樹可驗證性分流、skill-creator-plus 雙向觸發測試量化。7 個原子 commit，隔離驗收 8/8 PASS，ff-merge 入 master。
