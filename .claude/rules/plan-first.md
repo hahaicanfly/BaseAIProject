@@ -1,71 +1,71 @@
 ---
 name: plan-first
-description: 非瑣碎任務先進 Plan Mode（ExecPlan 範圍除外，見 CLAUDE.md 決策樹）
+description: Non-trivial tasks must enter Plan Mode first (except ExecPlan scope — see CLAUDE.md decision tree)
 always: true
 ---
 
 # Plan First Rule
 
-## 原則
+## Principle
 
-**執行任何非瑣碎任務前，必須先進入 Plan Mode，撰寫計劃供用戶審查。**
+**Before executing any non-trivial task, you must first enter Plan Mode and write a plan for the user to review.**
 
-> 入口以 CLAUDE.md「動手前決策樹」為準：跨模組／API 變更／大規模重構走 **ExecPlan**（`docs/plans/PLANS.md`，需人類核可），不適用本檔；本檔涵蓋其餘非瑣碎任務。
+> Entry point follows CLAUDE.md's "Decision Tree Before Acting": cross-module / API changes / large-scale refactors go through **ExecPlan** (`docs/plans/PLANS.md`, requires human approval) and are not covered by this file; this file covers all other non-trivial tasks.
 
-## 適用情境
+## Applicable Situations
 
-以下情境必須先寫計劃（已落入 ExecPlan 範圍者走 ExecPlan，不重複做）：
-- 新功能實作
-- 影響多個檔案的修改
-- 涉及安全或成本的決策
-- 刪除或移動檔案
+The following situations require a plan first (situations already covered by ExecPlan scope go through ExecPlan, not duplicated here):
+- New feature implementation
+- Changes affecting multiple files
+- Decisions involving security or cost
+- Deleting or moving files
 
-## 例外情境
+## Exceptions
 
-以下可直接執行：
-- 單一檔案的小修改（< 20 行）
-- 格式調整
-- 註解更新
-- 明確的 bug 修復（已定位問題）
-- 用戶明確指示「直接執行」
+The following can be executed directly:
+- Small single-file changes (< 20 lines)
+- Formatting adjustments
+- Comment updates
+- A clearly identified bug fix (root cause already located)
+- User explicitly instructs "just do it"
 
-## 計劃內容
+## Plan Content
 
 ```markdown
-## 執行計劃：[任務名稱]
+## Execution Plan: [Task Name]
 
-### 目標
-[要達成什麼]
+### Goal
+[What to achieve]
 
-### 影響範圍
-- 檔案：[列表]
-- 模組：[列表]
+### Scope
+- Files: [list]
+- Modules: [list]
 
-### 執行步驟
-1. [步驟 1]
-2. [步驟 2]
-3. [步驟 3]
+### Execution Steps
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
 
-### 風險評估
-- [潛在風險及緩解措施]
+### Risk Assessment
+- [Potential risks and mitigations]
 
-### 驗證方式
-- [如何確認完成]
+### Verification Method
+- [How to confirm completion]
 ```
 
-## 工作流程
+## Workflow
 
-1. 分析任務需求
-2. 進入 Plan Mode
-3. 撰寫執行計劃
-4. **等待用戶確認**
-5. 用戶同意後才開始實作
-6. 按計劃執行
-7. 完成後報告結果
+1. Analyze task requirements
+2. Enter Plan Mode
+3. Write the execution plan
+4. **Wait for user confirmation**
+5. Begin implementation only after user agrees
+6. Execute per the plan
+7. Report results on completion
 
-## 為什麼重要
+## Why This Matters
 
-- 確保開發方向符合用戶預期
-- 避免大量無效工作
-- 提供審查和修正的機會
-- 建立可追溯的決策記錄
+- Ensures the direction of development matches user expectations
+- Avoids large amounts of wasted work
+- Provides an opportunity for review and correction
+- Establishes a traceable decision record

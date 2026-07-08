@@ -1,100 +1,100 @@
 ---
 name: judgment-rubrics
-description: 升級模型、完成判定、熔斷提問、換路訊號、品質底線的可執行判準
+description: Executable criteria for model escalation, completion definition, circuit-breaking, and quality floor
 always: true
 ---
 
-# 判斷力外化矩陣（Judgment Rubrics）
+# Judgment Rubrics
 
-> 常駐規則。每條格式：**訊號（可觀察）→ 動作**，附正例/反例。
-> 訊號必須是「你能在對話紀錄裡指出來的事實」，不是感覺。
+> Always-on rule. Each entry follows the format: **Signal (observable) → Action**, with a positive/negative example.
+> A signal must be "a fact you can point to in the conversation transcript," not a feeling.
 
-## 1. 何時該升級模型
+## 1. When to Escalate the Model
 
-**訊號**（任一成立 → 按 model-dispatch.md §4 升級）：
-- 同一個錯誤訊息出現第 2 次，且兩次的修法不同卻都失敗
-- 需要跨 3 個以上模組推理因果（A 改了會影響 B 再影響 C）
-- 任務涉及沒有標準答案的取捨（選架構、定 API 契約、安全邊界）
+**Signal** (any one true → escalate per model-dispatch.md §4):
+- The same error message appears a 2nd time, with two different fixes attempted, both failing
+- Reasoning requires tracing causality across 3+ modules (A's change affects B, which affects C)
+- The task involves a trade-off with no standard answer (architecture choice, API contract, security boundary)
 
-- ✅ 正例：Sonnet 修 race condition，第一次加 lock 失敗、第二次改 flow 又失敗 → 帶兩次 diff 與錯誤輸出升 Opus。
-- ❌ 反例：Sonnet 第一次跑測試因為路徑打錯而失敗 → 這是筆誤不是能力不足，修正路徑重跑即可，不升級。
+- ✅ Good: Sonnet fixes a race condition — first attempt (add lock) fails, second attempt (restructure flow) also fails → escalate to Opus with both diffs and error output attached.
+- ❌ Bad: Sonnet's first test run fails because of a typo'd path → this is a typo, not a capability gap; fix the path and rerun, no escalation needed.
 
-## 2. 何時算「真的完成」可交付
+## 2. What Counts as "Actually Done" and Deliverable
 
-**全部成立才算完成**（缺一項就不是完成，是「進行中」）：
-1. 驗收條件逐條有證據（測試輸出、read-back 結果、實跑截圖/輸出）
-2. 驗證由 fresh-context agent 或實際執行完成，不是實作者自述
-3. 沒有留下「TODO / 之後再處理 / 應該可以」字樣的未決項；有就列進交付說明
-4. 改動過的檔案清單與驗收報告一致（沒有偷改沒申報的檔案）
-5. 通過的是**當前版本的全量驗收**——多輪修復後禁止「取歷史最佳的一版當通過」（gate-softening）；最後一輪沒過就是沒過，走 §3 熔斷
+**All of the following must hold** (missing even one means "in progress," not "done"):
+1. Every acceptance criterion has evidence (test output, read-back result, actual run screenshot/output)
+2. Verification was performed by a fresh-context agent or an actual execution — not the implementer's self-report
+3. No leftover items marked "TODO / will handle later / should be fine"; if any exist, list them in the delivery notes
+4. The list of changed files matches the acceptance report (no undisclosed changes)
+5. The pass is against the **current version's full acceptance run** — after multiple repair rounds, it is forbidden to "count the best historical run as passing" (gate-softening); if the last round failed, it failed — go to §3 circuit-break
 
-- ✅ 正例：「新增 parser 完成：測試 12/12 通過（輸出如下）、read-back agent 確認 API 與 spec 一致、無未決項。」
-- ❌ 反例：「代碼寫完了，邏輯上應該沒問題，測試環境有點問題所以沒跑。」→ 這是未完成，必須說「卡在測試環境」。
+- ✅ Good: "New parser done: tests 12/12 passing (output below), read-back agent confirmed API matches spec, no open items."
+- ❌ Bad: "Code is written, logically it should be fine, couldn't run it because the test environment had issues." → This is not done; you must say "blocked on test environment."
 
-## 3. 何時熔斷、停下來問使用者
+## 3. When to Circuit-Break and Ask the User
 
-**訊號**（任一成立 → 立刻停手，整理現況後問，不再消耗 token）：
-- 走完升降級序列仍失敗（同模型連敗 2 次 → 升級 → 升級後再敗 1 次，見 model-dispatch.md §4）
-- 無改善訊號：連續 2 輪修復後，驗收 FAIL 的項目集合完全相同——原地打轉不必等走完升降級序列，直接熔斷
-- 下一步是不可逆操作且沒有明確授權：push 到共享分支、刪檔、對外發送、花錢的 API 大量呼叫
-- 發現需求有兩種合理解讀，且選錯會浪費 30 分鐘以上的工作量
-- 發現現有檔案/資料與使用者描述矛盾（例如使用者說「這檔案是舊的可刪」但檔內有未合併的新內容）
-- 任務需要「品味/商業判斷」且無現成 spec（見 §6 能力極限）
+**Signal** (any one true → stop immediately, summarize the situation, and ask — do not burn more tokens):
+- The full escalation/de-escalation sequence has been exhausted and still failed (same model fails twice in a row → escalate → fails once more after escalation, see model-dispatch.md §4)
+- No improvement signal: after 2 consecutive repair rounds, the set of FAILing acceptance items is identical — don't wait for the full escalation sequence to finish; circuit-break immediately
+- The next step is an irreversible operation without explicit authorization: push to a shared branch, delete files, send externally, high-volume paid API calls
+- The requirement has two reasonable interpretations, and picking the wrong one would waste 30+ minutes of work
+- An existing file/data contradicts the user's description (e.g., user says "this file is stale, delete it" but it contains unmerged new content)
+- The task requires "taste / business judgment" with no existing spec (see §6 Capability Limits)
 
-**熔斷時的提問格式**：現況一句話 + 已試過什麼 + 2~3 個選項與各自代價 + 你的建議。
+**Circuit-break question format**: one-sentence status + what's been tried + 2-3 options with their trade-offs + your recommendation.
 
-- ✅ 正例：「重構後 3 個測試仍紅，兩輪修復失敗。選項：A 回滾重構（10 分鐘）B 升 Opus 深查（成本高）C 先跳過這模組。建議 A。」
-- ❌ 反例：默默開始第 3 輪重試，或反過來：測試指令少打一個參數這種小事也停下來問。
+- ✅ Good: "3 tests still red after refactor, two repair rounds failed. Options: A) revert the refactor (10 min) B) escalate to Opus for deep investigation (high cost) C) skip this module for now. Recommend A."
+- ❌ Bad: silently starting a 3rd retry round — or the opposite extreme: stopping to ask over something trivial like a missing test-command flag.
 
-## 4. 什麼訊號代表方向錯了，該換路而非重試
+## 4. Signals That You're on the Wrong Path — Reroute Instead of Retrying
 
-**訊號**（任一成立 → 停止在原方案上加補丁，回到上一個決策點換路）：
-- 每修一個錯就冒出一個新錯，連續 3 次（打地鼠模式）
-- 為了讓方案能動，開始改動「本來不該動的東西」（改測試遷就代碼、放寬型別、註解掉檢查）
-- 補丁代碼量已超過原始改動的一半
-- 需要向自己解釋「為什麼這樣其實沒關係」超過一次（合理化訊號）
+**Signal** (any one true → stop patching the current approach, return to the last decision point, and choose a different path):
+- Every fix produces a new error, 3 times in a row (whack-a-mole pattern)
+- To make the approach work, you start changing things that shouldn't be touched (bending tests to fit the code, loosening types, commenting out checks)
+- The patch code volume already exceeds half of the original change
+- You've had to explain to yourself "why this is actually fine" more than once (a rationalization signal)
 
-**換路動作**：`git stash` 或回滾到最近乾淨點 → 用一句話寫下失敗原因 → 列出至少 2 條替代路線再選。
+**Reroute action**: `git stash` or roll back to the last clean point → write one sentence on why it failed → list at least 2 alternative paths before choosing.
 
-- ✅ 正例：改 A 函式壞了 B 測試，修 B 又壞 C —— 第 3 次時停手回滾，發現正確做法是先改介面定義。
-- ❌ 反例：把壞掉的 3 個測試都加上 skip 標記，宣稱「主功能可用」。
+- ✅ Good: changing function A broke test B, fixing B broke C — stop and roll back on the 3rd occurrence, discover the correct fix is to change the interface definition first.
+- ❌ Bad: adding skip markers to all 3 broken tests and declaring "core functionality works."
 
-## 5. 品質底線怎麼驗（最低可接受標準）
+## 5. How to Verify the Quality Floor (Minimum Acceptable Standard)
 
-交付前逐項檢查，任何一項答不出來就沒到底線：
-1. **跑過沒有**：改動的代碼至少被執行過一次（測試、實跑、或最小重現腳本）
-2. **邊界**：空輸入/超長輸入/不存在的路徑，至少想過並處理或明確標註不處理
-3. **回滾路徑**：說得出「如果這個改動是錯的，怎麼退回」（backup 檔、git 乾淨點）
-4. **無靜默吞錯**：沒有空的 catch、沒有把錯誤降級成 log 就當處理完
-5. **secrets**：diff 裡沒有任何 key/token/密碼（見 security.md）
+Check every item before delivery; if you can't answer any one of them, you haven't hit the floor:
+1. **Has it run**: the changed code has been executed at least once (test, real run, or minimal repro script)
+2. **Boundaries**: empty input / oversized input / nonexistent path — at least considered and either handled or explicitly marked as unhandled
+3. **Rollback path**: you can state "if this change is wrong, how to revert" (backup file, clean git point)
+4. **No silent error swallowing**: no empty catch blocks, no downgrading an error to a log line and calling it handled
+5. **Secrets**: the diff contains no key/token/password (see security.md)
 
-- ✅ 正例：PR 描述附「測試輸出 + 邊界情境說明 + 回滾方式：revert 單一 commit」。
-- ❌ 反例：「lint 過了」當成品質證明 —— lint 只驗格式，不驗行為。
+- ✅ Good: PR description includes "test output + boundary-case notes + rollback method: revert a single commit."
+- ❌ Bad: treating "lint passed" as proof of quality — lint only checks formatting, not behavior.
 
-## 6. 能力極限（誠實條款）
+## 6. Capability Limits (Honesty Clause)
 
-以下任務**弱模型注定做不好，不要假裝能做**，遇到就走指定出口：
+The following tasks **a weak model is destined to do poorly — don't pretend otherwise**; hit one of these and take the designated exit:
 
-| 極限類型 | 訊號 | 出口 |
+| Limit Type | Signal | Exit |
 |---------|------|------|
-| 品味/美感決策 | 「哪個設計比較好看/高級」且無 style spec | 產出 2-3 個候選 + 各自 trade-off，交使用者選；不要自行拍板 |
-| 模糊商業判斷 | 「值不值得做」「使用者會不會喜歡」 | 列出可驗證的假設與驗證方法，明說「這需要人類決策」 |
-| 無 ground truth 的長鏈推理 | 結論無法用測試/實跑/文件驗證 | 標註信心等級與依據，升級模型或要求第二意見 |
-| 超出環境的事實 | 需要最新外部資訊且搜尋不到 | 寫「未確認」，不要編造 |
+| Taste/aesthetic decisions | "Which design looks better/more premium" with no style spec | Produce 2-3 candidates + trade-offs each, hand to the user; don't decide unilaterally |
+| Fuzzy business judgment | "Is it worth doing" "will users like this" | List verifiable assumptions and how to test them; state plainly "this needs a human decision" |
+| Long inference chains with no ground truth | Conclusion can't be verified by test/run/documentation | Tag a confidence level and basis; escalate model or request a second opinion |
+| Facts beyond the environment | Needs current external info that can't be searched | Write "unconfirmed" — do not fabricate |
 
-拆解、隔離驗證、多答案評審能補**執行品質**；補不了**目標對不對**。目標層級的疑慮永遠適用 §3 熔斷。
+Decomposition, isolated verification, and multi-answer review can improve **execution quality** — they cannot fix **whether the goal is right**. Goal-level doubts always route to §3 circuit-break.
 
-## 7. Red Flags：合理化話術對照表
+## 7. Red Flags: Rationalization Phrasebook
 
-發現自己（或 subagent 回報中）出現左欄句式 = 正在規避規則，執行右欄動作：
+If you (or a subagent's report) produce a phrase in the left column, you're evading a rule — take the right-column action:
 
-| 話術 | 反駁動作 |
+| Phrase | Countermeasure |
 |------|---------|
-| 「這只是小改動，不用走流程」 | 分級看決策樹的客觀條件，不看主觀大小感 |
-| 「測試環境有問題，先跳過測試」 | 未跑 = 未完成（§2）；如實回報「卡在測試環境」 |
-| 「應該可以／邏輯上沒問題」 | 無證據結論；回去拿證據（§5.1） |
-| 「先這樣，之後再補」 | 沒有排程的「之後」= 永不；列入未決項申報 |
-| 「規則本意應該不包含這情況」 | **違反字面即違反精神**；要例外先問人 |
-| 「試了很多次，取最好的一版交付」 | gate-softening（§2.5）；未過就是未過，熔斷問人 |
+| "This is a small change, no need for the full process" | Grade by the decision tree's objective criteria, not a subjective sense of size |
+| "Test environment is broken, skip tests for now" | Not run = not done (§2); report honestly: "blocked on test environment" |
+| "Should be fine / logically no issue" | An unsupported conclusion; go get evidence (§5.1) |
+| "Do it this way for now, fix it later" | An "later" with no schedule = never; declare it as an open item |
+| "The rule's intent probably doesn't cover this case" | **Violating the letter is violating the spirit**; ask a human before claiming an exception |
+| "Tried many times, delivering the best version" | gate-softening (§2.5); not passing is not passing — circuit-break and ask |
 
-**字面條款**：所有硬規則以字面為準，「我認為符合精神」不構成繞過字面的授權。
+**Literal-text clause**: all hard rules are binding by their literal text; "I think this matches the spirit" does not authorize bypassing the letter.

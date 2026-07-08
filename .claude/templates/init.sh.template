@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# init.sh — 環境自描述與可重現入口（Environment 子系統）
-# fork 本模板後：填實各段、去掉 .template 副檔名、chmod +x、在 CLAUDE.md Quick Commands 引用。
-# 目的：任何新 session/agent 跑這一支就得到可工作環境，並自我驗證。任何一步失敗 = 修好再開工，不帶病開始任務。
+# init.sh — Environment self-description and reproducible entry point (Environment subsystem)
+# After forking this template: fill in each section, drop the .template extension, chmod +x, reference it in CLAUDE.md Quick Commands.
+# Goal: any new session/agent that runs this single script ends up with a working environment and self-verifies it. Any step failing = fix it before starting a task, don't start sick.
 set -euo pipefail
 
-echo "== 1/4 環境需求檢查 =="
-# {{檢查語言/工具版本，例：node --version | grep -q 'v22' || { echo 'FAIL: 需 Node 22'; exit 1; }}}
+echo "== 1/4 Environment requirement check =="
+# {{Check language/tool versions, e.g.: node --version | grep -q 'v22' || { echo 'FAIL: requires Node 22'; exit 1; }}}
 
-echo "== 2/4 依賴安裝（版本必須由 lockfile 鎖定）=="
-# {{例：npm ci ／ pip install -r requirements.lock ／ ./gradlew dependencies}}
+echo "== 2/4 Install dependencies (versions must be pinned by a lockfile) =="
+# {{e.g.: npm ci / pip install -r requirements.lock / ./gradlew dependencies}}
 
-echo "== 3/4 建構 =="
-# {{例：npm run build ／ ./gradlew assembleDebug}}
+echo "== 3/4 Build =="
+# {{e.g.: npm run build / ./gradlew assembleDebug}}
 
-echo "== 4/4 驗證指令（Feedback 子系統；必須與 CLAUDE.md Quick Commands 一致）=="
-# {{例：npm test && npm run lint}}
+echo "== 4/4 Verification command (Feedback subsystem; must match CLAUDE.md Quick Commands) =="
+# {{e.g.: npm test && npm run lint}}
 
 echo "init OK"

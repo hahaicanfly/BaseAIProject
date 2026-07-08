@@ -1,6 +1,6 @@
 ---
 name: parallel-worktree
-description: 多 agent 並行開發時的 git worktree 隔離規則
+description: Git worktree isolation rules for multi-agent parallel development
 always: true
 ---
 
