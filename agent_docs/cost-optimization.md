@@ -1,82 +1,82 @@
-# AI 成本優化指南
+# AI Cost Optimization Guide
 
-> 常駐硬規則見 `.claude/rules/cost-optimization.md` 與 `.claude/rules/model-dispatch.md`；本檔只放延伸說明與範例。
-> **適用對象**：所有 agent（在選擇模型和決定是否發 API 請求時參考）。
-
----
-
-## 模型選用
-
-分級表、升降級路徑、派工規則以 `.claude/rules/model-dispatch.md` 為單一事實源，本檔不重複列表。
+> Standing hard rules live in `.claude/rules/cost-optimization.md` and `.claude/rules/model-dispatch.md`; this file only holds extended notes and examples.
+> **Audience**: all agents (reference when choosing a model or deciding whether to make an API call).
 
 ---
 
-## Prompt Cache 策略
+## Model Selection
 
-### 快取命中最大化
+The tier table, escalation/de-escalation path, and dispatch rules use `.claude/rules/model-dispatch.md` as the single source of truth; this file does not duplicate the table.
 
-- 長系統 prompt（CLAUDE.md、invariants.md）放在訊息**前面**，不要每次重新排列
-- 靜態 context（架構文件、規則）放在動態 context（當前任務）之前
-- 5 分鐘 TTL：若 session 超過 5 分鐘無活動，cache 會失效
+---
 
-### ScheduleWakeup 間隔選擇
+## Prompt Cache Strategy
 
-| 場景 | 建議間隔 | 原因 |
+### Maximizing Cache Hits
+
+- Put long system prompts (CLAUDE.md, invariants.md) at the **front** of the message; don't reorder them each time
+- Put static context (architecture docs, rules) before dynamic context (the current task)
+- 5-minute TTL: if a session is idle for more than 5 minutes, the cache expires
+
+### Choosing a ScheduleWakeup Interval
+
+| Scenario | Recommended interval | Reason |
 |------|---------|------|
-| 等待外部 CI/CD | 60–270s | 保持 cache 暖，輪詢外部狀態 |
-| 等待較長操作 | 1200–1800s | 超出 cache TTL，省一次 cache miss |
-| 避免 300s | — | 剛好 cache 失效但等待太短，最壞情況 |
+| Waiting on external CI/CD | 60–270s | Keeps cache warm while polling external status |
+| Waiting on a longer operation | 1200–1800s | Exceeds cache TTL anyway, so save a cache-miss cycle |
+| Avoid 300s | — | Just past cache expiry but too short a wait — worst case |
 
 ---
 
-## Context Engineering（Token 預算策略）
+## Context Engineering (Token Budget Strategy)
 
-### 三層讀取原則
+### Three-Tier Reading Principle
 
 ```
-第 1 層：讀 index 檔（輕量 ~KB）→ 定位相關頁面
-第 2 層：讀 2-3 個核心文件（中量）→ 組合回答
-第 3 層：只在前兩層不足時，才讀原始源碼（重量）
+Tier 1: Read the index file (lightweight, ~KB) → locate the relevant page
+Tier 2: Read 2-3 core documents (medium weight) → compose the answer
+Tier 3: Only read raw source code (heavyweight) if the first two tiers are insufficient
 ```
 
-### 防止 Context Flooding
+### Preventing Context Flooding
 
-- 優先讀摘要頁而非原始大檔
-- 使用 `grep` 定點讀取而非 `cat` 整個大檔
-- Sub-agent 處理重量任務，保護主 context
-
----
-
-## 邊緣 AI 整合（延伸）
-
-本地可完成的任務清單見 `.claude/rules/cost-optimization.md` 邊緣 AI 優先。額外補充——需要雲端模型的任務：
-
-- 深度語意理解
-- 複雜推理與分析
-- 跨文件綜合
+- Prefer reading summary pages over raw large files
+- Use `grep` for targeted reads instead of `cat`-ing an entire large file
+- Have sub-agents handle heavyweight tasks to protect the main context
 
 ---
 
-## 監控與分析
+## Edge AI Integration (Extended)
 
-### `state/token-usage.jsonl` 追蹤
+See `.claude/rules/cost-optimization.md` "Edge AI First" for the list of tasks that can be done locally. Additional notes — tasks that need a cloud model:
 
-`pre-compact-snapshot.py` 在每次 PreCompact 時自動記錄 token 用量。
-
-**需追蹤的指標**：
-- 每次 API 調用成本
-- cache 命中率（`cache_read` / `input_tokens`）
-- 平均 session token 消耗
-
-### 警告訊號
-
-- `cache_read` 持續為 0 → prompt 順序問題或 session 間隔過長
-- `input_tokens` 飆升 → context flooding，考慮 sub-agent 分拆
-- 同一任務反覆呼叫 → 缺少快取層
+- Deep semantic understanding
+- Complex reasoning and analysis
+- Cross-document synthesis
 
 ---
 
-## 延伸重點
+## Monitoring and Analysis
 
-- Sub-agent 隔離：重量任務用 sub-agent 執行，避免污染主 context
-- 定期審視：每月從 `state/token-usage.jsonl` 分析成本分布
+### `state/token-usage.jsonl` Tracking
+
+`pre-compact-snapshot.py` automatically logs token usage on every PreCompact event.
+
+**Metrics to track**:
+- Cost per API call
+- Cache hit rate (`cache_read` / `input_tokens`)
+- Average session token consumption
+
+### Warning Signs
+
+- `cache_read` staying at 0 → prompt ordering issue or session gaps too long
+- `input_tokens` spiking → context flooding, consider splitting into sub-agents
+- The same task called repeatedly → missing a caching layer
+
+---
+
+## Extended Priorities
+
+- Sub-agent isolation: run heavyweight tasks in a sub-agent to avoid polluting the main context
+- Periodic review: analyze cost distribution from `state/token-usage.jsonl` monthly

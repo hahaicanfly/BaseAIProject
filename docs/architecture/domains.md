@@ -1,13 +1,13 @@
 # {{PROJECT_NAME}} — Domain Architecture
 
-> **角色**：本檔定義系統的領域邊界與變更影響評估表。
-> **使用對象**：architect agent、code-reviewer agent、ExecPlan §3 Constraints 引用。
+> **Role**: This file defines the system's domain boundaries and change-impact assessment table.
+> **Audience**: architect agent, code-reviewer agent, referenced by ExecPlan §3 Constraints.
 
 ---
 
-## 系統架構概覽
+## System Architecture Overview
 
-> TODO：填入你的專案架構描述
+> TODO: fill in your project's architecture description
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -29,47 +29,47 @@
 
 ---
 
-## 領域模組清單
+## Domain Module List
 
-> TODO：根據你的專案填入實際模組
+> TODO: fill in your project's actual modules
 
-| 模組 | 職責 | 依賴 | 影響範圍 |
+| Module | Responsibility | Depends on | Blast radius |
 |------|------|------|---------|
-| `core/` | 核心業務邏輯 | — | 高（其他模組都依賴） |
-| `api/` | API 層 | core | 中 |
-| `ui/` | UI 元件 | api | 低（只影響前端） |
-| `infra/` | 基礎設施（DB/Cache） | — | 高（改動需謹慎） |
+| `core/` | Core business logic | — | High (all other modules depend on it) |
+| `api/` | API layer | core | Medium |
+| `ui/` | UI components | api | Low (affects only the frontend) |
+| `infra/` | Infrastructure (DB/Cache) | — | High (change with care) |
 
 ---
 
-## 變更影響評估表
+## Change-Impact Assessment Table
 
-ExecPlan §3 Constraints 必須引用此表的對應行。
+ExecPlan §3 Constraints must reference the corresponding row of this table.
 
-| 變更類型 | 影響模組 | 需要的額外驗證 | 是否需 multi-agent review |
+| Change type | Affected modules | Extra verification required | Needs multi-agent review? |
 |---------|---------|--------------|--------------------------|
-| API schema 變更 | api, ui, tests | 所有 client 同步更新 | 是 |
-| 資料庫 schema 變更 | infra, core | migration + rollback plan | 是 |
-| 新增 auth 機制 | api, core | security-reviewer | 是 |
-| UI 元件新增 | ui | a11y + responsive check | 否 |
-| 依賴升級 | all | 完整 build + test suite | 視情況 |
-| Config 變更 | infra | 環境一致性驗證 | 否 |
+| API schema change | api, ui, tests | All clients synchronized | Yes |
+| Database schema change | infra, core | Migration + rollback plan | Yes |
+| New auth mechanism | api, core | security-reviewer | Yes |
+| New UI component | ui | a11y + responsive check | No |
+| Dependency upgrade | all | Full build + test suite | Case-by-case |
+| Config change | infra | Environment consistency check | No |
 
 ---
 
-## 跨模組依賴規則
+## Cross-Module Dependency Rules
 
-1. **ui** 只能依賴 **api**（不可直接依賴 **core** 或 **infra**）
-2. **api** 只能依賴 **core**（不可依賴 **ui**）
-3. **core** 不依賴任何上層模組
-4. **infra** 只被 **core** 依賴
+1. **ui** may only depend on **api** (must not depend directly on **core** or **infra**)
+2. **api** may only depend on **core** (must not depend on **ui**)
+3. **core** depends on no upper-layer module
+4. **infra** is depended on only by **core**
 
-> 填入你的實際依賴規則，違反的視為 INV-ARC-* 違規。
+> Fill in your actual dependency rules; violations count as INV-ARC-* violations.
 
 ---
 
-## 引用此檔的位置
+## Where This File Is Referenced
 
-- ExecPlan §3 Constraints（每個 ExecPlan 必須引用相關行）
+- ExecPlan §3 Constraints (every ExecPlan must reference the relevant row)
 - `.claude/agents/architect.md`
 - `docs/plans/PLANS.md` §5

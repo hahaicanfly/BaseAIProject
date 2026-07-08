@@ -1,89 +1,89 @@
-# 安全政策
+# Security Policy
 
-> 常駐硬規則見 `.claude/rules/security.md` 與 `docs/architecture/invariants.md` INV-SEC-*；本檔只放延伸說明與範例。
-> **更新策略**：當發現新類型的安全問題時，同步更新 `docs/architecture/invariants.md` 的 INV-SEC-* 區塊。
+> Standing hard rules live in `.claude/rules/security.md` and `docs/architecture/invariants.md` INV-SEC-*; this file only holds extended notes and examples.
+> **Update policy**: when a new class of security issue is discovered, update the INV-SEC-* section of `docs/architecture/invariants.md` in sync.
 
 ---
 
-## 金鑰管理策略（延伸範例）
+## Key Management Strategy (Extended Examples)
 
-### 開發環境
+### Development Environment
 ```bash
-# .env（不提交，加入 .gitignore）
+# .env (not committed, add to .gitignore)
 API_KEY=your_key_here
 DB_PASSWORD=your_password_here
 ```
 
-### 範本檔案
+### Template File
 ```bash
-# .env.template（提交）
+# .env.template (committed)
 API_KEY=your_api_key_here
 DB_PASSWORD=your_password_here
 ```
 
-### CI/CD 環境
-- 使用平台 Secrets（GitHub Secrets、GitLab CI Variables 等）
-- 使用環境變數注入
-- 不在 workflow / pipeline 配置檔中明文存放
+### CI/CD Environment
+- Use platform secrets (GitHub Secrets, GitLab CI Variables, etc.)
+- Inject via environment variables
+- Never store in plaintext in workflow/pipeline config files
 
 ---
 
-## 代碼安全延伸
+## Code Security Extensions
 
-### API 安全
-- 所有對外通訊使用 HTTPS
-- 實作 request timeout（建議 30s）
-- 錯誤回應不洩漏內部資訊（stack trace、DB schema 等）
-- 實作 rate limiting
+### API Security
+- Use HTTPS for all outbound communication
+- Implement request timeouts (30s recommended)
+- Error responses must not leak internal details (stack traces, DB schema, etc.)
+- Implement rate limiting
 
-### 依賴管理範例
-基本原則見 `.claude/rules/security.md`；工具實務：
-- 使用 Dependabot / Renovate 自動化更新提醒
-- Lock file 入版控以鎖定依賴版本
+### Dependency Management Examples
+Basic principles are in `.claude/rules/security.md`; tooling practice:
+- Use Dependabot / Renovate for automated update alerts
+- Commit the lock file to version control to pin dependency versions
 
 ---
 
-## Agent 行為安全規則
+## Agent Behavior Security Rules
 
-### 遠端執行防護
+### Remote Execution Protection
 
-`pre-tool-use-guard.py` 阻擋以下模式：
+`pre-tool-use-guard.py` blocks the following patterns:
 ```
 curl ... | sh
 wget ... | bash
 curl ... | python
 ```
 
-### Git 操作防護
+### Git Operation Protection
 
-- 禁止直接 commit 到 `main` / `master`
-- 禁止 `git push --force` 到共享分支
-- 禁止 `git reset --hard` 到 remote
+- No direct commits to `main` / `master`
+- No `git push --force` to shared branches
+- No `git reset --hard` against remote
 
-### 檔案系統防護
+### Filesystem Protection
 
-- 禁止 `rm -rf /`
-- 禁止讀取 `.env`、`*.pem`、`*.keystore` 等敏感檔案
-
----
-
-## 安全 Code Review 檢查清單
-
-在執行 code review 時，`security-reviewer` agent 必須確認：
-
-- [ ] 無硬編碼金鑰、密碼、token
-- [ ] 無敏感資訊在日誌輸出中
-- [ ] 輸入有適當驗證與清理
-- [ ] 錯誤處理不洩漏內部資訊
-- [ ] 新依賴已審查安全性與授權
-- [ ] HTTPS 用於所有對外通訊
-- [ ] 無遠端執行漏洞（curl|sh 等）
+- No `rm -rf /`
+- No reading of sensitive files such as `.env`, `*.pem`, `*.keystore`
 
 ---
 
-## 發現安全問題時（延伸步驟）
+## Security Code Review Checklist
 
-基本流程見 `.claude/rules/security.md`；額外要求：
-1. 若已洩漏，建議立即輪換金鑰
-2. 記錄到 `docs/learnings/ERRORS.md` 的 Security / Auth 分類
-3. 以 `[HUMAN_ATTENTION_REQUIRED: security issue found]` 通知用戶
+When performing a code review, the `security-reviewer` agent must confirm:
+
+- [ ] No hardcoded keys, passwords, or tokens
+- [ ] No sensitive information in log output
+- [ ] Inputs are properly validated and sanitized
+- [ ] Error handling does not leak internal details
+- [ ] New dependencies have been vetted for security and license
+- [ ] HTTPS is used for all outbound communication
+- [ ] No remote-execution vulnerabilities (curl|sh, etc.)
+
+---
+
+## When a Security Issue Is Found (Extended Steps)
+
+Basic process is in `.claude/rules/security.md`; additional requirements:
+1. If a secret has already leaked, recommend rotating it immediately
+2. Log it under the Security / Auth category in `docs/learnings/ERRORS.md`
+3. Notify the user with `[HUMAN_ATTENTION_REQUIRED: security issue found]`

@@ -1,123 +1,123 @@
-# BaseAIProject — Antigravity (agy) 操作憲法
+# BaseAIProject — Antigravity (agy) Operating Constitution
 
-> **本檔為 Antigravity agent 的啟動協議。**
-> 每次 agy agent 在此專案中啟動任何任務時，**必須先完整讀取本檔，再讀取 `CLAUDE.md`**。
-> 所有工作規範以 `CLAUDE.md` 為最終依據，本檔為 agy 的橋接說明。
-
----
-
-## 第一步：立即讀取 CLAUDE.md
-
-```
-必讀：CLAUDE.md（本專案根目錄）
-```
-
-`CLAUDE.md` 是本專案的操作地圖，包含：
-- Quick Commands（常用指令）
-- 正典層級與動手前決策樹（含硬防線、INV-* 規則入口）
-- 常駐規則、交接與 Session 管理
-- 文件地圖（Virtual Team／Multi-Agent Skills 清單見 `agent_docs/AI-TEAM-REGISTRY.md`）
-- Tech Stack 與 Project Relations
-
-**在未讀完 `CLAUDE.md` 前，禁止執行任何檔案修改操作。**
+> **This file is the startup protocol for Antigravity agents.**
+> Whenever an agy agent starts any task in this project, it **must fully read this file first, then read `CLAUDE.md`**.
+> `CLAUDE.md` is the final authority for all work standards; this file is agy's bridging guide.
 
 ---
 
-## Antigravity 工作流對應
+## Step 1: Read CLAUDE.md immediately
 
-本專案採用 **Harness Engineering** 工作流。Antigravity agents 的工作方式對應如下：
+```
+Required reading: CLAUDE.md (project root)
+```
+
+`CLAUDE.md` is this project's operations map, containing:
+- Quick Commands
+- Canon hierarchy and decision tree before acting (including hard guardrails, INV-* rule entry points)
+- Standing rules, handoff, and session management
+- Document map (Virtual Team / Multi-Agent Skills roster in `agent_docs/AI-TEAM-REGISTRY.md`)
+- Tech Stack and Project Relations
+
+**No file modification operations are allowed before `CLAUDE.md` has been fully read.**
+
+---
+
+## Antigravity Workflow Mapping
+
+This project uses the **Harness Engineering** workflow. Antigravity agents map to it as follows:
 
 ### agy agents ↔ .claude/agents/
 
-| agy 呼叫（invoke_subagent / 直接使用） | 對應角色 | 必讀文件 |
+| agy invocation (invoke_subagent / direct use) | Corresponding role | Required reading |
 |--------------------------------------|---------|---------|
-| 需求分析任務 | `.claude/agents/pm.md` | `CLAUDE.md` + `TECHNICAL-REFERENCE.md` |
-| 架構設計任務 | `.claude/agents/architect.md` | `CLAUDE.md` + `invariants.md` |
-| 實作任務 | `.claude/agents/tech-lead.md` | `CLAUDE.md` + 對應 ExecPlan |
-| 代碼審查 | `.claude/agents/code-reviewer.md` | `review-protocol.md` |
-| 測試任務 | `.claude/agents/qa-engineer.md` | `CLAUDE.md` + `invariants.md` |
-| 安全審計 | `.claude/agents/security-reviewer.md` | `security-policy.md` |
-| 計劃審查 | `.claude/agents/plan-reviewer.md` | `execplan-lifecycle.md` |
-| UI/UX 任務 | `.claude/agents/uiux-agent.md` | `.claude/uiux/WORKFLOW.md` |
+| Requirements analysis | `.claude/agents/pm.md` | `CLAUDE.md` + `TECHNICAL-REFERENCE.md` |
+| Architecture design | `.claude/agents/architect.md` | `CLAUDE.md` + `invariants.md` |
+| Implementation | `.claude/agents/tech-lead.md` | `CLAUDE.md` + corresponding ExecPlan |
+| Code review | `.claude/agents/code-reviewer.md` | `review-protocol.md` |
+| Testing | `.claude/agents/qa-engineer.md` | `CLAUDE.md` + `invariants.md` |
+| Security audit | `.claude/agents/security-reviewer.md` | `security-policy.md` |
+| Plan review | `.claude/agents/plan-reviewer.md` | `execplan-lifecycle.md` |
+| UI/UX task | `.claude/agents/uiux-agent.md` | `.claude/uiux/WORKFLOW.md` |
 
 ### agy skills ↔ .claude/skills/
 
-所有 agy skills 在此專案中執行時，必須先確認 Harness 工作流要求：
+Every agy skill executed in this project must first confirm the Harness workflow requirements:
 
-| Skill 類型 | 對應 .claude/skills/ | 前置要求 |
+| Skill type | Corresponding .claude/skills/ | Prerequisite |
 |-----------|---------------------|---------|
-| 功能開發 | `feature-pipeline/` | 建 ExecPlan → 人類核可 → 開 branch |
-| 代碼審查 | `code-review/` | 讀 ExecPlan §3 + §5 |
-| 安全審計 | `security-audit/` | 讀 `invariants.md` |
-| 技術債 | `techdebt-scanner/` | 產出 report 到 `docs/learnings/` |
-| UI/UX | `ui-ux-pro-max/` | 讀 `.claude/uiux/WORKFLOW.md` |
+| Feature development | `feature-pipeline/` | Create ExecPlan → human approval → open branch |
+| Code review | `code-review/` | Read ExecPlan §3 + §5 |
+| Security audit | `security-audit/` | Read `invariants.md` |
+| Tech debt | `techdebt-scanner/` | Output report to `docs/learnings/` |
+| UI/UX | `ui-ux-pro-max/` | Read `.claude/uiux/WORKFLOW.md` |
 
 ---
 
-## 啟動任務的標準程序
+## Standard Procedure for Starting a Task
 
-### 1. 讀取階段（必做，不得跳過）
+### 1. Reading phase (mandatory, cannot be skipped)
 ```
-Step 1: 讀 GEMINI.md（本檔）           <- 你正在讀
-Step 2: 讀 CLAUDE.md                   <- 操作地圖
-Step 3: 讀 agent_docs/TECHNICAL-REFERENCE.md
-Step 4: 讀 docs/architecture/invariants.md
-Step 5: 讀 state/feature-list.json     <- 確認是否有 in_progress task
-```
-
-### 2. 判斷任務類型
-```
-簡單問答 / 說明     -> 直接回答，無需 ExecPlan
-單一檔案小修改     -> Read 該檔 -> 修改 -> lint
-跨模組 / API 變更  -> 必須先建 ExecPlan -> 等人類核可 -> 開 branch
+Step 1: Read GEMINI.md (this file)       <- you are reading this now
+Step 2: Read CLAUDE.md                   <- operations map
+Step 3: Read agent_docs/TECHNICAL-REFERENCE.md
+Step 4: Read docs/architecture/invariants.md
+Step 5: Read state/feature-list.json     <- check for any in_progress task
 ```
 
-### 3. 有 in_progress ExecPlan 時
+### 2. Determine task type
 ```
-讀 docs/plans/active/F-NNN-*.md
-看 §6 Progress Log 最後一行
-看 §9 Handoff Manifest 的 Current state marker
-依 marker 決定接手行動
+Simple Q&A / explanation      -> answer directly, no ExecPlan needed
+Single-file small change      -> Read the file -> modify -> lint
+Cross-module / API change     -> must create an ExecPlan first -> wait for human approval -> open branch
+```
+
+### 3. When an in_progress ExecPlan exists
+```
+Read docs/plans/active/F-NNN-*.md
+Check the last line of §6 Progress Log
+Check the Current state marker in §9 Handoff Manifest
+Decide follow-up action based on the marker
 ```
 
 ---
 
-## Handoff 標記（agy agents 必須遵守）
+## Handoff Markers (agy agents must comply)
 
-agy 的每個 subagent（invoke_subagent）完成任務時，final response 必須符合正典 `.claude/protocols/handoff-protocol.md` 定義的三種 marker 之一。這不只是 Claude Code 的規範，而是**本專案的硬性要求**，適用於所有在此專案執行的 AI agents。
+When each agy subagent (invoke_subagent) completes a task, its final response must conform to one of the three markers defined by the canonical `.claude/protocols/handoff-protocol.md`. This is not just a Claude Code convention — it is a **hard requirement of this project**, applying to all AI agents operating in it.
 
 ---
 
-## Git 規則（agy 必須主動遵守，無 hook 自動攔截）
+## Git Rules (agy must self-enforce; no automatic hook interception)
 
-Antigravity 環境沒有 Claude Code 的 Python hooks 自動攔截，**agy agents 必須在每次 git 操作前主動確認**：
+The Antigravity environment has no Claude Code Python hooks to auto-intercept, so **agy agents must proactively confirm before every git operation**:
 
 ```bash
-# 每次 git commit 前必做
-git branch --show-current   # 確認不是 master/main
+# Do this before every git commit
+git branch --show-current   # confirm not on master/main
 ```
 
-禁止指令的完整清單（INV-GIT-002/003/004）見正典 `docs/architecture/invariants.md`；hook 不會攔截，違反與否全靠 agy 自律。
+The full list of prohibited commands (INV-GIT-002/003/004) is in the canonical `docs/architecture/invariants.md`; hooks will not intercept them — compliance relies entirely on agy self-discipline.
 
 ---
 
-## 輸出語言與格式
+## Output Language and Format
 
-輸出語言、commit message 規範與回報格式，完整遵循正典 `CLAUDE.md` 的 Communication Style 一節，agy 無特例。
+Output language, commit message conventions, and report format fully follow the Communication Style section of the canonical `CLAUDE.md`; no exceptions for agy.
 
 ---
 
-## 快速參考
+## Quick Reference
 
-| 需要 | 去讀 |
+| Need | Read |
 |------|------|
-| 工作規範總覽 | `CLAUDE.md` |
-| 當前架構 | `agent_docs/TECHNICAL-REFERENCE.md` |
-| INV 硬規則 | `docs/architecture/invariants.md` |
-| 建新 ExecPlan | `docs/plans/PLANS.md` |
-| 查進行中任務 | `state/feature-list.json` |
-| Handoff 規範 | `.claude/protocols/handoff-protocol.md` |
-| ExecPlan 流程 | `.claude/protocols/execplan-lifecycle.md` |
-| 審查標準 | `.claude/protocols/review-protocol.md` |
+| Work standards overview | `CLAUDE.md` |
+| Current architecture | `agent_docs/TECHNICAL-REFERENCE.md` |
+| INV hard rules | `docs/architecture/invariants.md` |
+| Create a new ExecPlan | `docs/plans/PLANS.md` |
+| Check in-progress tasks | `state/feature-list.json` |
+| Handoff spec | `.claude/protocols/handoff-protocol.md` |
+| ExecPlan lifecycle | `.claude/protocols/execplan-lifecycle.md` |
+| Review standards | `.claude/protocols/review-protocol.md` |
 | Virtual Team | `agent_docs/AI-TEAM-REGISTRY.md` |
-| Multi-Agent 指南 | `agent_docs/multi-agent-guide.md` |
+| Multi-Agent guide | `agent_docs/multi-agent-guide.md` |

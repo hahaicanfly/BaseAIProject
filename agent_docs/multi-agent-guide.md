@@ -1,16 +1,16 @@
 # Multi-Agent Collaboration Guide
 
-> 多代理協作指南 — 利用 Claude Code 的 Agent 工具實現團隊協作模式
+> Multi-agent collaboration guide — using Claude Code's Agent tool to implement team-collaboration patterns
 
-## 概述
+## Overview
 
-本指南說明如何利用 Claude Code 的 **Agent 工具** 實現多代理協作，模擬 Code Review Swarm、Feature Factory 等協作模式。
+This guide explains how to use Claude Code's **Agent tool** for multi-agent collaboration, emulating patterns such as Code Review Swarm and Feature Factory.
 
-## 可用協作模式
+## Available Collaboration Patterns
 
-### 1. Swarm 模式（並行審查）
+### 1. Swarm Pattern (Parallel Review)
 
-多個專家代理同時審查同一目標，各自專注不同面向。
+Multiple expert agents review the same target simultaneously, each focused on a different dimension.
 
 ```
                     ┌─────────────────┐
@@ -20,7 +20,7 @@
            ▼                 ▼                 ▼
     ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
     │ Tech Lead   │   │  Security   │   │     QA      │
-    │ 代碼品質    │   │  安全漏洞   │   │  可測試性   │
+    │ Code Quality│   │Vulnerability│   │Testability  │
     └──────┬──────┘   └──────┬──────┘   └──────┬──────┘
            │                 │                 │
            └─────────────────┼─────────────────┘
@@ -30,50 +30,50 @@
                     └─────────────────┘
 ```
 
-**使用方式**: `/multi-agent-review [目標]`
+**Usage**: `/multi-agent-review [target]`
 
-### 2. Pipeline 模式（流水線開發）
+### 2. Pipeline Pattern (Sequential Development)
 
-代理按順序接力，每個階段的輸出是下一階段的輸入。
+Agents hand off in sequence; each stage's output is the next stage's input.
 
 ```
 ┌────┐    ┌──────────┐    ┌────────┐    ┌──────┐    ┌────────┐
 │ PM │ ─▶ │ Architect│ ─▶ │ UI/UX  │ ─▶ │ Dev  │ ─▶ │ Review │
 └────┘    └──────────┘    └────────┘    └──────┘    └────────┘
-需求       架構設計         UI 設計      實作        審查
+Requirements  Architecture  UI Design    Implementation  Review
 ```
 
-**使用方式**: `/feature-pipeline [功能描述]`
+**Usage**: `/feature-pipeline [feature description]`
 
-### 3. Council 模式（技術決策）
+### 3. Council Pattern (Technical Decisions)
 
-多個代理對同一問題提供不同角度的分析，協助用戶做決策。
+Multiple agents provide different-angle analyses of the same question to help the user decide.
 
-**手動啟動方式**:
+**Manual invocation**:
 ```
-同時啟動:
-- Architect: 架構可行性分析
-- Tech Lead: 技術債評估
-- PM: 業務價值分析
+Launch simultaneously:
+- Architect: architectural feasibility analysis
+- Tech Lead: technical-debt assessment
+- PM: business-value analysis
 ```
 
-### 4. Watchdog 模式（守護檢查）
+### 4. Watchdog Pattern (Guard Checks)
 
-在關鍵操作前後自動執行安全檢查。
+Automatically runs safety checks before/after critical operations.
 
-**自動觸發時機**:
-- git commit 前: 安全掃描（`pre-tool-use-guard.py`）
-- API 變更: 向後相容性檢查
-- 依賴更新: 漏洞掃描
+**Automatic trigger points**:
+- Before git commit: security scan (`pre-tool-use-guard.py`)
+- API changes: backward-compatibility check
+- Dependency updates: vulnerability scan
 
-### 5. Worktree 模式（平行開發）
+### 5. Worktree Pattern (Parallel Development)
 
-多個 Agent 各自在獨立的 git worktree 中工作，實現真正的平行開發。
+Multiple agents each work in an isolated git worktree, enabling true parallel development.
 
 ```
 ┌──────────────────────────────────────────┐
 │              Orchestrator                │
-│         (人類 or 管理 Agent)              │
+│         (human or managing agent)        │
 └────────┬──────────┬──────────┬───────────┘
          │          │          │
     ┌────▼────┐ ┌───▼────┐ ┌──▼─────┐
@@ -87,77 +87,77 @@
               PR → Merge
 ```
 
-**使用場景**：
-- 多個獨立任務需要同時進行
-- 長時間功能開發不影響快速修復
-- 需要物理隔離避免工作區衝突
+**Use cases**:
+- Multiple independent tasks need to run at once
+- Long-running feature work shouldn't block quick fixes
+- Physical isolation is needed to avoid workspace conflicts
 
-**Agent 工具使用**:
+**Agent tool usage**:
 ```
 Agent(
-  isolation: "worktree",     # 自動建立 git worktree
+  isolation: "worktree",     # automatically creates a git worktree
   prompt: "implement F-NNN ...",
   mode: "auto"
 )
 ```
 
-**詳見**: `.claude/rules/parallel-worktree.md`
+**See**: `.claude/rules/parallel-worktree.md`
 
-## 代理角色一覽
+## Agent Role Overview
 
-> 完整代理清單與觸發詞詳見 `agent_docs/AI-TEAM-REGISTRY.md`。
+> See `agent_docs/AI-TEAM-REGISTRY.md` for the full agent roster and trigger words.
 
-## 實作機制
+## Implementation Mechanics
 
-### Agent 工具使用
+### Agent Tool Usage
 
 ```
 Agent(
-  subagent_type: "tech-lead",     # 使用專案定義的代理
-  prompt: "審查 xxx 的代碼品質",
-  model: "sonnet",                # 可選: haiku, sonnet, opus
-  run_in_background: true         # 並行執行
+  subagent_type: "tech-lead",     # use a project-defined agent
+  prompt: "review the code quality of xxx",
+  model: "sonnet",                # optional: haiku, sonnet, opus
+  run_in_background: true         # run in parallel
 )
 ```
 
-### 並行執行
+### Parallel Execution
 
-同時啟動多個代理進行並行審查（在單一訊息中多個 Agent 調用）：
+Launch multiple agents simultaneously for parallel review (multiple Agent calls in a single message):
 
 ```
-Agent(tech-lead, "審查代碼品質", background=true)
-Agent(security-reviewer, "審查安全性", background=true)
-Agent(qa-engineer, "審查可測試性", background=true)
+Agent(tech-lead, "review code quality", background=true)
+Agent(security-reviewer, "review security", background=true)
+Agent(qa-engineer, "review testability", background=true)
 ```
 
-### 結果整合
+### Result Integration
 
-收集所有背景代理的結果，整合成統一報告，依嚴重度排序。
+Collect results from all background agents and merge them into a unified report, ordered by severity.
 
-## 成本優化
+## Cost Optimization
 
-> 模型選用表詳見 `.claude/rules/model-dispatch.md`。
+> See `.claude/rules/model-dispatch.md` for the model-selection table.
 
-## 最佳實踐
+## Best Practices
 
 ### DO
 
-- 對重要變更使用多代理審查
-- 在並行模式中設定 `run_in_background: true`
-- 整合報告時去重和排序
-- 按嚴重度排列問題
+- Use multi-agent review for significant changes
+- Set `run_in_background: true` in parallel mode
+- Dedupe and sort findings when integrating reports
+- Order issues by severity
 
 ### DON'T
 
-- 對簡單改動過度使用多代理
-- 同時啟動過多代理（建議 ≤ 3）
-- 忽略代理間的衝突意見
-- 不等待所有代理完成就整合結果
+- Overuse multi-agent review for simple changes
+- Launch too many agents at once (recommended ≤ 3)
+- Ignore conflicting opinions between agents
+- Integrate results before all agents have finished
 
-## 相關文件
+## Related Documents
 
 - Skills: `.claude/skills/multi-agent-review/`, `.claude/skills/feature-pipeline/`
 - Agents: `.claude/agents/`
 - Worktree Rules: `.claude/rules/parallel-worktree.md`
-- 安全政策: `agent_docs/security-policy.md`
-- 成本優化: `agent_docs/cost-optimization.md`
+- Security Policy: `agent_docs/security-policy.md`
+- Cost Optimization: `agent_docs/cost-optimization.md`

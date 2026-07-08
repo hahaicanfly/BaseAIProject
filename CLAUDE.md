@@ -1,84 +1,85 @@
-# {{PROJECT_NAME}} — Agent 操作地圖
+# {{PROJECT_NAME}} — Agent Operations Map
 
 > {{PROJECT_TAGLINE}}
-> 本檔是**路由中心**（≤100 行）：只放採信順序、決策樹與最高頻硬規則，詳情追引用檔。
-> 2026-07-04 由 503→125→本版重寫，舊版在 `CLAUDE.md.bak`，重寫依據見 `docs/harness/DIAGNOSIS.md`。
+> This file is the **routing hub** (≤100 lines): only trust order, decision tree, and highest-frequency hard rules live here — details are referenced elsewhere.
+> Rewritten 2026-07-04 from 503→125→this version; the old version is in `CLAUDE.md.bak`; rationale in `docs/harness/DIAGNOSIS.md`.
 
-## 啟用狀態（fork 本模板的新專案先讀這節）
+## Activation Status (new projects forked from this template: read this section first)
 
-- 任何檔案若仍含 `{{佔位符}}` = **未啟用**：跳過它，不要照做、不要編造內容補洞。
-- `agent_docs/TECHNICAL-REFERENCE.md` 填實後（無佔位符）→ 恢復「任務前必讀」地位；未填實 → 跳過。
+- If any file still contains `{{placeholder}}` = **not activated**: skip it — do not follow it literally, do not invent content to fill the gap.
+- Once `agent_docs/TECHNICAL-REFERENCE.md` is filled in (no placeholders) → it regains "must-read before any task" status; if not filled in → skip it.
 
 ## Quick Commands
 
 ```bash
-# {{填入專案建構/測試/lint 指令}} ← fork 後第一批必填（可執行驗證指令是成功率最大槓桿）；環境初始化範本：.claude/templates/init.sh.template
-git branch --show-current   # 動手前確認不在 master/main
+# {{fill in project build/test/lint commands}} ← first must-fill after forking (executable verification commands are the biggest lever on success rate); env bootstrap template: .claude/templates/init.sh.template
+git branch --show-current   # confirm not on master/main before making changes
 ```
 
-## 正典層級（文件互相矛盾時，依此順序採信）
+## Canon Hierarchy (trust order when documents conflict)
 
-1. 模型與工具分派 → 以 `.claude/agents/*.md` 的 frontmatter 為準
-2. Review 流程與輸出格式 → 以 `.claude/protocols/review-protocol.md` 為準
-3. Agent / Skill 名單 → 以 `agent_docs/AI-TEAM-REGISTRY.md` 為準（該檔由 frontmatter 生成，重生成方式見其檔頭）
-4. Git / 安全硬規則 → 以 `docs/architecture/invariants.md` 為準
+1. Model and tool dispatch → `.claude/agents/*.md` frontmatter is authoritative
+2. Review process and output format → `.claude/protocols/review-protocol.md` is authoritative
+3. Agent / Skill roster → `agent_docs/AI-TEAM-REGISTRY.md` is authoritative (generated from frontmatter; regeneration method in that file's header)
+4. Git / security hard rules → `docs/architecture/invariants.md` is authoritative
 
-遇到矛盾：按上表採信，並把矛盾記入 `docs/learnings/ERRORS.md`，不要停下來糾結。
+On conflict: trust per the table above, log the conflict in `docs/learnings/ERRORS.md`, and don't stop to deliberate.
 
-## 動手前決策樹（唯一入口）
+## Decision Tree Before Acting (single entry point)
 
-1. 跨模組 / API 變更 / 大規模重構 → 建 ExecPlan（`docs/plans/active/`，規格見 `docs/plans/PLANS.md`），**等人類核可**
-2. 其餘非瑣碎任務（新功能、多檔修改、刪檔）→ Plan Mode 提計劃，同意後執行
-3. 單檔 < 20 行、已定位的 bug 修復、格式調整 → 直接做
-4. 驗收條件無法機械化（品味／商業判斷）→ 產出候選＋trade-off 交人選（judgment-rubrics §6），不進實作迴圈
-5. 永遠適用：改檔前必先 Read；未經驗證不得宣稱完成
+1. Cross-module / API changes / large-scale refactors → create an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`), **wait for human approval**
+2. Other non-trivial tasks (new features, multi-file changes, file deletion) → propose a plan in Plan Mode, execute after approval
+3. Single file < 20 lines, already-located bug fix, formatting change → do it directly
+4. Acceptance criteria cannot be made mechanical (taste/business judgment) → produce candidates + trade-offs for a human to choose (judgment-rubrics §6); do not enter an implementation loop
+5. Always applies: Read before editing; do not claim completion without verification
 
-## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）
+## Standing Rules (auto-loaded from `.claude/rules/`, no need to re-read)
 
-security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ plan-first ／ parallel-worktree ／ cost-optimization（modularity 已降非常駐 → `agent_docs/modularity.md`）
+security / model-dispatch (model dispatch & delegation) / judgment-rubrics (escalation·completion·circuit-breaker·path-switch criteria) / plan-first / parallel-worktree / cost-optimization (modularity demoted from standing → `agent_docs/modularity.md`)
 
-- 派工 prompt 模板：`.claude/templates/delegation-templates.md`
-- Harness 檔案怎麼安全地改：`.claude/protocols/harness-maintenance.md`
+- Delegation prompt templates: `.claude/templates/delegation-templates.md`
+- How to safely edit harness files: `.claude/protocols/harness-maintenance.md`
 
-## 硬防線
+## Hard Guardrails
 
-`pre-tool-use-guard.py`（enforce，已實測）以 exit 2 阻斷：master/main 上 commit、force-push master/main、`reset --hard origin/master|main`、讀 `.env` 等密檔、`curl|sh`。全文見 `docs/architecture/invariants.md`。
+`pre-tool-use-guard.py` (enforce, field-tested) blocks via exit 2: commits on master/main, force-push to master/main, `reset --hard origin/master|main`, reading `.env` or other secret files, `curl|sh`. Full text in `docs/architecture/invariants.md`.
 
-NEVER：硬編碼 secrets ／ commit 敏感檔（`.env`、`*.keystore`…）／ 猜 API 簽名 ／ 加未要求的功能抽象 ／ 跳過 lint/test 宣稱完成。
+NEVER: hardcode secrets / commit sensitive files (`.env`, `*.keystore`, …) / guess API signatures / add unrequested feature abstractions / skip lint/test and claim completion.
 
-## 交接與 Session 管理
+## Handoff & Session Management
 
-- Sub-agent final response 必含 `[HANDOFF:*]` / `[VERIFY_FAILED:*]` / `[HUMAN_ATTENTION_REQUIRED:*]`（規範：`.claude/protocols/handoff-protocol.md`）
-- 階段完成且 context 用量 >50% → `/last-word` 產出 `SESSION-HANDOFF.md` → `/clear` → 新 session 讀檔續接
-- 踩坑教訓 append 到 `docs/learnings/ERRORS.md`（格式見 harness-maintenance.md）；重複出現且可機械化者，升級寫進 `invariants.md`
+- Sub-agent final responses must include `[HANDOFF:*]` / `[VERIFY_FAILED:*]` / `[HUMAN_ATTENTION_REQUIRED:*]` (spec: `.claude/protocols/handoff-protocol.md`)
+- Phase complete and context usage >50% → run `/last-word` to produce `SESSION-HANDOFF.md` → `/clear` → new session reads the file to continue
+- Append lessons learned to `docs/learnings/ERRORS.md` (format in harness-maintenance.md); recurring, mechanizable ones get promoted into `invariants.md`
 
-## 文件地圖
+## Document Map
 
-| 需要什麼 | 去哪裡 |
+| Need | Where |
 |---------|--------|
-| 文件總索引 | `docs/INDEX.md` |
-| 當前架構（填實後必讀） | `agent_docs/TECHNICAL-REFERENCE.md` |
-| 團隊名單、模型分派、skills | `agent_docs/AI-TEAM-REGISTRY.md` |
-| 多代理協作模式 | `agent_docs/multi-agent-guide.md` |
-| ExecPlan 10 階段生命週期 | `.claude/protocols/execplan-lifecycle.md` |
-| Harness 診斷書／給未來 session 的信 | `docs/harness/` |
-| UI 三階段流程 | `.claude/uiux/WORKFLOW.md` |
-| Runtime state 格式 | `state/SCHEMA.md` |
+| Full document index | `docs/INDEX.md` |
+| Current architecture (must-read once filled in) | `agent_docs/TECHNICAL-REFERENCE.md` |
+| Team roster, model dispatch, skills | `agent_docs/AI-TEAM-REGISTRY.md` |
+| Multi-agent collaboration patterns | `agent_docs/multi-agent-guide.md` |
+| ExecPlan 10-stage lifecycle | `.claude/protocols/execplan-lifecycle.md` |
+| Harness diagnosis / letter to future sessions | `docs/harness/` |
+| UI three-phase workflow | `.claude/uiux/WORKFLOW.md` |
+| Runtime state format | `state/SCHEMA.md` |
+| Chinese human-readable mirrors | auto-discovered dirs (agents/rules/commands) → `agent_docs/zh/`; everything else → same-dir `*_zh.md` |
 
 ## Communication Style
 
-繁體中文回應；代碼註解可英文；commit message 英文、`type(scope)` 格式、一功能一 commit、嚴禁直接 commit master（feat/<slug> 開分支 + PR）。精簡、技術準確、無 emoji（除非用戶要求）。
+Respond to the user in Traditional Chinese; code comments may be in English; commit messages in English, `type(scope)` format, one feature per commit, never commit directly to master (branch `feat/<slug>` + PR). Concise, technically accurate, no emoji (unless the user requests them).
 
 ```
-✓ 完成：[具體做了什麼]
-→ 下一步：[接下來要做什麼]
-⚠ 注意：[需要用戶知道的風險或問題]
+✓ Done: [what was specifically done]
+→ Next: [what happens next]
+⚠ Note: [risks or issues the user should know]
 ```
 
-## Tech Stack ／ Project Relations
+## Tech Stack / Project Relations
 
-{{未填 = 未啟用，跳過本節}}
+{{unfilled = not activated, skip this section}}
 
-## Antigravity (agy) 橋接
+## Antigravity (agy) Bridge
 
-agy agent：先讀 `GEMINI.md`。`.claude/agents/*.md` 與 `.claude/skills/*/SKILL.md` 規則完整適用於 agy；Python hooks 在 agy 環境不自動執行，須手動遵守等效規則（尤其 invariants 的 INV-GIT-*）。
+agy agent: read `GEMINI.md` first. Rules in `.claude/agents/*.md` and `.claude/skills/*/SKILL.md` apply fully to agy; Python hooks do not auto-run in the agy environment, so equivalent rules must be followed manually (especially invariants' INV-GIT-*).
