@@ -1,5 +1,7 @@
 # BaseAIProject — AI Harness Engineering Base Template
 
+https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
+
 > English | [繁體中文](README_zh.md)
 
 ## What This Is (30-Second Version)
