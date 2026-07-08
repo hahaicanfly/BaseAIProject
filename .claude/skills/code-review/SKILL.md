@@ -24,7 +24,7 @@ description: 對 PR diff 進行標準代碼審查，涵蓋安全性、品質與�
 5. 逐條驗證，依下列面向檢查（規則全文見對應檔案，本節不重複列出）：
    - **安全（優先）**：無硬編碼金鑰/密碼、無敏感資訊寫入日誌、輸入驗證、錯誤處理不洩漏內部細節 —— 詳 `.claude/rules/security.md`
    - **代碼品質**：命名規範遵循、函數單一職責、適當錯誤處理、無明顯效能問題
-   - **架構遵循**：模組結構正確、依賴方向正確（依賴抽象而非具體實作）、可復用邏輯放共享模組 —— 詳 `.claude/rules/modularity.md`
+   - **架構遵循**：模組結構正確、依賴方向正確（依賴抽象而非具體實作）、可復用邏輯放共享模組 —— 詳 `agent_docs/modularity.md`
    - **測試覆蓋**：核心邏輯有對應測試、測試命名清晰、測試彼此獨立
    - **成本考量**（如涉及 API 調用）：呼叫有快取、資源使用有上限、可本地化運算未誤發雲端 API —— 詳 `.claude/rules/cost-optimization.md`
 6. 輸出 Review Report（Blockers / Warnings / Suggestions / Praise，格式見下）
@@ -68,5 +68,5 @@ Pass / Block / Conditional Pass
 - `.claude/protocols/review-protocol.md`（完整 severity 定義與 checklist，本檔不重複）
 - `docs/architecture/invariants.md`
 - `.claude/rules/security.md`
-- `.claude/rules/modularity.md`
+- `agent_docs/modularity.md`（非常駐設計指引）
 - `.claude/rules/cost-optimization.md`

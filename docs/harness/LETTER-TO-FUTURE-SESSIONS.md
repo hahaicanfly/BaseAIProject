@@ -35,8 +35,6 @@
 1. **skillopt-loop.md 去留決策**（需使用者決定）：已標為「未接線設計草案」並清除虛構引用（2026-07-04 第三輪）。選項：(a) 保留為草案備將來接線 (b) 刪除（紅級刪檔需同意）。
 2. **session-handoffs 首次運轉驗證**（觀察項）：`state/session-handoffs/` 目前為空——本 session 從未觸發 PreCompact。下次發生 compaction 時，核實該目錄出現新快照檔；若沒有，pre-compact-snapshot.py 可能有同構失效（參照 hooks 煙霧測試教訓）。
 3. **Menu-Android guard 修復已完成但未 commit**（2026-07-04）：exit 2 修復與煙霧測試通過，改動留在該 repo `feat/ga-event-tracking` working tree，隨該分支一起 commit 即可。
-4. **rules 常駐總量超線**（需使用者決定）：2026-07-06 機制吸收後 rules 合計 663 行 > 600 觸發線（maintenance §5）。提案：`modularity.md`（104 行，代碼設計指引，非首決策必需）降為非常駐移入 agent_docs/。紅級，等同意後執行。
-
 > 2026-07-04 三輪優化全部完成（詳見 §四），26 個原子 commit 在 feat/harness-institution，未 push。
 
 ## 四、本次 session 已完成（供考古）

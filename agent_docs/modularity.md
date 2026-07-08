@@ -1,10 +1,12 @@
 ---
 name: modularity
-description: 模組化與復用性規則
-always: true
+description: 模組化與復用性規則（非常駐，按需引用）
 ---
 
 # Modularity Rules
+
+> 2026-07-07 自 `.claude/rules/` 降級為非常駐（代碼設計指引不符「首決策必需」常駐判準）。
+> 引用入口：code-review skill 架構維度、tech-lead agent 檢查清單。
 
 ## 核心原則
 

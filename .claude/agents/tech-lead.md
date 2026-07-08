@@ -38,7 +38,7 @@ context_firewall: true
 ### 架構遵循 (Architecture)
 - [ ] 遵循 `docs/architecture/domains.md` 模組結構
 - [ ] 依賴方向正確，無跨層直接調用
-- [ ] 使用依賴注入（介面優先，見 `.claude/rules/modularity.md`）
+- [ ] 使用依賴注入（介面優先，見 `agent_docs/modularity.md`）
 - [ ] 可復用邏輯放在共享模組（同一邏輯出現 ≥2 處即需抽取）
 
 ### 測試覆蓋 (Testing)

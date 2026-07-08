@@ -35,7 +35,7 @@ git branch --show-current   # 動手前確認不在 master/main
 
 ## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）
 
-security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ plan-first ／ modularity ／ parallel-worktree ／ cost-optimization
+security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ plan-first ／ parallel-worktree ／ cost-optimization（modularity 已降非常駐 → `agent_docs/modularity.md`）
 
 - 派工 prompt 模板：`.claude/templates/delegation-templates.md`
 - Harness 檔案怎麼安全地改：`.claude/protocols/harness-maintenance.md`
