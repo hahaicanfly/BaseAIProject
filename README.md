@@ -1,158 +1,174 @@
-# BaseAIProject — AI Harness Engineering 基礎模板
+# BaseAIProject — AI Harness Engineering Base Template
 
-> 一套可直接 fork 的 **AI 開發治理骨架**：讓 Sonnet / Haiku 等級的模型在缺乏人類逐步指揮的情況下，也能穩定、可驗證、不失控地自主產出。從 MaiNeu 實戰專案抽取，經 2026-07 Fable 5 架構 session 三輪深度制度化，再吸收外部 harness 生態研究（superpowers、learn-harness-engineering、revfactory/harness 等 7 個來源，星數與內容實地查證）的第四輪強化。
+> English | [繁體中文](README_zh.md)
 
-## 這個專案解決什麼問題
+## What This Is (30-Second Version)
 
-AI 主導開發的三大失敗模式，各有對應的物理防線：
+BaseAIProject is a directly-forkable **Claude Code AI development governance template**: it turns "how to delegate, how to verify, how to guard against failure, how to accumulate lessons" into institutional files — 6 always-on rules, 14 specialized agents, 17 trigger-based skills, 4 hard-guard hooks, and one lessons pipeline — so AI can produce stable, verifiable, non-runaway output with minimal human intervention.
 
-| 失敗模式 | 本專案的解法 |
+**Three steps to get started**:
+
+1. **Fork and fill in**: Globally replace placeholders like `{{PROJECT_NAME}}`, and fill in your project's build/test/lint commands (`CLAUDE.md` Quick Commands; environment bootstrap template at `.claude/templates/init.sh.template`) — executable verification commands are the single biggest lever for success rate
+2. **Activate the guardrails**: `chmod +x .claude/hooks/*.py`, then run the smoke tests per `.claude/protocols/harness-maintenance.md` §4 (test both the block and pass scenarios)
+3. **Canary acceptance**: Run a 30-minute small task through the full flow per `docs/harness/NEW-PROJECT-VALIDATION.md` (branch → plan → delegate → review → write lessons back); once it all passes, it's ready for real use
+
+Language convention: institutional files that AI reads are always the **English canon**; the Traditional Chinese human-facing version lives in a `_zh`-suffixed file in the same directory, or mirrored under `agent_docs/zh/`. The full introduction follows below.
+
+---
+
+> A directly-forkable **AI development governance skeleton**: it lets Sonnet/Haiku-tier models produce stable, verifiable, non-runaway output autonomously, even without step-by-step human direction. Extracted from the MaiNeu production project, institutionalized through three deep rounds during the 2026-07 Fable 5 architecture session, then strengthened in a fourth round that absorbed external harness-ecosystem research (7 sources including superpowers, learn-harness-engineering, revfactory/harness — star counts and content field-verified).
+
+## What Problem This Project Solves
+
+AI-led development has three major failure modes, each with a corresponding physical guardrail:
+
+| Failure Mode | This Project's Solution |
 |----------|------------|
-| **文件宣稱 ≠ 現實**（規則寫了沒人執行、防線部署了從未生效） | enforce hook 實測制度（黑箱煙霧測試）、引用即驗證、隔離驗收 |
-| **弱模型失焦**（多份文件互相矛盾、隨機採信） | 正典層級（每類事實唯一事實源，其他只准引用）、觸發詞互斥設計 |
-| **知識蒸發**（教訓沉入聊天記錄、同樣的坑踩三次） | 教訓管線：踩坑 → ERRORS.md → 人審 promote → 機械化進 invariants + guard |
+| **Documented claims ≠ reality** (rules written but never executed, guardrails deployed but never actually triggered) | Enforce hooks tested for real (black-box smoke tests), verify-on-reference, isolated acceptance |
+| **Weak-model loss of focus** (multiple documents contradict each other, arbitrary which one gets trusted) | Canonical hierarchy (one single source of truth per fact category, everything else may only reference it), mutually exclusive trigger-word design |
+| **Knowledge evaporation** (lessons sink into chat history, the same pitfall gets hit three times) | Lessons pipeline: hit a pitfall → ERRORS.md → human review promotes it → mechanized into invariants + guard |
 
-## 核心設計哲學（五條）
+## Core Design Philosophy (Five Principles)
 
-1. **指揮官不下場**：主對話只做決策、拆解、派工、驗收；大量讀檔/掃 repo/研究一律派 subagent，回報只收結論與 `檔案:行號`。
-2. **驗證不自驗**：實作者不得宣告自己通過驗收；一律派 fresh-context agent 做 read-back、實跑測試或多答案評審。
-3. **常駐面即預算**：每 session 自動載入的內容（CLAUDE.md + rules）是對所有未來工作的徵稅，有明確行數上限與精簡觸發線。
-4. **判斷力外化**：升級模型、判定完成、熔斷提問、換路訊號——全部寫成可觀察判準與正反例，弱模型照表執行。
-5. **誠實條款**：品味決策、模糊商業判斷、無 ground truth 推理是弱模型的極限——制度明定遇到時的出口（多候選交人選、標註未確認、第二意見），不假裝能做。
+1. **The commander doesn't get their hands dirty**: The main conversation only decides, decomposes, delegates, judges acceptance, and communicates with the user; any heavy file-reading/repo-scanning/research is always delegated to a subagent, whose report contains only conclusions and `file:line` references.
+2. **Verification is never self-verification**: The implementer may not declare their own output as passing acceptance; a fresh-context agent is always delegated to do read-back, run tests for real, or perform multi-answer review.
+3. **The always-loaded surface is the budget**: Content auto-loaded every session (CLAUDE.md + rules) is a tax on all future work, with an explicit line-count ceiling and a trigger line for trimming.
+4. **Judgment externalized**: When to escalate models, how to determine "actually done," when to circuit-break and ask, signals for changing course — all written as observable criteria with positive/negative examples, so weak models can execute by the book.
+5. **Honesty clause**: Taste decisions, ambiguous business judgment, and reasoning chains with no ground truth are the limits of weak models — the institution specifies clear exits when these are hit (offer multiple candidates for human choice, flag as unconfirmed, get a second opinion), rather than pretending to be capable.
 
-## 能力總覽
+## Capability Overview
 
-| 子系統 | 規模 | 一句話 |
+| Subsystem | Scale | One-Liner |
 |--------|------|--------|
-| Virtual Team | 14 agents（4 opus + 10 sonnet） | 職責互斥的專業分工，模型分派以 frontmatter 為正典 |
-| Skills | 17 個 | 觸發式工作流，description 互斥設計 + 機械驗證器 |
-| Hooks | 4 個 + 共用庫 | 1 個 enforce（exit 2 實測攔截）+ 3 個 sentinel |
-| 常駐 Rules | 6 條（`always: true`） | 調度、判準、安全、成本、worktree、plan-first（模組化已降非常駐 → `agent_docs/`） |
-| Protocols | 5 份 | ExecPlan 生命週期、交接 marker、review SOP、harness 維護、（1 份未接線草案） |
-| 知識系統 | 5 層 | 教訓／硬規則／ADR／session 快照／原生 memory，各有寫讀權與流動規則 |
+| Virtual Team | 14 agents (4 opus + 10 sonnet) | Mutually exclusive responsibilities, professional division of labor; model dispatch is canonically defined by frontmatter |
+| Skills | 17 | Trigger-based workflows, mutually exclusive description design + mechanical validators |
+| Hooks | 4 + shared library | 1 enforce (exit 2, tested for real interception) + 3 sentinels |
+| Always-on Rules | 6 (`always: true`) | Dispatch, judgment criteria, security, cost, worktree, plan-first (modularity has been demoted to non-always-on → `agent_docs/`) |
+| Protocols | 5 | ExecPlan lifecycle, handoff markers, review SOP, harness maintenance, (1 unwired draft) |
+| Knowledge System | 5 layers | Lessons / hard rules / ADRs / session snapshots / native memory, each with its own write/read permissions and flow rules |
 
-## 六大子系統
+## The Six Subsystems
 
-### 1. 指揮與調度層
+### 1. Command and Dispatch Layer
 
-- **`CLAUDE.md`（84 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
-- **`.claude/rules/model-dispatch.md`**：本機實際可用模型檔位、派工三件套（目標動機／驗收條件／回報格式，缺一不派）、升降級路徑（同模型連敗 2 次 → 升級一次 → 再敗 → 熔斷問人）、回報合約（≤40 行、長產物落檔傳路徑）、驗收邊界（FAIL 只准基於可機械檢查條件，風格意見進非阻斷建議欄）。
-- **`.claude/rules/judgment-rubrics.md`**：七節可觀察判準各附正反例——何時升級、何時算真完成（含 gate-softening 禁令）、何時熔斷提問（含無改善偵測：連續 2 輪 FAIL 集合相同即熔斷）、什麼訊號該換路、品質底線、能力極限、Red Flags 合理化話術對照表（「違反字面即違反精神」）。
-- **`.claude/templates/delegation-templates.md`**：搜尋／實作／重構／研究／審查／fresh-context 驗收六份派工模板，含範圍宣告（允許讀／允許寫／禁止觸碰／終止條件）與破壞性指令黑名單（禁對非指派檔案 rm / checkout / restore / clean）。
+- **`CLAUDE.md` (84-line routing hub)**: Canonical hierarchy (order of trust when documents conflict), pre-action decision tree (ExecPlan vs. Plan Mode vs. do it directly vs. acceptance criteria can't be mechanized → hand to human choice), hard-guardrail summary, document map. Exceeding 100 lines triggers mandatory trimming.
+- **`.claude/rules/model-dispatch.md`**: The actually-available model tiers on this machine, the delegation trio (goal & motivation / acceptance criteria / report format — missing any one means don't delegate), escalation/de-escalation path (same model fails twice in a row → escalate once → fails again → circuit-break and ask a human), report contract (≤40 lines, large artifacts get written to file with the path returned), acceptance boundary (FAIL may only be based on mechanically checkable criteria; style opinions go into a non-blocking suggestions column).
+- **`.claude/rules/judgment-rubrics.md`**: Seven sections of observable criteria, each with positive/negative examples — when to escalate, when something actually counts as done (including a gate-softening ban), when to circuit-break and ask (including no-improvement detection: two consecutive rounds with an identical FAIL set triggers a circuit-break), what signals mean you should change course, quality floor, capability limits, a Red Flags rationalization-phrase lookup table ("violating the letter is violating the spirit").
+- **`.claude/templates/delegation-templates.md`**: Six delegation templates — search / implementation / refactor / research / review / fresh-context acceptance — each including a scope declaration (allowed to read / allowed to write / off-limits / termination condition) and a blacklist of destructive commands (no rm / checkout / restore / clean on files outside the assignment).
 
-### 2. Virtual Team（14 agents）
+### 2. Virtual Team (14 Agents)
 
-opus ×4 保留給無標準答案的取捨：`architect`（系統設計/ADR）、`pm`（需求/優先級）、`security-reviewer`（安全審計）、`plan-reviewer`（計劃審查）。
-sonnet ×10 執行 checklist 與模板化工作：`code-reviewer`（PR gating，唯一 Decision 出口）、`qa-engineer`、`tech-lead`（架構重構顧問，不做 PR gating）、研究三人組（`data-analyst` 量化KPI／`market-researcher` 市場消費者／`competitive-analyst` 競品比較，觸發詞互斥）、`uiux-agent`（三階段入口）與 `ui-ux-designer`（Phase 3 產出）、`techdebt-scanner`、`workflow-optimizer`。
+Opus ×4 reserved for trade-offs with no standard answer: `architect` (system design/ADRs), `pm` (requirements/prioritization), `security-reviewer` (security audits), `plan-reviewer` (plan review).
+Sonnet ×10 execute checklists and templated work: `code-reviewer` (PR gating, the sole Decision exit point), `qa-engineer`, `tech-lead` (architectural refactoring advisor, does not do PR gating), the research trio (`data-analyst` for quantitative KPIs / `market-researcher` for market and consumer research / `competitive-analyst` for competitor comparison, mutually exclusive triggers), `uiux-agent` (three-phase entry point) and `ui-ux-designer` (Phase 3 output), `techdebt-scanner`, `workflow-optimizer`.
 
-四個 review 類 agent 的輸出格式統一採 `review-protocol.md` 正典詞彙（Blocker/Warning/Suggestion + Pass/Block/Conditional Pass）。名單與分派以 `agent_docs/AI-TEAM-REGISTRY.md` 為準（由 frontmatter 重生成，禁止手改單格）。
+The four review-category agents share a unified output format via the `review-protocol.md` canonical vocabulary (Blocker/Warning/Suggestion + Pass/Block/Conditional Pass). The roster and dispatch are canonically defined by `agent_docs/AI-TEAM-REGISTRY.md` (regenerated from frontmatter; manual edits to individual cells are forbidden).
 
-### 3. Skills（17 個）
+### 3. Skills (17)
 
-- **開發流程**：`feature-pipeline`（端對端流水線）、`tdd-workflow`、`spectra-amplifier`（PRD 補 acceptance criteria）
-- **審查三件套**（觸發互斥）：`code-review`（單一 PR 標準審查）、`multi-agent-review`（高風險三專家並行）、`pr-review-cycle-mob`（成本分級 cascade）
-- **安全與品質**：`security-audit`（OWASP）、`techdebt-scanner`、`harness-eval`（harness 成熟度 0-100 評分）
-- **知識與交接**：`pr-retro`（merge 後萃取教訓）、`context-aggregator`（多來源交接摘要）、`gen-app-map`（技術棧無關的專案地圖產生器）
-- **Skill 工程**：`skill-creator-plus`（官方 Anthropic 方法論 × 本地制度：意圖捕捉、互斥檢查、pushy description、機械驗證器 `validate_skill.py`、fresh-context 雙向觸發測試各 8-10 條、eval 迭代）
-- **UI 與圖表**：`beautiful-mermaid`（Mermaid → 終端 ASCII／SVG）、`ui-ux-pro-max`（設計系統產生器，附 3 支檢索腳本＋24 份跨 13 技術棧的設計資料庫）、`frontend-design`（設計哲學指引，Compose 範例＋等價寫法標註）
+- **Development workflows**: `feature-pipeline` (end-to-end pipeline), `tdd-workflow`, `spectra-amplifier` (adds acceptance criteria to PRDs)
+- **Review trio** (mutually exclusive triggers): `code-review` (standard single-PR review), `multi-agent-review` (three experts in parallel for high-risk changes), `pr-review-cycle-mob` (cost-tiered cascade)
+- **Security and quality**: `security-audit` (OWASP), `techdebt-scanner`, `harness-eval` (harness maturity, scored 0-100)
+- **Knowledge and handoff**: `pr-retro` (extracts lessons after merge), `context-aggregator` (multi-source handoff summary), `gen-app-map` (tech-stack-agnostic project map generator)
+- **Skill engineering**: `skill-creator-plus` (official Anthropic methodology × local institution: intent capture, overlap checks, pushy descriptions, the mechanical validator `validate_skill.py`, 8-10 fresh-context bidirectional trigger tests each way, eval iteration)
+- **UI and diagrams**: `beautiful-mermaid` (Mermaid → terminal ASCII/SVG), `ui-ux-pro-max` (design-system generator, with 3 retrieval scripts + 24 design databases across 13 tech stacks), `frontend-design` (design-philosophy guidance, with Compose examples annotated with equivalents)
 
-> 2026-07-07 全部 skills 已從母專案補回完整內容並去專案化（抽取時 10 個曾被靜默大綱化——這個事故本身也進了教訓管線）。
+> As of 2026-07-07, all skills have had their full content restored from the parent project and been de-project-specific-ized (10 of them had been silently outlined-down during extraction — this incident itself was also fed into the lessons pipeline).
 
-### 4. 物理防線（Hooks）
+### 4. Physical Guardrails (Hooks)
 
-| Hook | 事件 | 模式 | 職責 |
+| Hook | Event | Mode | Responsibility |
 |------|------|------|------|
-| `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce**（exit 2） | 攔截：master/main 直接 commit、force-push、reset --hard origin、讀取**與 git add** 敏感檔（.env/keystore/credential…）、`curl\|sh` 各變體、rm -rf / |
-| `post-edit-lint.py` | PostToolUse(寫入) | sentinel | INV pattern 快掃（fork 後填 QUICK_CHECKS） |
-| `pre-compact-snapshot.py` | PreCompact | sentinel | 自動寫 session 快照到 `state/session-handoffs/` |
-| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | 收割 `[VERIFY_FAILED:*]` 進 ERRORS.md；墓碑帳本防重複；30/90 天 state 輪替 |
+| `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce** (exit 2) | Blocks: direct commits to master/main, force-push, reset --hard origin, reading **and git-adding** sensitive files (.env/keystore/credential…), all variants of `curl\|sh`, rm -rf / |
+| `post-edit-lint.py` | PostToolUse(write) | sentinel | Quick INV-pattern scan (fill in QUICK_CHECKS after forking) |
+| `pre-compact-snapshot.py` | PreCompact | sentinel | Automatically writes a session snapshot to `state/session-handoffs/` |
+| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | Harvests `[VERIFY_FAILED:*]` into ERRORS.md; a tombstone ledger prevents duplicates; 30/90-day state rotation |
 
-鐵律（來自實戰教訓）：**任何 hook 新增或修改後，必須跑黑箱煙霧測試**（block 情境期望 exit 2、pass 期望 0，指令在 `harness-maintenance.md` §4）——本專案的 guard 曾因無執行權限＋錯誤 exit code 雙重失效而「紙上防線」數月無人發現。
+Iron rule (from a real production lesson): **any hook addition or modification must be black-box smoke tested** (block scenario expects exit 2, pass scenario expects 0; commands in `harness-maintenance.md` §4) — this project's guard once went unnoticed for months as a "paper guardrail," doubly disabled by missing execute permission and a wrong exit code.
 
-### 5. 知識管理（五層，地圖見 `docs/INDEX.md`）
+### 5. Knowledge Management (Five Layers; map at `docs/INDEX.md`)
 
 ```
-踩坑 ──→ ERRORS.md（Pending，hook 自動收割＋手動 append）
-              │ 人類週審 promote
+Pitfall hit ──→ ERRORS.md (Pending, auto-harvested by hook + manual append)
+              │ human weekly review promotes it
               ▼
-         Active Lessons（附 Why + How-to-apply）
-              │ 可機械化者
+         Active Lessons (with Why + How-to-apply)
+              │ mechanizable ones
               ▼
-    invariants.md（INV-* 硬規則）──→ guard hook（物理攔截）
+    invariants.md (INV-* hard rules) ──→ guard hook (physical interception)
 ```
 
-另三層：`docs/decisions/ADR-*`（架構決策，人核可）、`state/session-handoffs/`（PreCompact 自動快照）、Claude Code 原生 memory（**只准存跨 session 指標**，教訓全文一律走 ERRORS.md）。維護權限採紅黃綠三級（`harness-maintenance.md`）：教訓隨時可 append、行為指引備份後改、常駐規則與防線動之前問人。
+Three more layers: `docs/decisions/ADR-*` (architectural decisions, human-approved), `state/session-handoffs/` (automatic PreCompact snapshots), Claude Code's native memory (**only cross-session metrics allowed**; the full text of lessons always goes through ERRORS.md). Maintenance permissions use a red/yellow/green tier system (`harness-maintenance.md`): lessons may be appended anytime, behavioral guidance may be changed after backup, always-on rules and guardrails require asking a human before touching.
 
-### 6. UI/UX 三階段（可選）
+### 6. UI/UX Three-Phase Flow (Optional)
 
-Wireframe → Critique → Implementation 強制閘門（`.claude/uiux/WORKFLOW.md`），配 style-spec 模板與六份 prompt 模板。無前端專案可整組刪除 `.claude/uiux/` 與兩個 UI agent。
+Wireframe → Critique → Implementation, enforced as gates (`.claude/uiux/WORKFLOW.md`), with a style-spec template and six prompt templates. Projects without a frontend can delete `.claude/uiux/` and the two UI agents entirely.
 
-## 快速開始（fork 後五步）
+## Quick Start (Five Steps After Forking)
 
-1. **替換佔位符**：全域搜尋 `{{PROJECT_NAME}}`、`{{PROJECT_TAGLINE}}`；填 CLAUDE.md 的 Quick Commands 與 Tech Stack（可執行驗證指令是成功率最大槓桿——Feedback 子系統）；環境初始化照 `.claude/templates/init.sh.template` 填實。含 `{{}}` 的檔案視為未啟用，模型會自動跳過。
-2. **最小可用填寫**：`agent_docs/TECHNICAL-REFERENCE.md` 檔頭列了 5 個欄位（核心使命、技術棧四格、頂層模組、API base URL、認證方式）——填完即解鎖「任務前必讀」地位，其餘 28 個佔位符可後補。
-3. **Hooks 煙霧測試**：`chmod +x .claude/hooks/*.py` 後照 `harness-maintenance.md` §4 實測 block/pass 兩情境。
-4. **跑 canary 驗收**：照 `docs/harness/NEW-PROJECT-VALIDATION.md` 用一個 30 分鐘的小任務走完整流程（分支→計劃→派工→review→教訓管線），每步有可觀察判準。
-5. **按技術棧客製**：`invariants.md` 補 INV-SEC/TEST/API 規則、`post-edit-lint.py` 填 QUICK_CHECKS、`gen-app-map` 填掃描目標表、（有前端）填 uiux style-spec。
+1. **Replace placeholders**: Globally search for `{{PROJECT_NAME}}`, `{{PROJECT_TAGLINE}}`; fill in CLAUDE.md's Quick Commands and Tech Stack (executable verification commands are the single biggest lever for success rate — the Feedback subsystem); fill in environment bootstrap per `.claude/templates/init.sh.template`. Files still containing `{{}}` are treated as not yet activated, and the model will automatically skip them.
+2. **Minimum viable fill-in**: The header of `agent_docs/TECHNICAL-REFERENCE.md` lists 5 fields (core mission, tech-stack quadrant, top-level modules, API base URL, auth method) — filling these unlocks "required reading before any task" status; the remaining 28 placeholders can be filled in later.
+3. **Hooks smoke test**: `chmod +x .claude/hooks/*.py`, then test both the block/pass scenarios for real per `harness-maintenance.md` §4.
+4. **Run canary acceptance**: Use one 30-minute small task to walk the full flow per `docs/harness/NEW-PROJECT-VALIDATION.md` (branch → plan → delegate → review → lessons pipeline), with observable criteria at every step.
+5. **Customize by tech stack**: Add INV-SEC/TEST/API rules to `invariants.md`, fill in QUICK_CHECKS in `post-edit-lint.py`, fill in the scan-target table for `gen-app-map`, and (if you have a frontend) fill in the uiux style-spec.
 
-## 目錄結構
+## Directory Structure
 
 ```
 BaseAIProject/
-├── CLAUDE.md                  # 路由中心：正典層級、決策樹、文件地圖（≤100 行）
-├── GEMINI.md                  # Antigravity(agy) agent 橋接協議
-├── agent_docs/                # 詳版教學層（常駐 rules 的延伸內容）
-│   ├── AI-TEAM-REGISTRY.md    # agents/skills 正典名單（frontmatter 生成）
-│   ├── TECHNICAL-REFERENCE.md # 技術百科（含最小填寫清單）
+├── CLAUDE.md                  # Routing hub: canonical hierarchy, decision tree, document map (≤100 lines)
+├── GEMINI.md                  # Antigravity (agy) agent bridging protocol
+├── agent_docs/                # Detailed teaching layer (extended content for always-on rules)
+│   ├── AI-TEAM-REGISTRY.md    # Canonical roster of agents/skills (generated from frontmatter)
+│   ├── TECHNICAL-REFERENCE.md # Technical encyclopedia (with a minimum-fill checklist)
 │   └── multi-agent-guide / modularity / security-policy / cost-optimization / code-conventions
 ├── docs/
-│   ├── INDEX.md               # 文件索引 + 五層知識地圖
-│   ├── harness/               # 制度文件：診斷書、交接信、新專案驗收流程
-│   ├── architecture/          # invariants.md（INV-* 硬規則）、domains.md
-│   ├── decisions/             # ADR-0001 + 範本
-│   ├── learnings/ERRORS.md    # 教訓管線（Pending → Active → invariants）
-│   └── plans/                 # ExecPlan 規格 + active/ + completed/
-├── state/                     # runtime（gitignored）：快照、hook 事件、墓碑帳本
+│   ├── INDEX.md               # Document index + five-layer knowledge map
+│   ├── harness/                # Institutional documents: diagnosis report, letter to the future, new-project validation flow
+│   ├── architecture/          # invariants.md (INV-* hard rules), domains.md
+│   ├── decisions/             # ADR-0001 + template
+│   ├── learnings/ERRORS.md    # Lessons pipeline (Pending → Active → invariants)
+│   └── plans/                 # ExecPlan spec + active/ + completed/
+├── state/                     # runtime (gitignored): snapshots, hook events, tombstone ledger
 └── .claude/
-    ├── settings.json          # hooks 接線（5 事件）
-    ├── rules/                 # 6 條常駐規則（always: true）
-    ├── agents/                # 14 個 virtual agents
-    ├── skills/                # 17 個 skills
+    ├── settings.json          # Hook wiring (5 events)
+    ├── rules/                 # 6 always-on rules (always: true)
+    ├── agents/                # 14 virtual agents
+    ├── skills/                # 17 skills
     ├── protocols/             # lifecycle / handoff / review / maintenance
-    ├── templates/             # 派工模板、init.sh 環境範本
+    ├── templates/             # delegation templates, init.sh environment template
     ├── hooks/                 # 4 hooks + _lib
-    ├── commands/              # /last-word、/techdebt
-    └── uiux/                  # UI 三階段（可選）
+    ├── commands/               # /last-word, /techdebt
+    └── uiux/                   # UI three-phase flow (optional)
 ```
 
-## 核心概念快速參考
+## Core Concepts Quick Reference
 
-| 概念 | 說明 | 正典文件 |
+| Concept | Description | Canonical Document |
 |------|------|---------|
-| 正典層級 | 文件矛盾時的採信順序：frontmatter > 各 protocol > REGISTRY > invariants | `CLAUDE.md` |
-| 派工三件套 | 目標動機／驗收條件／回報格式，缺一不派 | `.claude/rules/model-dispatch.md` |
-| 驗證不自驗 | fresh-context agent 做 read-back／實跑／評審 | `model-dispatch.md` §5 |
-| 熔斷 | 升降級走完仍失敗→帶軌跡問人，格式固定 | `.claude/rules/judgment-rubrics.md` §3 |
-| ExecPlan | 跨模組/API 變更的 9 段計劃，10 階段生命週期 | `docs/plans/PLANS.md` |
-| Handoff Marker | agent 結尾必為 `[HANDOFF:]`/`[VERIFY_FAILED:]`/`[HUMAN_ATTENTION_REQUIRED:]` | `.claude/protocols/handoff-protocol.md` |
-| 紅黃綠分級 | harness 檔案的修改權限與備份驗證要求 | `.claude/protocols/harness-maintenance.md` |
-| 煙霧測試 | hook 改動後 block/pass 雙情境黑箱實測 | `harness-maintenance.md` §4 |
-| 範圍宣告 | 派工必附：允許讀／寫／禁觸／終止條件 | `delegation-templates.md` 通用規範 |
-| 品質關卡 | 新增/改 agent 或 skill：重複審查＋雙向觸發測試＋baseline 對照 | `harness-maintenance.md` §6 |
-| 五維度體檢 | Instructions/Tools/Environment/State/Feedback 缺一不完整 | `harness-maintenance.md` §7 |
-| Red Flags | 合理化話術對照表；違反字面即違反精神 | `judgment-rubrics.md` §7 |
+| Canonical hierarchy | Order of trust when documents conflict: frontmatter > each protocol > REGISTRY > invariants | `CLAUDE.md` |
+| Delegation trio | Goal & motivation / acceptance criteria / report format — missing any one means don't delegate | `.claude/rules/model-dispatch.md` |
+| Verification is never self-verification | A fresh-context agent does read-back / runs it for real / reviews it | `model-dispatch.md` §5 |
+| Circuit-break | Still failing after the full escalation/de-escalation path → ask a human with the failure trace, in a fixed format | `.claude/rules/judgment-rubrics.md` §3 |
+| ExecPlan | A 9-section plan for cross-module/API changes, with a 10-stage lifecycle | `docs/plans/PLANS.md` |
+| Handoff marker | An agent's final response must end with `[HANDOFF:]`/`[VERIFY_FAILED:]`/`[HUMAN_ATTENTION_REQUIRED:]` | `.claude/protocols/handoff-protocol.md` |
+| Red/yellow/green tiers | Modification permissions and backup-verification requirements for harness files | `.claude/protocols/harness-maintenance.md` |
+| Smoke test | Black-box testing of both block/pass scenarios for real, after any hook change | `harness-maintenance.md` §4 |
+| Scope declaration | Every delegation must include: allowed to read / write / off-limits / termination condition | `delegation-templates.md` general spec |
+| Quality gate | Adding/changing an agent or skill: overlap review + bidirectional trigger tests + baseline comparison | `harness-maintenance.md` §6 |
+| Five-dimension checkup | Instructions/Tools/Environment/State/Feedback — missing any one is incomplete | `harness-maintenance.md` §7 |
+| Red Flags | Rationalization-phrase lookup table; violating the letter is violating the spirit | `judgment-rubrics.md` §7 |
 
-## 能力極限（誠實條款）
+## Capability Limits (Honesty Clause)
 
-拆解、隔離驗證、多答案評審能把弱模型的**執行品質**逼近高階模型；**目標對不對**補不了。品味與美感決策、模糊商業判斷、無法驗證的長鏈推理——制度的答案是明確的出口（多候選交人選、明說需要人類決策、標註信心與未確認），而不是假裝能做。完整清單見 `docs/harness/DIAGNOSIS.md` §四。
+Decomposition, isolated verification, and multi-answer review can push a weak model's **execution quality** close to that of a high-tier model; they cannot fix **whether the goal itself is right**. Taste and aesthetic decisions, ambiguous business judgment, unverifiable long reasoning chains — the institution's answer is a clear exit (offer multiple candidates for human choice, explicitly state that human judgment is needed, flag confidence level and what's unconfirmed), not pretending to be capable. Full list in `docs/harness/DIAGNOSIS.md` §4.
 
-## 參考資料
+## References
 
 - [Anthropic — Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
-- [Anthropic — 官方 skills repo（skill-creator 方法論來源）](https://github.com/anthropics/skills)
-- [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering)（五子系統模型來源）
-- [obra/superpowers](https://github.com/obra/superpowers)（Red Flags 反合理化與 skill TDD 模式來源）
-- [revfactory/harness](https://github.com/revfactory/harness)（雙向觸發測試量化來源）
-- Addy Osmani — Loop Engineering（maker/verifier 分離、gate-softening 禁令的理論源頭）
+- [Anthropic — Official skills repo (source of the skill-creator methodology)](https://github.com/anthropics/skills)
+- [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) (source of the five-subsystem model)
+- [obra/superpowers](https://github.com/obra/superpowers) (source of the Red Flags anti-rationalization and skill-TDD patterns)
+- [revfactory/harness](https://github.com/revfactory/harness) (source of quantified bidirectional trigger testing)
+- Addy Osmani — Loop Engineering (theoretical origin of maker/verifier separation and the gate-softening ban)
 - Mitchell Hashimoto — Harness Engineering
-- Andy Matuschak — Evergreen Notes（知識管線設計參考）
+- Andy Matuschak — Evergreen Notes (reference for knowledge-pipeline design)
