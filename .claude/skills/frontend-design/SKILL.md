@@ -1,95 +1,95 @@
 ---
 name: frontend-design
-description: 以字體、色彩、動效、空間構成等設計哲學為核心，產出高品質 UI 元件與視覺設計指引；當使用者要設計介面、美化畫面或建立設計系統時觸發。
+description: Produces high-quality UI components and visual design guidance centered on typography, color, motion, and spatial-composition design philosophy; triggers when the user wants to design an interface, polish a screen, or build a design system, or mentions "設計介面", "美化畫面", "建立設計系統".
 ---
 
 # Frontend Design Skill
 
-高品質前端 UI 設計指南，基於 Anthropic 官方 Frontend Design Skill（Frontend Aesthetics Cookbook），技術棧無關——原則適用於任何前端框架（Web/CSS、React、Vue、SwiftUI、Compose 等），程式碼範例以 Compose 示範，換成專案實際技術棧的等價寫法即可。
+A high-quality frontend UI design guide, based on Anthropic's official Frontend Design Skill (Frontend Aesthetics Cookbook). Tech-stack agnostic — the principles apply to any frontend framework (Web/CSS, React, Vue, SwiftUI, Compose, etc.); code examples are demonstrated in Compose, and should be swapped for the equivalent syntax of the project's actual tech stack.
 
-## 使用方式
+## Usage
 
 ```
-/frontend-design [元件名稱或畫面描述]
+/frontend-design [component name or screen description]
 ```
 
-## 設計哲學
+## Design Philosophy
 
-你是一位擁有世界級美學品味的設計工程師。設計必須：
+You are a design engineer with world-class aesthetic taste. Designs must be:
 
-- **獨特性**：永遠不要建立看起來「模板化」或「千篇一律」的 UI
-- **藝術指導**：每個專案都需要清晰、一致的視覺語言
-- **細節執著**：魔鬼藏在細節中，從動效到間距都要精心設計
+- **Distinctive**: never build UI that looks "templated" or "cookie-cutter"
+- **Art-directed**: every project needs a clear, consistent visual language
+- **Detail-obsessed**: the devil is in the details — from motion to spacing, everything is deliberately crafted
 
 ---
 
-## 核心設計原則
+## Core Design Principles
 
-### 1. Typography（字體）
+### 1. Typography
 
-**原則**：選擇獨特且有個性的字體，並建立清晰的層級。
+**Principle**: Choose distinctive, characterful typefaces and establish a clear hierarchy.
 
-| 禁止 | 建議 |
+| Avoid | Prefer |
 |------|------|
-| Arial, Helvetica | 系統字體搭配明確層級 |
-| Inter, Roboto（過度通用、未經挑選） | 跨平台可用且有個性的特色字體 |
-| 預設字體配置 | 依專案自訂的 Typography 系統 |
+| Arial, Helvetica | System fonts with a clear hierarchy |
+| Inter, Roboto (overused, unconsidered defaults) | Cross-platform, characterful display fonts |
+| Default typography config | A custom Typography system per project |
 
-**範例（Compose，其他技術棧替換為等價的 Typography/CSS 系統）：**
+**Example (Compose; swap for the equivalent Typography/CSS system in other stacks):**
 ```kotlin
-// 定義清晰的字體層級
+// Define a clear type hierarchy
 val Typography = Typography(
     headlineLarge = TextStyle(
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
-        letterSpacing = (-0.5).sp  // 緊湊標題
+        letterSpacing = (-0.5).sp  // Tight heading tracking
     ),
     bodyLarge = TextStyle(
         fontSize = 16.sp,
-        lineHeight = 24.sp  // 舒適閱讀行高
+        lineHeight = 24.sp  // Comfortable reading line-height
     )
 )
 ```
 
-### 2. Color & Theme（色彩）
+### 2. Color & Theme
 
-**原則**：使用 Theme / 設計變數維護一致的調色盤，不硬編碼顏色值。
+**Principle**: Use a theme / design-token system to maintain a consistent palette — never hardcode color values.
 
-| 禁止 | 建議 |
+| Avoid | Prefer |
 |------|------|
-| 硬編碼顏色值 | 使用 Theme / CSS variable |
-| 俗套配色（藍灰白商務風） | 強主色 + 銳利點綴色 |
-| 無一致性的隨機顏色 | 明確的色彩系統 |
+| Hardcoded color values | Theme / CSS custom properties |
+| Cliché palettes (blue-gray-white corporate) | A strong primary color + a sharp accent |
+| Inconsistent, arbitrary colors | An explicit color system |
 
-**範例（Compose，Web 專案可替換為 CSS custom properties / Tailwind theme）：**
+**Example (Compose; web projects can swap for CSS custom properties / Tailwind theme):**
 ```kotlin
-// 定義品牌色彩系統
+// Define the brand color system
 private val LightColors = lightColorScheme(
     primary = Color(0xFF6750A4),
     secondary = Color(0xFF625B71),
-    tertiary = Color(0xFF7D5260),  // 點綴色
+    tertiary = Color(0xFF7D5260),  // Accent color
     surface = Color(0xFFFFFBFE),
     background = Color(0xFFFFFBFE)
 )
 
-// 自訂擴展顏色
+// Custom extended color
 val ColorScheme.accent: Color
-    get() = Color(0xFFFF6B35)  // 銳利橘色點綴
+    get() = Color(0xFFFF6B35)  // Sharp orange accent
 ```
 
-### 3. Motion（動效）
+### 3. Motion
 
-**原則**：優先高影響動效（入場、頁面切換），而非散亂的微互動。
+**Principle**: Prioritize high-impact motion (entrances, screen transitions) over scattered micro-interactions.
 
-| 禁止 | 建議 |
+| Avoid | Prefer |
 |------|------|
-| 到處都是微動效 | 聚焦在入場/頁面切換 |
-| 無意義的彈跳 | 有目的的引導動畫 |
-| 分散注意力 | 強化資訊層級 |
+| Micro-animations everywhere | Focus on entrance / screen-transition motion |
+| Meaningless bounces | Purposeful, guiding animation |
+| Distracting effects | Reinforcing information hierarchy |
 
-**範例（Compose，Web 專案可替換為 CSS transition / Framer Motion）：**
+**Example (Compose; web projects can swap for CSS transitions / Framer Motion):**
 ```kotlin
-// 列表項目交錯進場
+// Staggered list-item entrance
 LazyColumn {
     itemsIndexed(items) { index, item ->
         AnimatedVisibility(
@@ -97,7 +97,7 @@ LazyColumn {
             enter = fadeIn(
                 animationSpec = tween(
                     durationMillis = 300,
-                    delayMillis = index * 50  // 交錯延遲
+                    delayMillis = index * 50  // Stagger delay
                 )
             ) + slideInVertically(
                 initialOffsetY = { it / 2 }
@@ -109,50 +109,50 @@ LazyColumn {
 }
 ```
 
-### 4. Spatial Composition（空間構圖）
+### 4. Spatial Composition
 
-**原則**：打破可預測的對稱佈局，用留白與適度重疊創造視覺焦點。
+**Principle**: Break predictable symmetric layouts; use whitespace and deliberate overlap to create visual focal points.
 
-| 禁止 | 建議 |
+| Avoid | Prefer |
 |------|------|
-| 完美對稱 | 不對稱佈局創造視覺張力 |
-| 元素孤立 | 適度重疊增加層次 |
-| 擁擠佈局 | 大量負空間留白 |
+| Perfect symmetry | Asymmetric layouts that create visual tension |
+| Isolated elements | Deliberate overlap to add depth |
+| Cramped layouts | Generous negative space |
 
-**範例（Compose，其他技術棧替換為等價的容器/間距系統）：**
+**Example (Compose; swap for the equivalent container/spacing system in other stacks):**
 ```kotlin
-// 使用負空間創造呼吸感
+// Use negative space to create breathing room
 Column(
     modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 24.dp)  // 充足邊距
+        .padding(horizontal = 24.dp)  // Generous margins
 ) {
-    Spacer(modifier = Modifier.height(48.dp))  // 大量頂部留白
+    Spacer(modifier = Modifier.height(48.dp))  // Large top whitespace
 
     Text(
         text = title,
         style = MaterialTheme.typography.headlineLarge
     )
 
-    Spacer(modifier = Modifier.height(32.dp))  // 區塊間距
+    Spacer(modifier = Modifier.height(32.dp))  // Section spacing
 
-    // 內容...
+    // Content...
 }
 ```
 
-### 5. Visual Details（視覺細節）
+### 5. Visual Details
 
-**原則**：運用漸層、紋理、陰影營造氛圍，避免生硬邊緣。
+**Principle**: Use gradients, texture, and shadow to build atmosphere; avoid harsh edges.
 
-| 禁止 | 建議 |
+| Avoid | Prefer |
 |------|------|
-| 純平面色塊 | 微妙漸層增加深度 |
-| 無陰影設計 | 適當陰影建立層次 |
-| 生硬邊緣 | 精緻圓角和過渡 |
+| Flat, solid color blocks | Subtle gradients that add depth |
+| No shadows at all | Purposeful shadows that build hierarchy |
+| Hard edges | Refined corner radii and transitions |
 
-**範例（Compose，Web 專案可替換為 CSS box-shadow / gradient）：**
+**Example (Compose; web projects can swap for CSS box-shadow / gradient):**
 ```kotlin
-// 漸層背景
+// Gradient background
 Box(
     modifier = Modifier
         .fillMaxSize()
@@ -166,7 +166,7 @@ Box(
         )
 )
 
-// 精緻卡片陰影
+// Refined card shadow
 Card(
     elevation = CardDefaults.cardElevation(
         defaultElevation = 2.dp,
@@ -178,47 +178,47 @@ Card(
 
 ---
 
-## 禁止事項 (Anti-Patterns)
+## Anti-Patterns
 
-### 絕對禁止
+### Absolutely Forbidden
 
-1. **通用字體**：不要使用 Arial、Helvetica、預設 sans-serif
-2. **俗套配色**：避免千篇一律的藍灰白商務風
-3. **可預測佈局**：不要只用對稱置中的樣板佈局
-4. **模板感設計**：每個設計都必須有獨特的藝術指導
+1. **Generic fonts**: don't use Arial, Helvetica, or default sans-serif
+2. **Cliché palettes**: avoid the cookie-cutter blue-gray-white corporate look
+3. **Predictable layouts**: don't rely solely on centered, symmetric boilerplate layouts
+4. **Templated design**: every design must have its own distinctive art direction
 
-### 警告標誌
+### Warning Signs
 
-如果你的設計看起來像：
-- Bootstrap/Material 預設樣式 → **重新設計**
-- 任何人都能想到的佈局 → **更有創意**
-- 沒有視覺焦點 → **建立層級**
+If your design looks like:
+- Default Bootstrap/Material styling → **redesign it**
+- A layout anyone could have guessed → **be more creative**
+- No visual focal point → **build a hierarchy**
 
 ---
 
-## 專案套用指南
+## Project Application Guide
 
-本節為模板，實際品牌色彩 / 調性 / 目標感受請依專案 CLAUDE.md 或 `agent_docs/TECHNICAL-REFERENCE.md` 填入，不要沿用其他專案的既有品牌值。
+This section is a template — fill in the actual brand colors / tone / target feeling per project's CLAUDE.md or `agent_docs/TECHNICAL-REFERENCE.md`; do not carry over another project's existing brand values.
 
-### 品牌定位（依專案填入）
+### Brand Positioning (fill in per project)
 
-- **核心價值**：[依專案填入]
-- **視覺調性**：[依專案填入，例如：現代、清晰、友善、專業]
-- **目標感受**：[依專案填入，使用者拿到產品的第一印象]
+- **Core values**: [fill in per project]
+- **Visual tone**: [fill in per project, e.g. modern, clean, friendly, professional]
+- **Target feeling**: [fill in per project — the user's first impression on encountering the product]
 
-### 設計規範範本
+### Design Spec Template
 
 ```kotlin
-// 專案色彩系統（範例結構，實際色值依專案品牌填入）
+// Project color system (example structure — actual values per project brand)
 object AppColors {
-    val Primary = Color(0xFF6750A4)     // 主色
-    val Accent = Color(0xFFFF6B35)      // 點綴色
-    val Success = Color(0xFF4CAF50)     // 成功狀態
-    val Surface = Color(0xFFFFFBFE)     // 表面
-    val OnSurface = Color(0xFF1C1B1F)   // 文字
+    val Primary = Color(0xFF6750A4)     // Primary
+    val Accent = Color(0xFFFF6B35)      // Accent
+    val Success = Color(0xFF4CAF50)     // Success state
+    val Surface = Color(0xFFFFFBFE)     // Surface
+    val OnSurface = Color(0xFF1C1B1F)   // Text
 }
 
-// 間距系統
+// Spacing system
 object Spacing {
     val xs = 4.dp
     val sm = 8.dp
@@ -228,7 +228,7 @@ object Spacing {
     val xxl = 48.dp
 }
 
-// 圓角系統
+// Corner-radius system
 object Radius {
     val sm = 8.dp
     val md = 12.dp
@@ -237,45 +237,45 @@ object Radius {
 }
 ```
 
-### 元件設計原則（範例，依專案實際元件調整）
+### Component Design Principles (examples — adjust per project's actual components)
 
-| 元件類型 | 設計要點 |
+| Component Type | Design Focus |
 |------|----------|
-| 列表卡片 | 清晰的主/次資訊對照、關鍵數值突出、狀態明確 |
-| 首頁 | 簡潔的 CTA、友善的空狀態設計 |
-| 摘要展示畫面 | 大字清晰、適合快速掃視、多語言並列（如需要） |
-| Loading 狀態 | 有趣的載入動畫、清晰的進度提示 |
+| List card | Clear primary/secondary info contrast, key values emphasized, clear status |
+| Home screen | Concise CTA, friendly empty states |
+| Summary display screen | Large clear type, quick-scan friendly, multi-language side-by-side (if needed) |
+| Loading state | Engaging loading animation, clear progress indication |
 
 ---
 
-## 設計審查清單
+## Design Review Checklist
 
-在完成設計前，檢查以下項目：
+Check the following before finalizing a design:
 
 ```
-□ 字體是否有明確層級？標題與內文對比足夠？
-□ 色彩是否使用 Theme 系統？有無硬編碼顏色？
-□ 關鍵操作有無適當的動效引導？
-□ 佈局是否有視覺焦點？留白是否充足？
-□ 細節是否到位？圓角、陰影、過渡是否精緻？
-□ 整體是否有獨特的藝術指導？還是看起來像模板？
+□ Does typography have a clear hierarchy? Enough contrast between headings and body text?
+□ Does color use the theme system? Any hardcoded colors?
+□ Do key actions have appropriate motion guidance?
+□ Does the layout have a visual focal point? Enough whitespace?
+□ Are details polished? Are corner radii, shadows, and transitions refined?
+□ Does the overall design have distinctive art direction, or does it look templated?
 ```
 
 ---
 
-## 參考資源
+## Reference Resources
 
 - [Anthropic Frontend Aesthetics Cookbook](https://github.com/anthropics/claude-cookbooks/blob/main/coding/prompting_for_frontend_aesthetics.ipynb)
 - [Material Design 3](https://m3.material.io/)
 
 ---
 
-*此 Skill 基於 Anthropic 官方 Frontend Design Skill，程式碼範例以 Compose Multiplatform/Kotlin 示範，原則本身技術棧無關。*
+*This skill is based on Anthropic's official Frontend Design Skill. Code examples are demonstrated in Compose Multiplatform/Kotlin; the principles themselves are tech-stack agnostic.*
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：design guidance MD（含程式碼示例 + a11y checklist）。
-- **整合**：作為 `uiux-agent` Phase 2 評審的判準依據。
-- **必查 invariants**：若專案在 `docs/architecture/invariants.md` 定義了 UI 元件相關的 INV（例如 Compose/前端框架既知陷阱），一併對照；無對應 INV 時，依本檔審查清單自行檢查。
-- **與 ui-ux-pro-max 區別**：frontend-design = 原則／美學指引；ui-ux-pro-max = 完整 design system spec 產出。
-- **交接 marker**：guidance 提供完畢 → `[HANDOFF: uiux-agent]` 或 `[HANDOFF: dev]`。
+- **Output form**: design guidance MD (with code examples + a11y checklist).
+- **Integration**: serves as the review criteria for `uiux-agent` Phase 2.
+- **Required invariants check**: if the project defines UI-component-related INVs in `docs/architecture/invariants.md` (e.g. known Compose/frontend-framework pitfalls), cross-check against them; if there's no corresponding INV, use this document's review checklist to self-check.
+- **Distinction from ui-ux-pro-max**: frontend-design = principles/aesthetic guidance; ui-ux-pro-max = full design-system spec output.
+- **Handoff marker**: once guidance is delivered → `[HANDOFF: uiux-agent]` or `[HANDOFF: dev]`.

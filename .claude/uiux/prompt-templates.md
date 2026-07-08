@@ -1,165 +1,165 @@
 # UI/UX Prompt Templates
 
-> **六份可直接複製使用的 Prompts，配合三階段流程（草圖 → 評審 → 實作）。**
+> **Six copy-paste-ready prompts, aligned to the three-phase workflow (Wireframe → Critique → Implementation).**
 >
-> 每份 prompt 都包含「輸入區塊」和「輸出格式」說明。
+> Each prompt includes an "input block" and an "output format" section.
 
 ---
 
-## Prompt 1：Wireframe 草圖生成
+## Prompt 1: Wireframe Generation
 
-> **用途**：從需求產生 Layout 草圖，只關注資訊架構，禁止寫最終樣式。
+> **Purpose**: Generate a layout wireframe from requirements, focused only on information architecture — no final styling allowed.
 >
-> **階段**：Phase 1 - 草圖
+> **Phase**: Phase 1 - Wireframe
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位 UI/UX 設計師，專長是資訊架構與 Layout 設計。
+# Role
+You are a UI/UX designer specializing in information architecture and layout design.
 
-# 任務
-根據以下需求，產生「純 Layout 草圖」。
+# Task
+Based on the following requirements, produce a "pure layout wireframe."
 
-## 輸入
+## Input
 
-### 畫面名稱
-[填入畫面名稱，例如：ProductListScreen]
+### Screen Name
+[Fill in the screen name, e.g. ProductListScreen]
 
-### 使用者目標
-[填入使用者想達成什麼]
+### User Goal
+[Fill in what the user wants to accomplish]
 
-### 核心操作
-[填入 1-3 個主要操作]
+### Core Actions
+[Fill in 1-3 primary actions]
 
-### 資料內容
-[填入這個畫面會顯示什麼資料]
+### Data Content
+[Fill in what data this screen will display]
 
-### 限制條件
-[填入任何技術或設計限制]
+### Constraints
+[Fill in any technical or design constraints]
 
-## 輸出格式要求
+## Output Format Requirements
 
 ### 1. ASCII Wireframe
-用純文字畫出區塊結構，標註每個區塊的用途。
+Draw the block structure in plain text, labeling the purpose of each block.
 
-### 2. 區塊說明表
-列出每個區塊的：內容、高度/比例、是否固定。
+### 2. Block Description Table
+List for each block: content, height/ratio, whether it's fixed.
 
-### 3. 資訊層級
-說明資訊的優先順序：Primary > Secondary > Tertiary。
+### 3. Information Hierarchy
+State the priority order of information: Primary > Secondary > Tertiary.
 
-### 4. 初步元件清單
-列出需要的元件類型（不含樣式）。
+### 4. Preliminary Component List
+List the component types needed (no styling).
 
-## 禁止事項
-- ❌ 禁止定義顏色、字體大小、圓角等視覺細節
-- ❌ 禁止寫任何程式碼
-- ❌ 禁止討論動畫效果
-- ❌ 禁止選擇配色方案
+## Prohibited
+- ❌ Do not define visual details like colors, font sizes, or corner radii
+- ❌ Do not write any code
+- ❌ Do not discuss animation effects
+- ❌ Do not choose a color scheme
 
-開始生成草圖。
+Begin generating the wireframe.
 ```
 
 ---
 
-## Prompt 2：設計評審（挑毛病）
+## Prompt 2: Design Critique (Nitpicking)
 
-> **用途**：讓 Claude 用設計師視角評審草圖/設計，找出問題並提出替代方案。
+> **Purpose**: Have Claude review a wireframe/design from a designer's perspective, identify issues, and propose alternatives.
 >
-> **階段**：Phase 2 - 評審
+> **Phase**: Phase 2 - Critique
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位資深 UI/UX 設計評審，擅長識別「AI 味」和「模板感」的設計問題。
+# Role
+You are a senior UI/UX design reviewer, skilled at spotting "AI smell" and "template feel" design problems.
 
-# 任務
-審查以下設計草圖/實作，指出問題並提出替代方案。
+# Task
+Review the following design wireframe/implementation, point out issues, and propose alternatives.
 
-## 輸入
+## Input
 
-### 設計草圖/截圖
-[貼入 ASCII Wireframe 或描述現有設計]
+### Design Wireframe/Screenshot
+[Paste the ASCII wireframe or describe the existing design]
 
-### 設計目標
-[這個設計要達成什麼目標]
+### Design Goal
+[What this design is meant to achieve]
 
-### 目標用戶
-[描述目標用戶特徵]
+### Target Users
+[Describe the target user characteristics]
 
-### 品牌調性
-[填入品牌風格關鍵詞，例如：現代、友善、專業、活潑]
+### Brand Tone
+[Fill in brand style keywords, e.g. modern, friendly, professional, playful]
 
-## 評審要求
+## Review Requirements
 
-### 1. AI 味檢測
-找出任何讓設計看起來像「AI 生成」或「模板」的元素
+### 1. AI Smell Detection
+Identify any elements that make the design look "AI-generated" or "templated"
 
-### 2. 可用性問題
-- 資訊層級是否清晰？
-- 觸控目標是否足夠？
-- 認知負擔是否過重？
+### 2. Usability Issues
+- Is the information hierarchy clear?
+- Are touch targets large enough?
+- Is the cognitive load too high?
 
-### 3. 遺漏狀態
-- 是否缺少 Loading state？
-- 是否缺少 Empty state？
-- 是否缺少 Error state？
+### 3. Missing States
+- Is a Loading state missing?
+- Is an Empty state missing?
+- Is an Error state missing?
 
-## 輸出格式要求
+## Output Format Requirements
 
-### 問題清單
-| 問題 | 嚴重度 | 位置 | 說明 |
+### Issue List
+| Issue | Severity | Location | Description |
 |-----|-------|------|------|
 | | High/Med/Low | | |
 
-### 3 個替代方向
-提出 3 個不同的改進方向，每個包含：
-- **方向名稱**
-- **核心改變**
-- **預期效果**
-- **風險/取捨**
+### 3 Alternative Directions
+Propose 3 different improvement directions, each including:
+- **Direction name**
+- **Core change**
+- **Expected effect**
+- **Risk/trade-off**
 
-### 建議採用
-說明你推薦哪個方向，以及原因。
+### Recommendation
+State which direction you recommend and why.
 ```
 
 ---
 
-## Prompt 3：UI 實作
+## Prompt 3: UI Implementation
 
-> **用途**：把已核准草圖 + Style Spec 轉成可執行的 UI 程式碼。
+> **Purpose**: Turn an approved wireframe + Style Spec into executable UI code.
 >
-> **階段**：Phase 3 - 實作
+> **Phase**: Phase 3 - Implementation
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位前端工程師，專精 [填入技術棧: React/Tailwind / Compose Multiplatform / SwiftUI / Vue]。
+# Role
+You are a frontend engineer specializing in [fill in tech stack: React/Tailwind / Compose Multiplatform / SwiftUI / Vue].
 
-# 任務
-根據已核准的草圖和 Style Spec，實作完整的 UI 程式碼。
+# Task
+Implement complete UI code based on the approved wireframe and Style Spec.
 
-## 輸入
+## Input
 
-### 核准的草圖
-[貼入 ASCII Wireframe]
+### Approved Wireframe
+[Paste the ASCII wireframe]
 
 ### Style Spec
-[貼入或引用 style-spec.template.md 的內容]
+[Paste or reference the contents of style-spec.template.md]
 
-### 技術棧
+### Tech Stack
 [React + Tailwind / Compose Multiplatform (Kotlin) / SwiftUI / Vue + Tailwind]
 
-### Design Token 來源
-[引用專案的 Design Token 檔案路徑]
+### Design Token Source
+[Reference the project's Design Token file path]
 
-## 實作要求
+## Implementation Requirements
 
-### 1. 狀態完整性
-必須實作所有互動狀態：
+### 1. State Completeness
+Must implement all interaction states:
 - [ ] Default
 - [ ] Hover (desktop)
 - [ ] Focus (keyboard)
@@ -167,14 +167,14 @@
 - [ ] Disabled
 - [ ] Loading
 
-### 2. 無障礙（a11y）
-- [ ] 所有圖示有 aria-label / contentDescription
-- [ ] 對比度 >= 4.5:1
-- [ ] 觸控目標 >= 44-48px
-- [ ] 鍵盤可完整操作
-- [ ] 尊重 prefers-reduced-motion
+### 2. Accessibility (a11y)
+- [ ] All icons have aria-label / contentDescription
+- [ ] Contrast ratio >= 4.5:1
+- [ ] Touch target >= 44-48px
+- [ ] Fully keyboard operable
+- [ ] Respects prefers-reduced-motion
 
-### 3. 響應式
+### 3. Responsive
 - [ ] Mobile (< 640px)
 - [ ] Tablet (640-1024px)
 - [ ] Desktop (> 1024px)
@@ -182,55 +182,55 @@
 ### 4. Edge Cases
 - [ ] Empty state
 - [ ] Error state
-- [ ] Loading state（Skeleton）
-- [ ] 長文字處理
+- [ ] Loading state (Skeleton)
+- [ ] Long text handling
 
-## 禁止事項
-- ❌ 禁止使用硬編碼顏色/間距
-- ❌ 禁止省略任何狀態
-- ❌ 禁止忽略 a11y
-- ❌ 禁止添加未被要求的功能
+## Prohibited
+- ❌ Do not use hardcoded colors/spacing
+- ❌ Do not omit any state
+- ❌ Do not ignore a11y
+- ❌ Do not add unrequested features
 ```
 
 ---
 
-## Prompt 4：Design Token 萃取
+## Prompt 4: Design Token Extraction
 
-> **用途**：從參考網站/截圖萃取 Design Tokens。
+> **Purpose**: Extract Design Tokens from a reference site/screenshot.
 >
-> **階段**：任何階段（設計研究）
+> **Phase**: Any phase (design research)
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位設計系統專家，擅長分析視覺設計並萃取可複用的 Design Tokens。
+# Role
+You are a design systems expert, skilled at analyzing visual designs and extracting reusable Design Tokens.
 
-# 任務
-分析以下參考資料，萃取 Design Tokens。
+# Task
+Analyze the following reference material and extract Design Tokens.
 
-## 輸入
+## Input
 
-### 參考來源
-[貼入以下任一種]
-- 網站 URL
-- 截圖描述
-- Figma/設計稿連結
+### Reference Source
+[Paste one of the following]
+- Website URL
+- Screenshot description
+- Figma/design file link
 
-### 萃取重點
-- [ ] 顏色系統
-- [ ] 字體系統
-- [ ] 間距系統
-- [ ] 圓角/形狀
-- [ ] 陰影/深度
-- [ ] 動畫時間
+### Extraction Focus
+- [ ] Color system
+- [ ] Typography system
+- [ ] Spacing system
+- [ ] Corner radius/shape
+- [ ] Shadow/elevation
+- [ ] Animation timing
 
-### 目標技術棧
+### Target Tech Stack
 [CSS Variables / Tailwind / Compose / SwiftUI]
 
-## 輸出格式要求
+## Output Format Requirements
 
-### 1. 顏色 Token
+### 1. Color Tokens
 ```css
 :root {
   --color-primary: #______;
@@ -241,130 +241,130 @@
 }
 ```
 
-### 2. 字體 Token
-字體大小、行高、字重的完整定義。
+### 2. Typography Tokens
+Complete definitions of font size, line height, and font weight.
 
-### 3. 間距 Token
-xs / sm / md / lg / xl / xxl 的完整定義。
+### 3. Spacing Tokens
+Complete definitions of xs / sm / md / lg / xl / xxl.
 
-### 4. 應用範例
-展示這些 Token 如何應用在實際元件上。
+### 4. Application Example
+Show how these tokens apply to an actual component.
 ```
 
 ---
 
-## Prompt 5：Microcopy 生成
+## Prompt 5: Microcopy Generation
 
-> **用途**：生成一致語氣的介面文案（按鈕、錯誤訊息、空狀態）。
+> **Purpose**: Generate interface copy with a consistent tone (buttons, error messages, empty states).
 >
-> **階段**：任何階段
+> **Phase**: Any phase
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位 UX Writer，專精介面文案與微文案設計。
+# Role
+You are a UX writer specializing in interface copy and microcopy design.
 
-# 任務
-為以下介面元素撰寫文案，確保語氣一致。
+# Task
+Write copy for the following interface elements, ensuring a consistent tone.
 
-## 輸入
+## Input
 
-### 品牌語氣
-[描述品牌說話的方式，例如：友善、專業、活潑、簡潔]
+### Brand Voice
+[Describe how the brand speaks, e.g. friendly, professional, playful, concise]
 
-### 目標用戶
-[描述用戶背景]
+### Target Users
+[Describe user background]
 
-### 需要文案的元素
-[列出按鈕、錯誤訊息、空狀態、確認對話框等]
+### Elements Needing Copy
+[List buttons, error messages, empty states, confirmation dialogs, etc.]
 
-### 語言
-[繁體中文 / 英文 / 雙語]
+### Language
+[Traditional Chinese / English / Bilingual]
 
-## 輸出格式
+## Output Format
 
-### 按鈕文案
-| 動作 | 文案 | 替代方案 |
+### Button Copy
+| Action | Copy | Alternative |
 |-----|------|---------|
 
-### 錯誤訊息
-| 錯誤類型 | 標題 | 說明 | 操作 |
+### Error Messages
+| Error Type | Title | Description | Action |
 |---------|------|------|------|
 
-### 空狀態
-| 場景 | 標題 | 說明 | CTA |
+### Empty States
+| Scenario | Title | Description | CTA |
 |-----|------|------|-----|
 ```
 
 ---
 
-## Prompt 6：UI Polish（微調）
+## Prompt 6: UI Polish (Fine-tuning)
 
-> **用途**：優化動畫、hover/focus、間距，禁止大改資訊架構。
+> **Purpose**: Refine animation, hover/focus, and spacing — no major changes to information architecture allowed.
 >
-> **階段**：Phase 3 後（精修）
+> **Phase**: Post-Phase-3 (polish)
 
 ### Prompt
 
 ```markdown
-# 角色
-你是一位注重細節的 UI 工程師，專精動畫與互動細節。
+# Role
+You are a detail-oriented UI engineer specializing in animation and interaction details.
 
-# 任務
-對以下 UI 進行 Polish（精修），提升視覺質感和互動體驗。
+# Task
+Polish the following UI to improve visual quality and interaction experience.
 
-## 輸入
+## Input
 
-### 現有程式碼
-[貼入需要 Polish 的元件程式碼]
+### Existing Code
+[Paste the component code that needs polishing]
 
-### Polish 範圍
-- [ ] 動畫 / Transition
-- [ ] Hover 效果
-- [ ] Focus 效果
-- [ ] 間距微調
-- [ ] Loading 動畫
+### Polish Scope
+- [ ] Animation / Transition
+- [ ] Hover effects
+- [ ] Focus effects
+- [ ] Spacing adjustments
+- [ ] Loading animation
 
-### 目標感受
-[描述優化後想達成的感覺：更流暢、更精緻、更有活力]
+### Target Feel
+[Describe the desired feeling after optimization: smoother, more refined, more lively]
 
-## 限制條件
+## Constraints
 
-### ❌ 禁止事項
-- 禁止改變資訊架構（區塊順序、內容結構）
-- 禁止新增/刪除功能
-- 禁止改變元件 API
+### ❌ Prohibited
+- Do not change the information architecture (block order, content structure)
+- Do not add/remove features
+- Do not change the component API
 
-### ✅ 允許事項
-- 添加/調整動畫（150-300ms）
-- 調整 hover/focus/active 狀態
-- 微調間距（±4px 以內）
-- 添加 Skeleton Loading
+### ✅ Allowed
+- Add/adjust animation (150-300ms)
+- Adjust hover/focus/active states
+- Fine-tune spacing (within ±4px)
+- Add Skeleton Loading
 
-## 輸出
+## Output
 
-1. 變更清單（原本 vs 修改後）
-2. 程式碼 Diff
-3. 效能說明（是否使用 GPU 加速屬性）
-4. Reduced Motion 處理
+1. Change list (before vs. after)
+2. Code diff
+3. Performance notes (whether GPU-accelerated properties are used)
+4. Reduced Motion handling
 ```
 
 ---
 
-## 使用建議
+## Usage Recommendations
 
-### 流程對應
+### Workflow Mapping
 
-| 階段 | 使用的 Prompt |
+| Phase | Prompt Used |
 |-----|--------------|
-| Phase 1: 草圖 | Prompt 1（Wireframe） |
-| Phase 2: 評審 | Prompt 2（設計評審） |
-| Phase 3: 實作 | Prompt 3（UI 實作） |
-| 精修 | Prompt 6（UI Polish） |
-| 研究 | Prompt 4（Token 萃取） |
-| 任何階段 | Prompt 5（Microcopy） |
+| Phase 1: Wireframe | Prompt 1 (Wireframe) |
+| Phase 2: Critique | Prompt 2 (Design Critique) |
+| Phase 3: Implementation | Prompt 3 (UI Implementation) |
+| Polish | Prompt 6 (UI Polish) |
+| Research | Prompt 4 (Token Extraction) |
+| Any phase | Prompt 5 (Microcopy) |
 
 ---
 
-*最後更新：2026-01-27*
+*Last updated: 2026-01-27*

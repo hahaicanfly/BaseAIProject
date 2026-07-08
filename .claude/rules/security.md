@@ -1,78 +1,78 @@
 ---
 name: security
-description: 安全相關的強制規則
+description: Mandatory security-related rules
 always: true
 ---
 
 # Security Rules
 
-## 絕對禁止
+## Absolutely Forbidden
 
-### 1. 硬編碼機敏資訊
+### 1. Hardcoding Sensitive Information
 ```
-// ❌ 永遠不要這樣做
+// ❌ Never do this
 apiKey = "sk-xxxxx"
 password = "my_password"
 token = "ghp_xxxxx"
 
-// ✅ 正確做法
+// ✅ Correct approach
 apiKey = process.env.API_KEY
 apiKey = BuildConfig.API_KEY
 apiKey = os.getenv("API_KEY")
 ```
 
-### 2. 日誌洩漏
+### 2. Log Leakage
 ```
-// ❌ 禁止
+// ❌ Forbidden
 log("Request with key: " + apiKey)
 log("Password: " + password)
 print(f"Token: {token}")
 
-// ✅ 正確
+// ✅ Correct
 log("Request sent")
 log("Authentication failed")
 ```
 
-### 3. 提交敏感檔案
-以下檔案絕對不能提交到 git：
+### 3. Committing Sensitive Files
+The following files must never be committed to git:
 - `.env`, `.env.*`
 - `local.properties`, `local-prod.properties`
 - `*.keystore`, `*.jks`
 - `*.pem`, `*.key`, `*.p12`
 - `*secret*`, `*credential*`
 - `serviceAccountKey.json`
-- `google-services.json` (如包含敏感資訊)
+- `google-services.json` (if it contains sensitive info)
 
-## 發現問題時
+## When an Issue Is Found
 
-如果在代碼中發現機敏資訊：
-1. **立即停止**當前操作
-2. **警告用戶**潛在風險
-3. **建議修復**方案
-4. **不要**執行可能造成洩漏的 git 操作
+If sensitive information is found in code:
+1. **Stop immediately** — halt the current operation
+2. **Warn the user** of the potential risk
+3. **Suggest a fix**
+4. **Do not** perform any git operation that could cause leakage
 
-## 審查時機
+## When to Proactively Check Security
 
-在以下時機主動檢查安全：
-- 任何涉及 API 調用的代碼
-- 配置檔案的修改
-- 新增依賴
-- git commit 前
-- 處理用戶輸入的代碼
+Proactively check security at the following times:
+- Any code involving API calls
+- Modifications to configuration files
+- Adding new dependencies
+- Before a git commit
+- Code that handles user input
 
-## 安全最佳實踐
+## Security Best Practices
 
-### 輸入驗證
-- 驗證所有外部輸入
-- 設定合理的長度/大小限制
-- 使用白名單而非黑名單
+### Input Validation
+- Validate all external input
+- Set reasonable length/size limits
+- Use allowlists rather than denylists
 
-### 錯誤處理
-- 不在錯誤訊息中暴露內部細節
-- 記錄錯誤但不記錄敏感資料
-- 提供通用的用戶錯誤訊息
+### Error Handling
+- Don't expose internal details in error messages
+- Log errors but not sensitive data
+- Provide generic user-facing error messages
 
-### 依賴管理
-- 定期更新依賴
-- 檢查已知漏洞
-- 審查新依賴的安全性
+### Dependency Management
+- Update dependencies regularly
+- Check for known vulnerabilities
+- Review the security posture of new dependencies

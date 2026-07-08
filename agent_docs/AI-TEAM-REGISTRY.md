@@ -1,80 +1,80 @@
 # AI Team Registry
 
-> **角色**：本檔是所有 agent 與 skill 的完整目錄，內容逐字取自 `.claude/agents/*.md` frontmatter 與 `.claude/skills/*/SKILL.md` description。
-> **正典規則**：模型分派以 `.claude/agents/*.md` frontmatter 的 `model` 欄為準（CLAUDE.md 正典層級）。
-> **本檔由 frontmatter 生成（2026-07-04）**。與 agent frontmatter 矛盾時以 frontmatter 為準；更新方式：照本段說明重新生成（逐檔讀取 frontmatter / SKILL.md description 覆寫下表），不要手改單格。
+> **Role**: This file is the complete registry of all agents and skills, generated verbatim from `.claude/agents/*.md` frontmatter and `.claude/skills/*/SKILL.md` description fields.
+> **Canonical rule**: Model dispatch is governed by the `model` field in `.claude/agents/*.md` frontmatter (see CLAUDE.md canonical hierarchy).
+> **This file was regenerated from frontmatter on 2026-07-08 (regenerated in English)**. If it conflicts with agent frontmatter, frontmatter wins. To update: re-generate per this section (re-read each file's frontmatter / SKILL.md description and overwrite the tables below) — do not hand-edit individual cells.
 
 ---
 
 ## Agents — 14
 
-| Agent | model | 職責 | tools |
+| Agent | model | Responsibility | tools |
 |-------|-------|------|-------|
-| `architect` | opus | 系統架構師 - 系統設計、API 設計、資料結構、ADR | Read, Grep, Glob |
-| `code-reviewer` | sonnet | 自動化 Code Review 專員 | Read, Bash, Grep, Glob |
-| `competitive-analyst` | sonnet | 競品分析師 - 競品逐項比較、功能對照表、定價比較、SWOT。不做市場規模／消費者調研（找 market-researcher）、不做量化 KPI／指標設計（找 data-analyst） | Read, Grep, Glob, WebFetch, WebSearch |
-| `data-analyst` | sonnet | 數據分析師 - 量化數據分析、KPI 與指標設計、統計趨勢解讀。不做市場定性研究（找 market-researcher）、不做競品逐項比較（找 competitive-analyst） | Read, WebSearch, WebFetch, Grep |
-| `market-researcher` | sonnet | 市場研究員 - 市場規模（TAM/SAM/SOM）、用戶調研、消費者洞察。不做量化 KPI／指標設計（找 data-analyst）、不做競品逐項比較（找 competitive-analyst） | Read, Grep, Glob, WebFetch, WebSearch |
-| `plan-reviewer` | opus | Plan 審查員 - 審查執行計劃的完整性、風險與驗證策略 | Read, Grep, Glob |
-| `pm` | opus | 產品經理 - 需求分析、用戶故事、優先級排序 | Read, Grep, Glob, WebSearch, WebFetch |
-| `qa-engineer` | sonnet | 測試工程師 - 單元測試、整合測試、Bug 分析 | Read, Bash, Grep, Glob |
-| `security-reviewer` | opus | 安全審查員 - 安全審計、漏洞檢測、金鑰保護 | Read, Grep, Glob |
-| `tech-lead` | sonnet | 技術主管 - 架構重構、跨模組設計檢視、技術債裁決 | Read, Grep, Glob |
-| `techdebt-scanner` | sonnet | 技術債分析師 - 掃描技術債、代碼健康度分析 | Read, Bash, Grep, Glob |
-| `ui-ux-designer` | sonnet | UI/UX 設計師 - 高保真設計產出（uiux-agent 三階段流程的 Phase 3） | Read, Grep, Glob, WebFetch |
-| `uiux-agent` | sonnet | UI/UX 設計代理 - 負責草圖、評審，不直接寫 production code | Read, Grep, Glob, Task |
-| `workflow-optimizer` | sonnet | 工作流優化師 - 審查 Claude Code 配置與開發體驗 | Read, Grep, Glob |
+| `architect` | opus | Software Architect - system design, API design, data modeling, ADRs | Read, Grep, Glob |
+| `code-reviewer` | sonnet | Automated Code Review specialist | Read, Bash, Grep, Glob |
+| `competitive-analyst` | sonnet | Competitive Analyst - feature-by-feature competitor comparison, feature matrices, pricing comparison, SWOT. Not for market-size/consumer research (use market-researcher), not for quantitative KPI/metric design (use data-analyst) | Read, Grep, Glob, WebFetch, WebSearch |
+| `data-analyst` | sonnet | Data Analyst - quantitative data analysis, KPI/metric design, statistical trend interpretation. Not for market qualitative research (use market-researcher), not for feature-by-feature competitor comparison (use competitive-analyst) | Read, WebSearch, WebFetch, Grep |
+| `market-researcher` | sonnet | Market Researcher - market sizing (TAM/SAM/SOM), user research, consumer insights. Not for quantitative KPI/metric design (use data-analyst), not for feature-by-feature competitor comparison (use competitive-analyst) | Read, Grep, Glob, WebFetch, WebSearch |
+| `plan-reviewer` | opus | Plan Reviewer - reviews execution plans for completeness, risk, and verification strategy | Read, Grep, Glob |
+| `pm` | opus | Product Manager - requirements analysis, user stories, prioritization | Read, Grep, Glob, WebSearch, WebFetch |
+| `qa-engineer` | sonnet | QA Engineer - unit tests, integration tests, bug analysis | Read, Bash, Grep, Glob |
+| `security-reviewer` | opus | Security Reviewer - security audits, vulnerability detection, secret protection | Read, Grep, Glob |
+| `tech-lead` | sonnet | Tech Lead - architectural refactoring, cross-module design review, tech-debt rulings | Read, Grep, Glob |
+| `techdebt-scanner` | sonnet | Tech Debt Analyst - scans tech debt, code health analysis | Read, Bash, Grep, Glob |
+| `ui-ux-designer` | sonnet | UI/UX Designer - high-fidelity design output (Phase 3 of the uiux-agent three-phase flow) | Read, Grep, Glob, WebFetch |
+| `uiux-agent` | sonnet | UI/UX Design Agent - handles wireframing and critique, does not write production code | Read, Grep, Glob, Task |
+| `workflow-optimizer` | sonnet | Workflow Optimizer - reviews Claude Code configuration and developer experience | Read, Grep, Glob |
 
-> 所有 agent 皆有 `verification_required: true`、`handoff_artifact: docs/plans/active/<task-id>.md`、`context_firewall: true`（未列於上表，逐檔一致）。
+> All agents also carry `verification_required: true`, `handoff_artifact: docs/plans/active/<task-id>.md`, `context_firewall: true` (omitted from the table above; consistent across every file).
 
 ---
 
 ## Skills — 17
 
-| Skill | 一句話描述 |
+| Skill | One-line description |
 |-------|-----------|
-| `beautiful-mermaid` | 生成美觀、清晰的 Mermaid 圖表（架構圖、流程圖、序列圖、類別圖、ER 圖、狀態圖），可輸出終端 ASCII 藝術或 SVG 檔案 |
-| `code-review` | 對 PR diff 進行標準代碼審查，涵蓋安全性、品質與架構合規。單一 PR 的標準審查 |
-| `context-aggregator` | 聚合 MCP 記憶、Git 歷史、本地檔案等多來源資訊，產出結構化摘要以利 session 交接與工作延續 |
-| `feature-pipeline` | 大型新功能的端對端開發流水線，從需求分析、架構設計、UI/UX 到多代理審查一次串接 |
-| `frontend-design` | 以字體、色彩、動效、空間構成等設計哲學為核心，產出高品質 UI 元件與視覺設計指引 |
-| `gen-app-map` | 掃描專案的進入點、路由、資料層與狀態管理，產出 app-map.json（AI 可讀 context primer）與 app-map.html（人類可讀視覺化），作為新 debug/重構 session 的輕量專案地圖。技術棧無關模板，fork 後需依專案填實掃描目標表 |
-| `harness-eval` | 掃描目標 repo，評估 Harness Engineering 成熟度並輸出 0–100 分數、缺口清單與優先改善建議 |
-| `multi-agent-review` | 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查。高風險/核心邏輯變更，需要三專家並行時用；一般 PR 用 code-review |
-| `pr-retro` | 每次 PR merge 後自動萃取教訓並寫入 ERRORS.md Pending Review，驅動 skill 文件持續優化 |
-| `pr-review-cycle-mob` | 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程。需要成本分級 cascade 策略時用 |
-| `security-audit` | 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 OWASP 標準檢查 |
-| `skill-creator` | （基礎版存根，已被 skill-creator-plus 取代）僅在使用者明確輸入 /skill-creator 指令時使用；任何建立/優化/評測 skill 的需求一律改用 skill-creator-plus |
-| `skill-creator-plus` | 引導完整的 skill 建立流程——意圖捕捉、重疊檢查、撰寫、機械驗證、觸發測試到 registry 登記，含 eval 迭代方法。取代基礎版 skill-creator |
-| `spectra-amplifier` | 將薄弱的需求描述或 PRD 草稿強化為每項需求皆附可驗證 acceptance criteria 的完整規格 |
-| `tdd-workflow` | 執行 Red → Green → Refactor 的測試驅動開發流程，用於核心業務邏輯與高可靠性需求 |
-| `techdebt-scanner` | 系統性掃描專案技術債（TODO/FIXME、複雜函式、重複程式碼等），產出分級優先報告 |
-| `ui-ux-pro-max` | 產出完整設計系統，涵蓋色彩調色盤、字體配對、UI 風格與 UX 準則，支援多種前端技術棧 |
+| `beautiful-mermaid` | Generates beautiful, clear Mermaid diagrams (architecture, flowcharts, sequence, class, ER, state diagrams), output as terminal ASCII art or SVG files |
+| `code-review` | Standard code review of a PR diff, covering security, quality, and architectural compliance. Standard single-PR review |
+| `context-aggregator` | Aggregates multi-source information (MCP memory, git history, local files) into a structured summary for session handoff and work continuity |
+| `feature-pipeline` | End-to-end development pipeline for large new features — requirements analysis, architecture design, UI/UX, through multi-agent review in one chain |
+| `frontend-design` | Produces high-quality UI components and visual design guidance centered on typography, color, motion, and spatial-composition design philosophy |
+| `gen-app-map` | Scans a project's entry points, routes, data layer, and state management to produce app-map.json (an AI-readable context primer) and app-map.html (a human-readable visualization), serving as a lightweight project map for new debug/refactor sessions. Tech-stack-agnostic template — fill in the scan-target table after forking to a specific project |
+| `harness-eval` | Scans a target repo, evaluates Harness Engineering maturity, and outputs a 0–100 score, a gap list, and prioritized improvement recommendations |
+| `multi-agent-review` | Launches code-reviewer, security-reviewer, and qa-engineer in parallel for an all-around review. Use for high-risk/core-logic changes needing three experts in parallel; use code-review for regular PRs |
+| `pr-retro` | After every PR merge, automatically extracts lessons and writes them to ERRORS.md Pending Review, driving continuous improvement of skill docs |
+| `pr-review-cycle-mob` | Uses a Cascade tiering strategy to balance cost, speed, and quality, running the optimal PR review flow after AI finishes writing code. Use when a cost-tiered cascade strategy is needed |
+| `security-audit` | Full security review covering authentication, key leakage, dependency vulnerabilities, and OWASP standard checks |
+| `skill-creator` | (Base version stub, superseded by skill-creator-plus) Use only when the user explicitly types the /skill-creator command; any create/optimize/evaluate-a-skill request should use skill-creator-plus instead |
+| `skill-creator-plus` | Guides the complete skill-creation workflow — intent capture, overlap check, drafting, mechanical validation, trigger testing, through registry registration — including the eval iteration method. Supersedes the base skill-creator |
+| `spectra-amplifier` | Strengthens a thin requirements description or PRD draft into a complete spec where every requirement carries verifiable acceptance criteria |
+| `tdd-workflow` | Runs the Red → Green → Refactor test-driven development cycle, for core business logic and high-reliability requirements |
+| `techdebt-scanner` | Systematically scans a project for technical debt (TODO/FIXME, complex functions, duplicated code, etc.) and produces a prioritized report |
+| `ui-ux-pro-max` | Produces a complete design system covering color palettes, typography pairings, UI styles, and UX guidelines, across multiple frontend tech stacks |
 
 ---
 
-## Commands（`.claude/commands/`）
+## Commands (`.claude/commands/`)
 
-| 指令 | 檔案 |
+| Command | File |
 |------|------|
 | `/last-word` | `.claude/commands/last-word.md` |
 | `/techdebt` | `.claude/commands/techdebt.md` |
 
 ---
 
-## 模型分級策略
+## Model Tiering Strategy
 
 ```
-haiku  → 重複性、格式化、簡單判斷
-sonnet → 代碼生成、分析、一般 review（預設）
-opus   → 架構設計、複雜推理、深度分析
+haiku  → repetitive tasks, formatting, fixed templates, simple lookups
+sonnet → code generation, analysis, general review (default)
+opus   → architecture design, complex reasoning, deep analysis
 ```
 
-詳見 `.claude/rules/cost-optimization.md`。
+See `.claude/rules/cost-optimization.md` for details.
 
 ---
 
-## 引用此檔的位置
+## Files that reference this registry
 
 - `agent_docs/multi-agent-guide.md`
 - `CLAUDE.md` rule pointer

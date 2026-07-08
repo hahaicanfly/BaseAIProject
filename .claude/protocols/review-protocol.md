@@ -1,101 +1,101 @@
 # Protocol: PR Review
 
-> **角色**：定義 code-reviewer / security-reviewer / qa-engineer 在 ExecPlan Phase 6 (VERIFYING) 的標準動作。
-> **使用對象**：上述 3 個 reviewer agents + 主對話發 PR 前。
-> **依據**：`docs/plans/PLANS.md` §3 + `.claude/protocols/execplan-lifecycle.md` Phase 6。
+> **Role**: Defines the standard actions for code-reviewer / security-reviewer / qa-engineer during ExecPlan Phase 6 (VERIFYING).
+> **Audience**: The above 3 reviewer agents + the main conversation before opening a PR.
+> **Basis**: `docs/plans/PLANS.md` §3 + `.claude/protocols/execplan-lifecycle.md` Phase 6.
 
 ---
 
-## 觸發
+## Trigger
 
 ```
-[HANDOFF: code-reviewer]    # 一般 PR 前必跑
-[HANDOFF: security-reviewer] # 涉及 auth/secret 額外跑
-[HANDOFF: qa-engineer]       # 核心邏輯 / 高 reliability 額外跑
+[HANDOFF: code-reviewer]    # required before any general PR
+[HANDOFF: security-reviewer] # extra pass for anything touching auth/secret
+[HANDOFF: qa-engineer]       # extra pass for core logic / high-reliability requirements
 ```
 
-或主對話手動執行：
+Or run manually from the main conversation:
 ```
 @.claude/agents/code-reviewer.md
 ```
 
 ---
 
-## Review 輸入
+## Review Inputs
 
-每個 reviewer agent 必須先讀以下檔案，**不得跳過**：
+Every reviewer agent must read the following files first, **no skipping**:
 
-1. 對應的 ExecPlan：`docs/plans/active/F-NNN-*.md` §3 Constraints + §5 Verification Strategy
-2. `docs/architecture/invariants.md`：本次變更涉及的 INV-id
-3. `docs/learnings/ERRORS.md`：相關歷史 lessons
-4. `agent_docs/TECHNICAL-REFERENCE.md`：相關章節（從 ExecPlan §2 Context 找路徑）
-5. `git diff master...HEAD`：本次變更的完整 diff
+1. The corresponding ExecPlan: `docs/plans/active/F-NNN-*.md` §3 Constraints + §5 Verification Strategy
+2. `docs/architecture/invariants.md`: the INV-ids involved in this change
+3. `docs/learnings/ERRORS.md`: related historical lessons
+4. `agent_docs/TECHNICAL-REFERENCE.md`: relevant sections (find the path from ExecPlan §2 Context)
+5. `git diff master...HEAD`: the full diff of this change
 
-> **執行者**：第 5 項等 git 指令，由主對話或具 Bash 的 agent（code-reviewer / qa-engineer）執行；無 Bash 的 agent（如 security-reviewer）不自行跑 git 指令，以主對話提供的 diff/context 為準。
+> **Executor note**: item 5's git command is run by the main conversation or an agent with Bash (code-reviewer / qa-engineer); agents without Bash (e.g. security-reviewer) do not run git commands themselves — they work from the diff/context provided by the main conversation.
 
 ---
 
 ## Severity Levels
 
-每條 finding 必須標 severity：
+Every finding must be tagged with a severity:
 
-| Severity | 意義 | 修復強制性 |
+| Severity | Meaning | Fix Requirement |
 |----------|------|-----------|
-| **Blocker** | 違反 invariant / 安全漏洞 / build 不過 / 測試紅燈 | **必須修，否則不得 merge** |
-| **Warning** | 違反 convention / 可能引入 regression / 缺 verification | **必須修**（CLAUDE.md 規範） |
-| **Suggestion** | 可選優化 / 風格調整 / 命名改善 | 視情況處理 |
-| **Praise** | 做得好的部分（鼓勵記得） | 不需處理 |
+| **Blocker** | Invariant violation / security vulnerability / build failure / red test | **Must fix, or merge is blocked** |
+| **Warning** | Convention violation / possible regression / missing verification | **Must fix** (per CLAUDE.md policy) |
+| **Suggestion** | Optional improvement / style tweak / naming improvement | Handle at discretion |
+| **Praise** | Something done well (worth remembering) | No action needed |
 
 ---
 
 ## Code Reviewer Checklist
 
 ```
-□ 讀 ExecPlan §1 Goal 並對照 PR diff 確認範圍一致
-□ 讀 ExecPlan §3 Constraints，逐條 INV-id 在 diff 中驗證
-□ 跑 ExecPlan §5 Verification Strategy 的所有指令
-□ git branch --show-current 確認非 master
-□ commit message 是否原子化、type(scope) 格式正確
-□ commit 是否能獨立編譯通過
-□ 有無硬編碼 secret（grep API_KEY / TOKEN / PASSWORD）
-□ 有無 debug print / log 殘留
-□ 新加的功能模組有對應 test？（見 INV-TEST-*，依 invariants.md 現行清單）
-□ 新加 interface method 是否所有 fake/mock 都更新
-□ 文件同步（TECHNICAL-REFERENCE.md / diagrams）
-□ 涉及 enum 或 sealed class 是否所有 case 都補全
+□ Read ExecPlan §1 Goal and confirm the PR diff's scope matches it
+□ Read ExecPlan §3 Constraints; verify each INV-id against the diff
+□ Run every command in ExecPlan §5 Verification Strategy
+□ git branch --show-current to confirm you're not on master
+□ Is the commit message atomic and in type(scope) format?
+□ Does each commit build independently?
+□ Any hardcoded secrets (grep API_KEY / TOKEN / PASSWORD)?
+□ Any leftover debug prints / logs?
+□ Does new functionality have corresponding tests? (see INV-TEST-*, per the current invariants.md list)
+□ Are all fakes/mocks updated for any new interface method?
+□ Is documentation in sync (TECHNICAL-REFERENCE.md / diagrams)?
+□ Are all cases covered for any new enum or sealed class?
 ```
 
 ---
 
-## Security Reviewer 額外 Checklist
+## Security Reviewer's Extra Checklist
 
 ```
-□ 所有 INV-SEC-*（Security/Auth/Secrets）相關規則過檢
-□ 敏感資料不寫入 log
-□ API key / token 不硬編碼
-□ 敏感 UI 畫面是否需要保護（截圖防護等）
-□ EncryptedStorage / Keychain key 不洩漏
-□ 第三方 OAuth / JWT 處理是否正確
-□ Certificate Pinning / App Integrity 整合（如適用）
-□ 輸入驗證是否完整
-```
-
----
-
-## QA Engineer 額外 Checklist
-
-```
-□ Unit test 覆蓋核心分支（含 negative case）
-□ Test fake / mock 與 production interface 同步（INV-TEST-*，依 invariants.md 現行清單）
-□ Coroutine / async test 使用正確的 test dispatcher
-□ Polling / timer 測試可注入時間參數
-□ 所有 loading / error / empty state 有測試覆蓋
-□ Edge case：空值、超長字串、極端資料量
+□ All INV-SEC-* (Security/Auth/Secrets) rules checked
+□ Sensitive data not written to logs
+□ API keys / tokens not hardcoded
+□ Do sensitive UI screens need protection (screenshot protection etc.)?
+□ EncryptedStorage / Keychain keys not leaked
+□ Third-party OAuth / JWT handling is correct
+□ Certificate Pinning / App Integrity integrated (if applicable)
+□ Input validation is complete
 ```
 
 ---
 
-## Output 格式（每個 reviewer 必須遵循）
+## QA Engineer's Extra Checklist
+
+```
+□ Unit tests cover core branches (including negative cases)
+□ Test fakes/mocks are in sync with the production interface (INV-TEST-*, per the current invariants.md list)
+□ Coroutine/async tests use the correct test dispatcher
+□ Polling/timer tests can inject a time parameter
+□ All loading/error/empty states have test coverage
+□ Edge cases: empty values, overlong strings, extreme data volumes
+```
+
+---
+
+## Output Format (required for every reviewer)
 
 ```markdown
 # Review Report — F-NNN
@@ -109,8 +109,8 @@
 ### Blockers
 - [SEC] <description>
   - File: `path/to/file:NN`
-  - Violates: INV-SEC-001（範例 id，依專案 invariants.md 現行清單實填）
-  - Fix: <具體修復步驟>
+  - Violates: INV-SEC-001 (illustrative id; fill in per the project's current invariants.md)
+  - Fix: <specific fix steps>
 
 ### Warnings
 - [QA] <description>
@@ -121,7 +121,7 @@
   - ...
 
 ### Praise
-- 做得好：<...>
+- Well done: <...>
 
 ## Verification Results
 
@@ -139,13 +139,13 @@
 [HANDOFF: <dev to fix | human-pr-review | etc>]
 ```
 
-並把 Decision 部分**同步**寫進 ExecPlan §7 Decision Log（一行 summary）。
+The Decision section must also be **synced** into ExecPlan §7 Decision Log as a one-line summary.
 
 ---
 
-## 三 reviewer 並行執行（multi-agent-review skill）
+## Three Reviewers Running in Parallel (multi-agent-review skill)
 
-`/multi-agent-review` skill 的並行 review 流程：
+The `/multi-agent-review` skill's parallel review flow:
 
 ```
        ┌─────────────────┐
@@ -166,20 +166,20 @@
          to ExecPlan §7
 ```
 
-並行時注意：subagent 內 `git checkout` 可能改 branch，主對話 commit 前再次 `git branch --show-current`。
+When running in parallel, note: a subagent's internal `git checkout` may switch branches — the main conversation must re-check `git branch --show-current` before committing.
 
 ---
 
-## 反模式
+## Anti-Patterns
 
-- ❌ Reviewer 不讀 ExecPlan 直接 review diff（會漏掉 Constraints 引用的 INV-id）
-- ❌ 把 Suggestion 標成 Blocker（會無故拖慢 merge）
-- ❌ 沒跑 §5 Verification Strategy 就 Pass
-- ❌ 看到問題自己順手改（reviewer 不寫 production code，只報告與建議）
+- ❌ Reviewer reviews the diff without reading the ExecPlan (misses INV-ids referenced in Constraints)
+- ❌ Labeling a Suggestion as a Blocker (needlessly delays merge)
+- ❌ Passing without running the §5 Verification Strategy
+- ❌ Fixing an issue directly upon spotting it (a reviewer does not write production code — only reports and suggests)
 
 ---
 
-## 引用此檔的位置
+## Where This File Is Referenced
 
 - `.claude/agents/code-reviewer.md`
 - `.claude/agents/security-reviewer.md`

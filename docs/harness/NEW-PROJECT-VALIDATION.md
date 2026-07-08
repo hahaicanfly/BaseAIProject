@@ -1,106 +1,106 @@
-# 新專案 Harness 驗收流程（Canary Walkthrough）
+# New-Project Harness Acceptance Flow (Canary Walkthrough)
 
-> **角色**：fork 本模板後，用一個約 30 分鐘、無實際業務價值的 canary 任務，走完 harness 的關鍵環節，證明「有 hook/protocol 檔案」≠「真的運作」。
-> **依據**：改寫自一次真實專案的 10-phase harness 遷移 dogfood 實錄（過程中發現 2 個 hook bug）。已抽掉該專案的技術棧細節，只留可複用的驗收動作。
-> **原則**：每步都要有**可觀察**的通過判準（檔案內容、指令輸出、退出碼），不接受「應該有跑」的口頭確認。
+> **Role**: after forking this template, use a ~30-minute canary task with no real business value to walk through the harness's key links, proving that "hook/protocol files exist" ≠ "they actually work".
+> **Basis**: adapted from a real project's 10-phase harness-migration dogfood log (which uncovered 2 hook bugs along the way). The project's tech-stack details have been stripped; only the reusable acceptance actions remain.
+> **Principle**: every step must have an **observable** pass criterion (file contents, command output, exit code); verbal "it probably ran" confirmations are not accepted.
 
-## 何時執行
+## When to run
 
-Fork 模板建好新 repo、`{{BUILD_CMD}}` 已可跑通、CLAUDE.md 佔位符已填、`.claude/hooks/*.py` 已依專案技術棧填入 `QUICK_CHECKS` 之後，正式開發前先跑本流程一次。之後每次調整 hooks/protocols（黃/紅級變更）也應重跑對應步驟。
+After forking the template into a new repo, once `{{BUILD_CMD}}` runs clean, CLAUDE.md placeholders are filled, and `.claude/hooks/*.py` has `QUICK_CHECKS` filled in for the project's tech stack — run this flow once before real development starts. Also re-run the relevant steps after any later hooks/protocols change (yellow/red-tier changes).
 
-## 前置檢查
+## Preflight checks
 
-- [ ] `{{BUILD_CMD}}` 執行成功（專案自己的 build/lint/test 指令，取代此佔位符）
-- [ ] `git branch --show-current` 確認不在 master/main
-- [ ] `.claude/hooks/settings.json`（或 `.claude/settings.json`）已註冊要用的 hooks
+- [ ] `{{BUILD_CMD}}` runs successfully (the project's own build/lint/test command, replacing this placeholder)
+- [ ] `git branch --show-current` confirms you are not on master/main
+- [ ] `.claude/hooks/settings.json` (or `.claude/settings.json`) has the hooks you'll use registered
 
 ---
 
-## Step 1 — Hooks 煙霧測試
+## Step 1 — Hooks smoke test
 
-**動作**：依 `.claude/protocols/harness-maintenance.md` §4 的煙霧測試程序，對 `pre-tool-use-guard.py`（或專案等效 enforce hook）跑一次 block 案例與一次 pass 案例：
+**Action**: following the smoke-test procedure in `.claude/protocols/harness-maintenance.md` §4, run one block case and one pass case against `pre-tool-use-guard.py` (or the project's equivalent enforce hook):
 
 ```bash
 python3 -c "import json,subprocess; h='.claude/hooks/pre-tool-use-guard.py'; \
 print(subprocess.run([h],input=json.dumps({'tool_name':'Bash','tool_input':{'command':'ca'+'t .e'+'nv'}}),capture_output=True,text=True).returncode)"
 ```
 
-**通過判準**：
-- block 案例退出碼為非 0（依專案定義，通常 `2`）
-- 把 command 換成 `ls -la` 後退出碼為 `0`
-- 不要用 `git commit` 當測資（只在 master/main 上 block，在 feat 分支恆為 0，會誤判 hook 失效）
+**Pass criteria**:
+- block case exits non-zero (per project definition, usually `2`)
+- swapping the command for `ls -la` exits `0`
+- do not use `git commit` as a test case (it only blocks on master/main and always exits 0 on a feat branch, which would falsely suggest the hook is broken)
 
 ---
 
-## Step 2 — 開 feat 分支走一次最小 ExecPlan / Plan Mode
+## Step 2 — Open a feat branch and walk one minimal ExecPlan / Plan Mode
 
-**動作**：從 master 開 `feat/canary-<date>` 分支，依 `docs/plans/PLANS.md` §2 建一份最小 ExecPlan `docs/plans/active/F-CANARY-<date>.md`（可以只做一個無害的假變更，例如新增一行註解），或改用 Plan Mode 走一次同等流程。
+**Action**: branch `feat/canary-<date>` off master; per `docs/plans/PLANS.md` §2, create a minimal ExecPlan `docs/plans/active/F-CANARY-<date>.md` (a single harmless fake change is enough, e.g. adding one comment line), or walk the equivalent flow in Plan Mode instead.
 
-**通過判準**：
-- ExecPlan 檔案含 §1 Goal ～ §9 Handoff Manifest 全部 9 段（順序符合 `PLANS.md` §2）
-- `Status` 欄位隨流程從 `todo` → `in_progress` → `done` 有更新
-- 至少 1 個 commit 引用該 ExecPlan 檔名或 F-id
-
----
-
-## Step 3 — 派一次 subagent 驗證 handoff marker 與回報合約
-
-**動作**：用 Task/Agent 工具派一個 sub-agent（任一角色，例如 `code-reviewer` 或通用 dev agent）完成 Step 2 的假變更，要求其 final response 依 `.claude/protocols/handoff-protocol.md` 結尾。
-
-**通過判準**：
-- sub-agent 的最終回應**最後一行**是 `[HANDOFF: <target>]` / `[VERIFY_FAILED: <reason>]` / `[HUMAN_ATTENTION_REQUIRED: <reason>]` 三者之一
-- `<target>` 是 handoff-protocol.md 表列的合法值之一（非捏造角色名）
-- 若沒有任何 marker → 視為 protocol violation，直接進 Step 5（不需另外造錯）
+**Pass criteria**:
+- the ExecPlan file contains all 9 sections §1 Goal ~ §9 Handoff Manifest (order per `PLANS.md` §2)
+- the `Status` field advances through the flow: `todo` → `in_progress` → `done`
+- at least 1 commit references the ExecPlan filename or F-id
 
 ---
 
-## Step 4 — 觸發一次 code-review skill
+## Step 3 — Dispatch one subagent to verify handoff markers and the reporting contract
 
-**動作**：對 Step 2/3 產生的 diff 執行 `/code-review`（或直接照 `.claude/skills/code-review/SKILL.md` 步驟手動走一次）。
+**Action**: use the Task/Agent tool to dispatch a sub-agent (any role, e.g. `code-reviewer` or a generic dev agent) to complete Step 2's fake change, requiring its final response to end per `.claude/protocols/handoff-protocol.md`.
 
-**通過判準**：
-- 輸出符合 SKILL.md 定義格式：含 `Blockers / Warnings / Suggestions / Praise` 四段與 `Decision`
-- 結尾同樣有合法 `[HANDOFF: ...]` marker
-- Review 內容至少引用 1 條 `docs/architecture/invariants.md` 的 INV-id（證明 reviewer 真的讀了 constraints，不是空泛評論）
-
----
-
-## Step 5 — 故意犯一個小錯，驗證 ERRORS.md 管線
-
-**動作**：刻意違反一條已知 invariant（例如在 master 上跑一次會被擋的操作、或寫一個明知會被 hook 標記的檔案），觀察錯誤是否真的被記錄。
-
-**通過判準**：
-- `docs/learnings/ERRORS.md` 的 `## Pending Review` 節新增一條，格式含「情境 / 錯誤 / 教訓 / 建議去向」四欄（依 `harness-maintenance.md` §3）
-- 若專案有 sentinel hook（如 stop-retro-logger 等效物），對應的 `state/*.jsonl` 也應出現這次事件
-- 手動確認新條目**不是**重複既有主題；若同主題已存在，改為在舊條目加 `再犯：YYYY-MM-DD`
+**Pass criteria**:
+- the **last line** of the sub-agent's final response is one of `[HANDOFF: <target>]` / `[VERIFY_FAILED: <reason>]` / `[HUMAN_ATTENTION_REQUIRED: <reason>]`
+- `<target>` is one of the legal values tabled in handoff-protocol.md (not a fabricated role name)
+- if no marker at all → treat as a protocol violation and go straight to Step 5 (no need to manufacture another error)
 
 ---
 
-## Step 6 — 檢查團隊名單與 frontmatter 一致
+## Step 4 — Trigger one code-review skill run
 
-**動作**：比對 `agent_docs/AI-TEAM-REGISTRY.md` 表列的 agent/model/tools，與 `.claude/agents/*.md` 逐檔 frontmatter（`model` / `tools` 欄）。
+**Action**: run `/code-review` on the diff produced by Steps 2/3 (or manually walk the steps in `.claude/skills/code-review/SKILL.md`).
 
-**通過判準**：
-- 逐一 agent 的 `model` 欄與 REGISTRY 表格一致，0 矛盾
-- REGISTRY 檔頭聲明的正典來源（frontmatter 為準）沒有被表格內容反過來覆蓋
-- Agent 數量與 REGISTRY 標題（如「Agents — N」）計數相符
-- 有矛盾 → 依 `harness-maintenance.md` 檔案分級：REGISTRY.md 屬黃級可直接修並重生成；frontmatter 本身若要改則走該 agent 檔的分級規則
+**Pass criteria**:
+- output matches the format defined in SKILL.md: the four sections `Blockers / Warnings / Suggestions / Praise` plus a `Decision`
+- likewise ends with a legal `[HANDOFF: ...]` marker
+- the review cites at least 1 INV-id from `docs/architecture/invariants.md` (proving the reviewer actually read the constraints rather than commenting generically)
 
 ---
 
-## 總結驗收表
+## Step 5 — Deliberately make one small mistake to verify the ERRORS.md pipeline
 
-| # | 環節 | 判準（可觀察） |
+**Action**: deliberately violate one known invariant (e.g. run an operation on master that should be blocked, or write a file you know a hook will flag), and observe whether the error actually gets recorded.
+
+**Pass criteria**:
+- `docs/learnings/ERRORS.md` gains a new entry under `## Pending Review`, formatted with the four fields "situation / error / lesson / suggested destination" (per `harness-maintenance.md` §3)
+- if the project has a sentinel hook (e.g. a stop-retro-logger equivalent), the corresponding `state/*.jsonl` should also show this event
+- manually confirm the new entry is **not** a duplicate of an existing topic; if the topic already exists, instead append `再犯：YYYY-MM-DD` (recurrence: date) to the old entry
+
+---
+
+## Step 6 — Check roster consistency with frontmatter
+
+**Action**: compare the agents/models/tools tabled in `agent_docs/AI-TEAM-REGISTRY.md` against each `.claude/agents/*.md` file's frontmatter (`model` / `tools` fields).
+
+**Pass criteria**:
+- every agent's `model` field matches the REGISTRY table, 0 contradictions
+- the canon source declared in the REGISTRY header (frontmatter is authoritative) is not overridden in reverse by table contents
+- agent count matches the REGISTRY heading count (e.g. "Agents — N")
+- on contradiction → follow the file tiering in `harness-maintenance.md`: REGISTRY.md is yellow-tier and may be fixed and regenerated directly; changing frontmatter itself follows that agent file's own tier rules
+
+---
+
+## Summary acceptance table
+
+| # | Link | Criterion (observable) |
 |---|------|---------------|
-| 1 | Hooks 煙霧測試 | block 案例非 0、pass 案例為 0 |
-| 2 | ExecPlan / Plan Mode | 9 段齊全、Status 有推進、有對應 commit |
-| 3 | Subagent handoff | 結尾為合法三種 marker 之一 |
-| 4 | code-review skill | 四段輸出格式 + 引用 INV-id + 合法 marker |
-| 5 | ERRORS.md 管線 | Pending Review 新增合規格式條目（或 jsonl 事件） |
-| 6 | REGISTRY 一致性 | agent 數量/model 欄與 frontmatter 0 矛盾 |
+| 1 | Hooks smoke test | block case non-zero, pass case 0 |
+| 2 | ExecPlan / Plan Mode | all 9 sections present, Status advanced, matching commit exists |
+| 3 | Subagent handoff | ends with one of the three legal markers |
+| 4 | code-review skill | four-section output + INV-id citation + legal marker |
+| 5 | ERRORS.md pipeline | Pending Review gains a well-formed entry (or jsonl event) |
+| 6 | REGISTRY consistency | agent count / model fields vs frontmatter, 0 contradictions |
 
-## 清理
+## Cleanup
 
-Canary 完成後：假變更 revert 或保留成本次驗收證據存檔於 `docs/plans/completed/`；不需要的 feat 分支可刪除（非 master，非強制保留）。
+After the canary: revert the fake change, or keep it archived in `docs/plans/completed/` as this acceptance run's evidence; the feat branch may be deleted if unneeded (it is not master, not force-retained).
 
 `[HANDOFF: human-approval]`

@@ -1,53 +1,53 @@
 ---
 name: cost-optimization
-description: AI 模型成本優化規則
+description: AI model cost-optimization rules
 always: true
 ---
 
 # Cost Optimization Rules
 
-## 模型選用
+## Model Selection
 
-模型分級、升降級、派工規則以 `.claude/rules/model-dispatch.md` 為單一事實源，本檔不另列模型表。
+Model tiering, escalation/de-escalation, and delegation rules are single-sourced in `.claude/rules/model-dispatch.md`; this file does not duplicate the model table.
 
-## API 成本控制
+## API Cost Control
 
-### 快取策略
-- 相同請求不重複調用
-- 結果本地快取
-- 設定合理的快取過期時間
+### Caching Strategy
+- Do not repeat identical requests
+- Cache results locally
+- Set a reasonable cache expiry
 
-### 輸入優化
-- 圖片壓縮/降解析度
-- 精簡 prompt
-- 避免不必要的 context
+### Input Optimization
+- Compress images / lower resolution
+- Trim prompts
+- Avoid unnecessary context
 
-### 批次處理
-- 合併多個小請求
-- 減少 API 呼叫次數
+### Batch Processing
+- Merge multiple small requests
+- Reduce API call count
 
-## 邊緣 AI 優先
+## Edge AI First
 
-能在設備本地完成的任務，不要發 API：
-- OCR 文字辨識
-- 語言偵測
-- 基礎文字處理
-- 圖片預處理
-- 格式驗證
+Don't call an API for tasks that can run locally on-device:
+- OCR text recognition
+- Language detection
+- Basic text processing
+- Image preprocessing
+- Format validation
 
-## 監控提醒
+## Monitoring Reminders
 
-如果發現以下情況，主動提醒用戶：
-- 大量重複的 API 請求
-- 可以本地化的任務使用雲端 API
-- 高成本操作沒有快取
-- 使用過高等級模型處理簡單任務
+Proactively flag the following to the user:
+- Large volumes of repeated API requests
+- Cloud API used for tasks that could be localized
+- High-cost operations with no caching
+- An over-tiered model used for a simple task
 
-## 成本意識檢查清單
+## Cost-Awareness Checklist
 
-在設計功能時考慮：
-- [ ] 這個操作需要 API 嗎？能本地完成嗎？
-- [ ] 選用的模型等級適當嗎？
-- [ ] 有快取機制嗎？
-- [ ] 輸入資料有優化嗎？
-- [ ] 失敗重試有限制嗎？
+When designing a feature, consider:
+- [ ] Does this operation need an API? Could it run locally?
+- [ ] Is the chosen model tier appropriate?
+- [ ] Is there a caching mechanism?
+- [ ] Is the input data optimized?
+- [ ] Are retry attempts on failure capped?

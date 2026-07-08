@@ -1,134 +1,134 @@
 ---
 name: multi-agent-review
-description: 並行啟動 code-reviewer、security-reviewer、qa-engineer 三位專家代理做全方位審查；當使用者要對高風險變更、核心邏輯或 PR 進行綜合審查時觸發。高風險/核心邏輯變更，需要三專家並行時用；一般 PR 用 code-review。
+description: Launches code-reviewer, security-reviewer, and qa-engineer in parallel for an all-around review; triggers when the user wants a comprehensive review of high-risk changes, core logic, or a PR, or mentions "高風險", "核心邏輯", "綜合審查". Use for high-risk/core-logic changes needing three experts in parallel; use code-review for regular PRs.
 ---
 
 # Skill: multi-agent-review
 
-> **用途**：並行啟動三個 reviewer（code-reviewer + security-reviewer + qa-engineer）做全方位審查，模擬 Code Review Swarm 模式。
-> **觸發**：`/multi-agent-review`
-> **適用場景**：高風險變更、涉及 auth/security、核心業務邏輯
+> **Purpose**: Launch three reviewers in parallel (code-reviewer + security-reviewer + qa-engineer) for an all-around review, simulating a Code Review Swarm pattern.
+> **Trigger**: `/multi-agent-review`
+> **Applicable scenarios**: high-risk changes, auth/security-related, core business logic
 
-## 使用方式
+## Usage
 
 ```
-/multi-agent-review [檔案路徑或模組名稱]
+/multi-agent-review [file path or module name]
 ```
 
-## 協作模式
+## Collaboration Pattern
 
-本 skill 同時啟動以下代理進行並行審查：
+This skill launches the following agents simultaneously for parallel review:
 
-| 代理 | 職責 | 工具 |
+| Agent | Responsibility | Tools |
 |------|------|------|
-| **code-reviewer** | 代碼品質、架構遵循、convention | Read, Bash, Grep, Glob |
-| **security-reviewer** | 安全漏洞、金鑰洩漏、auth/secret | Read, Grep, Glob |
-| **qa-engineer** | 可測試性、測試覆蓋、edge case | Read, Bash, Grep, Glob |
+| **code-reviewer** | Code quality, architecture compliance, conventions | Read, Bash, Grep, Glob |
+| **security-reviewer** | Security vulnerabilities, key leaks, auth/secret | Read, Grep, Glob |
+| **qa-engineer** | Testability, test coverage, edge cases | Read, Bash, Grep, Glob |
 
-## 執行流程
+## Execution Flow
 
-### Phase 1: Fan-out 並行審查
+### Phase 1: Fan-out Parallel Review
 
-使用 Agent 工具同時啟動三個專家代理（見 `.claude/protocols/review-protocol.md` 並行 review fan-out 圖）：
+Use the Agent tool to launch all three expert agents simultaneously (see the parallel review fan-out diagram in `.claude/protocols/review-protocol.md`):
 
 ```
-1. 啟動 code-reviewer 代理 → 代碼品質審查
-2. 啟動 security-reviewer 代理 → 安全審查
-3. 啟動 qa-engineer 代理 → 測試審查
+1. Launch code-reviewer agent → code quality review
+2. Launch security-reviewer agent → security review
+3. Launch qa-engineer agent → test review
 ```
 
-每個 reviewer 各自讀 ExecPlan（`docs/plans/active/F-NNN-*.md`）與 `docs/architecture/invariants.md`，不得只看 diff——否則會漏掉 Constraints 引用的 INV-id。
+Each reviewer must read the ExecPlan (`docs/plans/active/F-NNN-*.md`) and `docs/architecture/invariants.md` on its own — not just the diff — otherwise INV-ids referenced in Constraints will be missed.
 
-### Phase 2: 結果整合
+### Phase 2: Result Aggregation
 
-收集所有代理的審查結果，整合成統一報告，並把 Aggregated Decision 同步寫入 ExecPlan §7 Decision Log（一行 summary）。
+Collect all agents' review results, merge them into a unified report, and sync the Aggregated Decision into ExecPlan §7 Decision Log (one-line summary).
 
-### Phase 3: 行動建議
+### Phase 3: Action Recommendations
 
-根據所有審查結果，提供優先級排序的行動清單。
+Based on all review results, provide a prioritized action list.
 
-## 並行注意事項
+## Parallelism Notes
 
-- subagent 內 `git checkout` 可能改 branch，主對話 commit 前再次 `git branch --show-current`
-- 三方 Report 需全部 Pass 才進入 human-pr-review
+- A sub-agent's `git checkout` may switch branches; the main conversation must re-check `git branch --show-current` before committing
+- All three reports must be Pass before proceeding to human-pr-review
 
-## 輸出範本
+## Output Template
 
 ```markdown
-## Multi-Agent Review Report: [目標]
+## Multi-Agent Review Report: [Target]
 
-### 審查摘要
+### Review Summary
 
-| 代理 | 評價 | 問題數 |
+| Agent | Verdict | Issue Count |
 |------|------|--------|
 | code-reviewer | [Pass/Block] | [N] |
 | security-reviewer | [Pass/Block] | [N] |
 | qa-engineer | [Pass/Block] | [N] |
 
-### Critical Issues (必須修復)
+### Critical Issues (must fix)
 
-#### [來源代理] 問題標題
-- **位置**: `path/file:line`
-- **描述**: [問題]
-- **修復**: [建議]
+#### [Source Agent] Issue Title
+- **Location**: `path/file:line`
+- **Description**: [issue]
+- **Fix**: [suggestion]
 
-### High Priority (應該修復)
-[同上格式]
+### High Priority (should fix)
+[same format as above]
 
-### Medium Priority (建議改進)
-[同上格式]
+### Medium Priority (suggested improvement)
+[same format as above]
 
-### 行動計劃
+### Action Plan
 
-1. [ ] [最高優先級任務]
-2. [ ] [次優先級任務]
-3. [ ] [一般任務]
+1. [ ] [Highest priority task]
+2. [ ] [Next priority task]
+3. [ ] [General task]
 
 ### Aggregated Decision
 [HANDOFF: dev | human-pr-review]
 
-### 各代理完整報告
+### Full Reports per Agent
 
 <details>
 <summary>code-reviewer Report</summary>
-[完整報告]
+[full report]
 </details>
 
 <details>
 <summary>security-reviewer Report</summary>
-[完整報告]
+[full report]
 </details>
 
 <details>
 <summary>qa-engineer Report</summary>
-[完整報告]
+[full report]
 </details>
 ```
 
-## 使用場景
+## Use Cases
 
-- **PR 審查**：在合併前進行全面檢查
-- **上線前審查**：重要功能發布前的最終確認
-- **技術債清理**：識別需要優先處理的問題
-- **新成員代碼**：確保符合團隊標準
+- **PR review**: full inspection before merge
+- **Pre-release review**: final confirmation before important feature launches
+- **Tech debt cleanup**: identify issues that need priority handling
+- **New contributor code**: ensure conformance to team standards
 
-## 成本考量
+## Cost Considerations
 
-此 skill 會啟動多個代理，消耗較多資源。建議用於：
-- 核心模組變更
-- 重要功能上線前
-- 定期代碼健康檢查
+This skill launches multiple agents and consumes more resources. Recommended for:
+- Core module changes
+- Before important feature releases
+- Periodic code health checks
 
-日常小改動建議使用單一的 `/code-review`。
+For everyday small changes, use the single-reviewer `/code-review` instead.
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：3 份獨立 reviewer 報告（code-reviewer + security-reviewer + qa-engineer）+ 主對話聚合 summary。
-- **並行性檢查**：3 個 sub-agent 各自最末行必為 `[HANDOFF: <main>]` marker。
-- **ExecPlan 整合**：聚合 summary 一段寫入 §7 Decision Log，個別細項各 reviewer 自行依 review-protocol.md 處理。
-- **失敗模式**：任一 reviewer 報 Blocker → 主對話輸出 `[HANDOFF: dev]`，禁止繼續到 PR。
+- **Output form**: 3 independent reviewer reports (code-reviewer + security-reviewer + qa-engineer) + a main-conversation aggregated summary.
+- **Parallelism check**: each of the 3 sub-agents' final line must be a `[HANDOFF: <main>]` marker.
+- **ExecPlan integration**: the aggregated summary paragraph is written into §7 Decision Log; individual details are handled by each reviewer per review-protocol.md.
+- **Failure mode**: if any reviewer reports a Blocker → the main conversation outputs `[HANDOFF: dev]`, and must not proceed to PR.
 
-## 參考
+## References
 
 - `.claude/protocols/review-protocol.md`
 - `.claude/agents/code-reviewer.md`

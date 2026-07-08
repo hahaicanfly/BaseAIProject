@@ -1,14 +1,14 @@
 # Protocol: Agent Handoff Markers
 
-> **角色**：定義 agent 之間、agent 與人類之間的結構化交接訊號。
-> **使用對象**：所有 sub-agent 在輸出末段必須使用本協議的標記。
-> **依據**：`docs/decisions/ADR-0001-adopt-harness-engineering.md` D7。
+> **Role**: Defines the structured handoff signals used between agents, and between agents and humans.
+> **Audience**: All sub-agents must use this protocol's markers at the end of their output.
+> **Basis**: `docs/decisions/ADR-0001-adopt-harness-engineering.md` D7.
 
 ---
 
-## 標記語法
+## Marker Syntax
 
-每個 agent 的 final response **必須**以下列三個標記之一為結尾（單行，方括號）：
+Every agent's final response **must** end with one of the following three markers (single line, square brackets):
 
 ```
 [HANDOFF: <next-agent-or-state>]
@@ -16,35 +16,35 @@
 [HUMAN_ATTENTION_REQUIRED: <reason>]
 ```
 
-任何其他結尾被視為 protocol violation，由 `stop-retro-logger.py` 標記送 `docs/learnings/ERRORS.md` Pending Review。
+Any other ending is treated as a protocol violation, flagged by `stop-retro-logger.py` and sent to `docs/learnings/ERRORS.md` Pending Review.
 
 ---
 
 ## 1. `[HANDOFF: <target>]`
 
-**用途**：正常完成自己負責的階段，移交下一個角色。
-**Target 必須是下列之一**：
+**Purpose**: Normal completion of your own phase, handing off to the next role.
+**Target must be one of the following**:
 
-| Target | 意義 |
+| Target | Meaning |
 |--------|------|
-| `architect` | 移交給 architect agent |
-| `plan-reviewer` | 移交給 plan-reviewer agent 審 ExecPlan |
-| `tech-lead` | 移交給 tech-lead 開始實作 |
-| `dev` | 移交給開發路徑（可能是主對話 + 多個 sub-agent） |
-| `code-reviewer` | 完成實作，等待 review |
-| `qa-engineer` | 移交給 QA agent 寫測試 / 跑驗證 |
-| `security-reviewer` | 涉及 auth/secret 的最終審查 |
-| `uiux-agent` | UI 相關，進三階段流程 |
-| `human-approval` | ExecPlan §1-§5 已完成，等人類核可 |
-| `human-pr-review` | code-review 通過，等人類審 PR |
-| `done` | task 全部完成（merged）|
-| `main` | 回報主對話（指揮官）— 派工 subagent（見 `.claude/templates/delegation-templates.md`）完成子任務時使用 |
-| `pending` | 尚未確定下一個（極少用，多半搭配 Open Questions） |
+| `architect` | Hand off to the architect agent |
+| `plan-reviewer` | Hand off to the plan-reviewer agent to review the ExecPlan |
+| `tech-lead` | Hand off to tech-lead to begin implementation |
+| `dev` | Hand off to the development path (may be the main conversation + multiple sub-agents) |
+| `code-reviewer` | Implementation done, awaiting review |
+| `qa-engineer` | Hand off to the QA agent to write tests / run verification |
+| `security-reviewer` | Final review for anything touching auth/secrets |
+| `uiux-agent` | UI-related, entering the three-phase flow |
+| `human-approval` | ExecPlan §1-§5 complete, awaiting human approval |
+| `human-pr-review` | Code review passed, awaiting human PR review |
+| `done` | Task fully complete (merged) |
+| `main` | Report back to the main conversation (commander) — used when a delegated subagent (see `.claude/templates/delegation-templates.md`) completes its subtask |
+| `pending` | Next step not yet determined (rarely used, usually paired with Open Questions) |
 
-**範例**（INV id 為示意，實填依 `docs/architecture/invariants.md` 現行清單）：
+**Example** (INV ids are illustrative; use the current list in `docs/architecture/invariants.md`):
 ```
-✓ Plan 完成，§3 Constraints 引用 INV-GIT-002 / INV-SEC-001
-→ 下一步：等待 plan-reviewer 審查
+✓ Plan complete, §3 Constraints references INV-GIT-002 / INV-SEC-001
+→ Next: waiting for plan-reviewer to review
 [HANDOFF: plan-reviewer]
 ```
 
@@ -52,20 +52,20 @@
 
 ## 2. `[VERIFY_FAILED: <INV-id-or-reason>]`
 
-**用途**：執行中發現驗證失敗（lint / test / hook 攔截 / invariant 違反）。
-**Reason 格式**：
-- 如果違反某條 invariant：填該條 INV id（如 `INV-GIT-002`，依 `docs/architecture/invariants.md` 現行清單）
-- 如果是其他原因：簡短一句話（≤80 字元）
+**Purpose**: A verification failure discovered during execution (lint / test / hook block / invariant violation).
+**Reason format**:
+- If a specific invariant was violated: fill in that INV id (e.g. `INV-GIT-002`, per the current list in `docs/architecture/invariants.md`)
+- For other reasons: a short sentence (≤80 characters)
 
-**規則**：
-- 看到 `[VERIFY_FAILED:]` → 不得繼續、不得 commit、必須修復後重試
-- 連續 3 次 `[VERIFY_FAILED:]` → 必須升級為 `[HUMAN_ATTENTION_REQUIRED:]`
-- `stop-retro-logger.py`（Phase D）會把所有 `[VERIFY_FAILED:]` 與其前 5 行 context 收割到 `docs/learnings/ERRORS.md` Pending Review
+**Rules**:
+- On seeing `[VERIFY_FAILED:]` → do not continue, do not commit, must fix and retry
+- 3 consecutive `[VERIFY_FAILED:]` → must escalate to `[HUMAN_ATTENTION_REQUIRED:]`
+- `stop-retro-logger.py` (Phase D) harvests every `[VERIFY_FAILED:]` plus its preceding 5 lines of context into `docs/learnings/ERRORS.md` Pending Review
 
-**範例**（INV id 為示意，依專案 invariants 實填）：
+**Example** (INV id is illustrative; fill in per the project's actual invariants):
 ```
-✗ post-edit-lint 攔截：INV-SEC-001 diff 中偵測到疑似硬編碼金鑰
-→ 修復方案：改讀環境變數並更新 .env.example
+✗ post-edit-lint blocked: INV-SEC-001 — suspected hardcoded key detected in diff
+→ Fix: read from an environment variable instead and update .env.example
 [VERIFY_FAILED: INV-SEC-001]
 ```
 
@@ -73,85 +73,85 @@
 
 ## 3. `[HUMAN_ATTENTION_REQUIRED: <reason>]`
 
-**用途**：超出 agent 可自主決定的範圍，必須人類介入。
-**6 種觸發情境**（任一即可標記）：
+**Purpose**: Beyond what an agent may autonomously decide; requires human intervention.
+**6 trigger situations** (any one is sufficient to mark):
 
-1. **連續 3 次 lint/test 失敗仍無法定位根因**
-2. **偵測到 secret / 硬編碼 API key / 密碼**
-3. **invariant 衝突無法以技術手段化解**（例：兩條 INV 互斥）
-4. **ExecPlan §8 Open Questions 未獲解答阻擋進度**
-5. **跨 repo / 跨平台影響**（如前端改動需後端配合）
-6. **任何 destructive op**（rm -rf / git reset --hard / branch -D / force-push）
+1. **3 consecutive lint/test failures with the root cause still unidentified**
+2. **Secret / hardcoded API key / password detected**
+3. **An invariant conflict that cannot be resolved technically** (e.g., two INVs are mutually exclusive)
+4. **ExecPlan §8 Open Questions unanswered and blocking progress**
+5. **Cross-repo / cross-platform impact** (e.g., a frontend change requires backend coordination)
+6. **Any destructive op** (rm -rf / git reset --hard / branch -D / force-push)
 
-**規則**：
-- 標記後**必須立即停止**，不得試圖自己解決
-- 必須輸出**結構化問題清單**讓人類能快速回覆
-- 與 ExecPlan §8 Open Questions 同步
+**Rules**:
+- Must **stop immediately** after marking; do not attempt to resolve it yourself
+- Must output a **structured question list** so a human can reply quickly
+- Keep in sync with ExecPlan §8 Open Questions
 
-**範例**（INV id 為示意，依專案 invariants 實填）：
+**Example** (INV id is illustrative; fill in per the project's actual invariants):
 ```
-⚠ 偵測到 Request data class 缺 deviceId field，違反 INV-SEC-002
-   修復方案有兩種：
-   a) 加 default null，相容舊 client
-   b) 加 non-null 必填 → 所有呼叫點要同步改
+⚠ Detected the Request data class missing a deviceId field, violating INV-SEC-002
+   Two possible fixes:
+   a) add a default null, compatible with old clients
+   b) add a non-null required field → all call sites must be updated together
 
-→ 不在 ExecPlan 預期範圍內，請選擇方案
-[HUMAN_ATTENTION_REQUIRED: 修復方案需人類選擇 a 或 b]
+→ Outside the ExecPlan's expected scope, please choose a direction
+[HUMAN_ATTENTION_REQUIRED: fix approach requires human choice between a or b]
 ```
 
 ---
 
-## 標記出現位置
+## Where Markers Appear
 
-| 位置 | 行為 |
+| Location | Behavior |
 |------|------|
-| Sub-agent 的 final response | **必須**有單行 marker 結尾 |
-| ExecPlan §9 Handoff Manifest | 寫入 `Current state marker:` 欄位 |
-| ExecPlan §6 Progress Log | 每行末段可加 marker |
-| 主對話的 turn 結尾 | 非 task workflow 不要求；task 中建議加 |
+| Sub-agent's final response | **Must** end with a single-line marker |
+| ExecPlan §9 Handoff Manifest | Written into the `Current state marker:` field |
+| ExecPlan §6 Progress Log | A marker may be appended to the end of each line |
+| End of main conversation turn | Not required outside a task workflow; recommended within one |
 
 ---
 
-## Handoff 必要 context
+## Required Handoff Context
 
-每次 `[HANDOFF: <next>]` 之前，輸出必須包含足夠 context 讓下一個 agent 能 cold start：
+Every `[HANDOFF: <next>]` must be preceded by enough context for the next agent to cold-start:
 
-| 資訊 | 是否必要 |
+| Info | Required? |
 |------|---------|
-| ExecPlan 路徑（`docs/plans/active/F-NNN-*.md`） | **必要** |
-| 當前 branch | **必要** |
-| 最後 commit hash | **必要** |
-| §4 Step 進度（哪步完成、哪步進行中） | **必要** |
-| 已知 Open Questions | 若有則必要 |
-| 推薦執行順序（給下一個 agent） | 建議 |
+| ExecPlan path (`docs/plans/active/F-NNN-*.md`) | **Required** |
+| Current branch | **Required** |
+| Last commit hash | **Required** |
+| §4 Step progress (which steps done, which in progress) | **Required** |
+| Known Open Questions | Required if any exist |
+| Recommended execution order (for the next agent) | Recommended |
 
-**範例 handoff payload**（在 marker 前一段）：
+**Example handoff payload** (in the paragraph before the marker):
 
 ```
 HANDOFF SUMMARY
 - ExecPlan: docs/plans/active/F-042-export-history.md
 - Branch: feat/export-history (commit 7890ab)
 - Step status: §4.1-§4.4 done, §4.5 (test) pending
-- Open Questions: 無
-- Suggested next: code-reviewer 跑 review，重點看 §5 negative case 是否覆蓋
+- Open Questions: none
+- Suggested next: code-reviewer runs review, focus on whether §5 negative case is covered
 
 [HANDOFF: code-reviewer]
 ```
 
 ---
 
-## 反模式
+## Anti-Patterns
 
-- ❌ 用「完成」「ok」「done」當結尾，沒有 marker
-- ❌ 在 marker 後又繼續輸出（marker 必須是最後一行）
-- ❌ `[HANDOFF: code-review]` （正確是 `code-reviewer`，含 -er）
-- ❌ `[VERIFY_FAILED: failed]` （reason 必須具體；INV-id 或一句話）
-- ❌ `[HUMAN_ATTENTION_REQUIRED:]` 後自己又試著 workaround（看到此 marker 必須停）
+- ❌ Ending with "done" / "ok" / "complete" without a marker
+- ❌ Continuing to output after the marker (the marker must be the last line)
+- ❌ `[HANDOFF: code-review]` (correct is `code-reviewer`, with the `-er`)
+- ❌ `[VERIFY_FAILED: failed]` (reason must be specific: an INV-id or a sentence)
+- ❌ `[HUMAN_ATTENTION_REQUIRED:]` followed by attempting your own workaround (on seeing this marker, you must stop)
 
 ---
 
-## 引用此檔的位置
+## Where This File Is Referenced
 
-- `.claude/agents/*.md`（每個 agent 的 Harness 交接協議段）
+- `.claude/agents/*.md` (each agent's Harness handoff-protocol section)
 - `.claude/protocols/execplan-lifecycle.md`
-- `.claude/hooks/stop-retro-logger.py`（Phase D）
+- `.claude/hooks/stop-retro-logger.py` (Phase D)

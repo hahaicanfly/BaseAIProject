@@ -1,79 +1,79 @@
-# A. Harness 漏水診斷書
+# A. Harness Leak Diagnosis
 
-> 產出：2026-07-04 Fable 5 一次性架構 session。讀者：Sonnet / Opus / Haiku 等長期運作模型。
-> 依據：3 組並行審計（BaseAIProject 68 檔全量、全域 ~/.claude 環境、MaiNeu 母專案比較）+ 主對話實測驗證。
-> 本檔是後續所有 harness 檔案的依據；修復狀態標記：[已修] [未修]。
+> Produced: 2026-07-04 one-off architecture session by Fable 5. Audience: long-running models such as Sonnet / Opus / Haiku.
+> Basis: 3 parallel audits (full 68-file BaseAIProject sweep, global ~/.claude environment, comparison with the MaiNeu parent project) + live verification in the main conversation.
+> This file is the basis for all subsequent harness files. Fix-status markers: [已修] (fixed) / [未修] (not fixed).
 
-## 診斷方法
+## Diagnostic method
 
-- 全量盤點 68 檔（約 8,760 行），標記 DUP（重複）/ STALE（過時）/ HEAVY（常駐過重）
-- 對 hooks 做黑箱實測（餵 JSON payload 看 exit code），不信文件自述
-- 與 MaiNeu 母專案（Menu-Android，實戰調校最久）比對演化差異
-- 判定「漏 token」的標準：每 session 或每 spawn 必然載入、且資訊密度低或重複
+- Full inventory of 68 files (~8,760 lines), tagged DUP (duplicate) / STALE (outdated) / HEAVY (too heavy for always-on load)
+- Black-box testing of hooks (feed JSON payloads, observe exit codes) — never trust a document's self-description
+- Compared evolutionary drift against the MaiNeu parent project (Menu-Android, the longest battle-tuned)
+- Criterion for "token leak": loaded on every session or every spawn, with low information density or duplication
 
-## 一、Token 最漏 Top 3
+## I. Top 3 token leaks
 
-### 1. 「必讀」的空殼檔：agent_docs/TECHNICAL-REFERENCE.md（257 行，33 個 {{佔位符}} 全空）[已修]
-CLAUDE.md 第一條 MUST 是「任務前必讀此檔」，但整檔是未填模板 —— 每個任務強制付 257 行 token 換到零資訊，還訓練弱模型「必讀檔可以不含資訊」的壞直覺。
-**阻斷方案**：CLAUDE.md 改為「若 TECHNICAL-REFERENCE.md 仍含 {{佔位符}}，視為未啟用、跳過」；模板頂部加啟用開關說明。新專案填實後才恢復必讀地位。
+### 1. The "must-read" empty shell: agent_docs/TECHNICAL-REFERENCE.md (257 lines, all 33 {{placeholders}} empty) [已修 fixed]
+CLAUDE.md's first MUST was "read this file before any task", yet the entire file was an unfilled template — every task paid a mandatory 257 lines of tokens for zero information, and it trained weak models into the bad intuition that "must-read files can contain no information".
+**Blocking fix**: CLAUDE.md now says "if TECHNICAL-REFERENCE.md still contains {{placeholders}}, treat it as not activated and skip it"; an activation-switch note was added at the top of the template. It regains must-read status only after a new project fills it in.
 
-### 2. 常駐 rules 全量載入 + 同一規則三重拷貝（每 session ~420 行，其中過半重複）[已修]
-`.claude/rules/*.md` 全部自動注入每個 session。security 規則存在三份（rules/security.md ≈ agent_docs/security-policy.md ≈ invariants.md INV-SEC-*），cost 規則兩份，內容僅措辭差異。
-**阻斷方案**：單一事實源分層 —— rules/ 只放「常駐精簡版」（判準與硬規則），詳版與教學內容留在 agent_docs/ 且由 rules 引用；重複段落刪除。新增規則檔先問「這需要常駐嗎」。
+### 2. All standing rules loaded in full + the same rule copied three times (~420 lines per session, more than half duplicated) [已修 fixed]
+All of `.claude/rules/*.md` is auto-injected into every session. The security rule existed in three copies (rules/security.md ≈ agent_docs/security-policy.md ≈ invariants.md INV-SEC-*), the cost rule in two, differing only in wording.
+**Blocking fix**: layered single source of truth — rules/ holds only the "standing condensed version" (criteria and hard rules); full versions and tutorial content live in agent_docs/ and are referenced from rules; duplicate passages deleted. Any new rule file must first answer "does this need to be standing?"
 
-### 3. 14 個 agent 檔的逐字重複樣板（每次 spawn 重付 ~15-20 行 ×14 檔 ≈ 250 行）[未修→維護協議接手]
-三 marker 交接說明、`git branch --show-current` 自檢、「讀 invariants 列 INV-id」等段落在 14 個 agent 檔逐字複製（源頭是 handoff-protocol.md:13-17）。
-**阻斷方案**：agent 檔尾段收斂為一行：「交接與自檢規範見 `.claude/protocols/handoff-protocol.md`，final response 必含 marker」。批次修改屬機械套用，適合派 Haiku/Sonnet 批次執行（正好是 model-dispatch.md §4 降級批次的範例任務）。
+### 3. Verbatim boilerplate across 14 agent files (~15–20 lines × 14 files ≈ 250 lines repaid on every spawn) [未修 not fixed → handed to the maintenance protocol]
+The three-marker handoff explanation, the `git branch --show-current` self-check, and the "read invariants, list INV-ids" passage were copied verbatim across 14 agent files (source: handoff-protocol.md:13-17).
+**Blocking fix**: collapse each agent file's tail section to one line: "Handoff and self-check rules: see `.claude/protocols/handoff-protocol.md`; final response must include a marker." The batch edit is mechanical application, well suited to dispatching Haiku/Sonnet in batch (exactly the example downgrade-batch task in model-dispatch.md §4).
 
-## 二、最容易失焦 Top 3
+## II. Top 3 focus-loss risks
 
-### 1. 單一事實源分裂：同一件事有多份互相矛盾的正典 [部分已修]
-- 模型分派表 9 處矛盾（agent frontmatter vs CLAUDE.md 表 vs AI-TEAM-REGISTRY.md，如 pm 一邊標 haiku 一邊標 opus）
-- Review 輸出格式三套互斥（code-reviewer vs review-protocol vs tech-lead）
-- Agent/skill 名單兩份且計數皆錯（REGISTRY 漏 code-reviewer、skill 清單漏 4 個後加 skill）
-弱模型遇到矛盾不會停下來查證，會隨機採信其一，行為因此不可預測。
-**阻斷方案**：宣告正典層級（新 CLAUDE.md 已寫入）：模型分派以 **agent frontmatter** 為準；review 格式以 **review-protocol.md** 為準；名單以 **AI-TEAM-REGISTRY.md** 為準，其他檔案只准引用不准另列。矛盾未清完前，弱模型遇不一致按此層級採信。
+### 1. Fractured single source of truth: multiple mutually contradictory canons for the same thing [部分已修 partially fixed]
+- Model dispatch table contradicted in 9 places (agent frontmatter vs the CLAUDE.md table vs AI-TEAM-REGISTRY.md — e.g. pm marked haiku in one and opus in another)
+- Three mutually exclusive review output formats (code-reviewer vs review-protocol vs tech-lead)
+- Two agent/skill rosters, both with wrong counts (REGISTRY missing code-reviewer; skill list missing 4 later-added skills)
+A weak model that hits a contradiction will not stop to verify — it adopts one at random, making behavior unpredictable.
+**Blocking fix**: declare a canon hierarchy (now written into the new CLAUDE.md): model dispatch follows **agent frontmatter**; review format follows **review-protocol.md**; rosters follow **AI-TEAM-REGISTRY.md**; other files may only reference, never re-list. Until contradictions are fully cleaned, weak models resolve inconsistencies by this hierarchy.
 
-### 2. 死引用與幽靈路徑：追不到的東西會讓弱模型編造 [部分已修]
-`ADR-0001`（7 處引用、檔案不存在）、`/harness-workflow` skill（CLAUDE.md 引用、不存在）、`scripts/*.sh`（parallel-worktree.md 引用、不存在）、`src/`（techdebt 兩處引用、不存在）、docs/INDEX.md 宣稱的 `always_read` frontmatter（0 個 agent 有）。
-**阻斷方案**：新 CLAUDE.md 刪除死引用；維護協議（harness-maintenance.md）規定「引用即驗證」：寫下任何路徑前必須確認存在，發現死引用記入 ERRORS.md。剩餘死引用清單已列入 LETTER-TO-FUTURE-SESSIONS.md 交接清單。
+### 2. Dead references and ghost paths: what can't be traced makes weak models fabricate [部分已修 partially fixed]
+`ADR-0001` (referenced 7 times, file doesn't exist), `/harness-workflow` skill (referenced in CLAUDE.md, doesn't exist), `scripts/*.sh` (referenced in parallel-worktree.md, doesn't exist), `src/` (referenced twice by techdebt, doesn't exist), the `always_read` frontmatter claimed by docs/INDEX.md (0 agents have it).
+**Blocking fix**: the new CLAUDE.md drops the dead references; the maintenance protocol (harness-maintenance.md) mandates "reference = verify": confirm any path exists before writing it down; log discovered dead references in ERRORS.md. The remaining dead-reference list is in the LETTER-TO-FUTURE-SESSIONS.md handoff checklist.
 
-### 3. 雙軌前置流程無先後：plan-first.md（Plan Mode）vs ExecPlan（PLANS.md）[已修]
-兩套「動手前先計劃」機制並存且未定義關係，弱模型會兩個都做（重複勞動）或都不做（各自以為另一個涵蓋了）。
-**阻斷方案**：新 CLAUDE.md 定義單一決策樹：跨模組/API/重構 → ExecPlan（重量級、入版控、需人類核可）；其餘非瑣碎任務 → Plan Mode（輕量級、對話內）；< 20 行單檔修改 → 直接做。
+### 3. Two parallel pre-work processes with no defined precedence: plan-first.md (Plan Mode) vs ExecPlan (PLANS.md) [已修 fixed]
+Two "plan before acting" mechanisms coexisted with no defined relationship; a weak model would either do both (duplicated labor) or neither (each assumed the other covered it).
+**Blocking fix**: the new CLAUDE.md defines a single decision tree: cross-module / API / refactor → ExecPlan (heavyweight, version-controlled, needs human approval); other non-trivial tasks → Plan Mode (lightweight, in-conversation); single-file < 20-line changes → do directly.
 
-## 三、最容易出錯 Top 3（工具/hook/skill 調用）
+## III. Top 3 error sources (tool/hook/skill invocation)
 
-### 1. 全部 4 個 hooks（+1 共用庫 `_lib.py`）從未執行過：雙重失效 [已修，實測通過]
-(a) 檔案無執行權限（`-rw-r--r--`）且 settings.json 直呼 `.py` → 每次觸發都 Permission denied；
-(b) 即使修好 (a)，guard 用 `exit 1` 想攔截 —— Claude Code hook 協議中 **exit 2 才阻斷，exit 1 只是警告、指令照跑**。
-也就是說 CLAUDE.md 宣稱的「enforce mode 攔截」自部署以來完全是紙上防線。
-**修復**：`chmod +x` 全部 hooks；guard 兩處 `return 1` → `return 2`（備份於 pre-tool-use-guard.py.bak）。實測：攔截情境 exit 2 且 stderr 帶原因、正常指令 exit 0。
-**教訓（已成規則）**：任何 hook 部署後必須黑箱實測一次 block 與 pass 兩情境，寫入 harness-maintenance.md。
+### 1. All 4 hooks (+1 shared lib `_lib.py`) had never executed: double failure [已修 fixed, verified by live test]
+(a) Files lacked execute permission (`-rw-r--r--`) and settings.json invoked `.py` directly → Permission denied on every trigger;
+(b) even with (a) fixed, the guard tried to block with `exit 1` — in the Claude Code hook protocol **only exit 2 blocks; exit 1 is a warning and the command runs anyway**.
+In other words, the "enforce mode interception" claimed by CLAUDE.md had been a paper defense since deployment.
+**Fix**: `chmod +x` all hooks; two `return 1` → `return 2` in the guard (backup at pre-tool-use-guard.py.bak). Live-tested: block scenarios exit 2 with reason on stderr; normal commands exit 0.
+**Lesson (now a rule)**: every hook must be black-box tested once after deployment, covering both a block and a pass scenario — written into harness-maintenance.md.
 
-### 2. stop-retro-logger dedup 失效，持續污染 ERRORS.md [未修→交接]
-dedup hash 把 timestamp 算進去 → 永不判重 → ERRORS.md 已被 7 條重複 PR_RETRO noise 灌入。教訓檔被 noise 稀釋後，弱模型會停止信任並停止閱讀它，整條「踩坑→教訓→規則」管線就死了。
-**阻斷方案**：修 `_hash` 移除 timestamp 欄位（stop-retro-logger.py，具體行號見交接清單）；清除 ERRORS.md 現有重複條目。
+### 2. stop-retro-logger dedup broken, continuously polluting ERRORS.md [未修 not fixed → handed off]
+The dedup hash included the timestamp → nothing ever deduplicates → ERRORS.md was flooded with 7 duplicate PR_RETRO noise entries. Once the lessons file is diluted by noise, weak models stop trusting it and stop reading it — the whole "mistake → lesson → rule" pipeline dies.
+**Blocking fix**: fix `_hash` to drop the timestamp field (stop-retro-logger.py, exact line numbers in the handoff checklist); purge existing duplicate entries from ERRORS.md.
 
-### 3. Agent 工具權限與職責矛盾 + skill 觸發失效 [未修→交接]
-- pm、security-reviewer 無 Bash，卻被 review-protocol.md 要求跑 `git branch --show-current`；tech-lead 唯讀（Read/Grep/Glob），execplan-lifecycle.md:82 卻指派它「實作、commit」→ agent 執行到一半發現無工具，回報失敗或亂繞路
-- 部分 SKILL.md（如 skill-creator）缺 YAML frontmatter → 可能根本不被觸發
-**阻斷方案**：以「職責決定工具」重審 14 個 agent frontmatter；SOP 中要求 agent 做的每個動作，該 agent 必須有對應工具。批次修正適合派 Sonnet 照 checklist 執行。
+### 3. Agent tool permissions contradict duties + skill triggering broken [未修 not fixed → handed off]
+- pm and security-reviewer have no Bash, yet review-protocol.md requires them to run `git branch --show-current`; tech-lead is read-only (Read/Grep/Glob), yet execplan-lifecycle.md:82 assigns it to "implement, commit" → the agent discovers mid-run it lacks tools, then reports failure or takes wild detours
+- Some SKILL.md files (e.g. skill-creator) lack YAML frontmatter → may never trigger at all
+**Blocking fix**: re-audit all 14 agent frontmatters on the principle "duties determine tools"; every action a SOP demands of an agent must be backed by a corresponding tool. The batch fix suits dispatching Sonnet against a checklist.
 
-## 四、Harness 能力極限（誠實條款）
+## IV. Harness capability limits (honesty clause)
 
-拆解、隔離驗證、多答案評審能把弱模型的**執行品質**逼近高階模型；以下三類**補不了**，遇到走指定出口（詳見 `.claude/rules/judgment-rubrics.md` §6）：
+Decomposition, isolated verification, and multi-answer adjudication can push a weak model's **execution quality** toward that of a stronger model; the following three categories **cannot be compensated** — take the designated exit (details in `.claude/rules/judgment-rubrics.md` §6):
 
-1. **品味與美感決策**（UI 好不好看、文案語感）：弱模型產出 2-3 個候選 + trade-off 交人選，不自行拍板。
-2. **模糊商業判斷**（值不值得做、使用者要什麼）：列可驗證假設，明說需要人類決策。
-3. **無 ground truth 的長鏈推理**（無法用測試/實跑/文件驗證的結論）：標信心等級，升級模型或第二意見；查不到就寫「未確認」，不編造。
+1. **Taste and aesthetic decisions** (whether a UI looks good, copywriting tone): the weak model produces 2–3 candidates + trade-offs for a human to choose; it does not decide on its own.
+2. **Ambiguous business judgment** (is it worth doing, what do users want): list verifiable hypotheses and state plainly that a human decision is required.
+3. **Long-chain reasoning without ground truth** (conclusions unverifiable by tests / live runs / documents): mark confidence level, escalate the model or seek a second opinion; if it can't be found, write "unverified" — do not fabricate.
 
-此外本診斷自身的極限:「未確認」項目包括 commands/last-word.md 與 uiux/ 5 檔的逐行內容、agy（Gemini）端實際行為 —— 均未實測。
+Additionally, this diagnosis has its own limits: "unverified" items include the line-by-line content of commands/last-word.md and the 5 uiux/ files, and the actual behavior of the agy (Gemini) side — none were live-tested.
 
-## 附：本次已完成的實體修復清單
+## Appendix: physical fixes completed this session
 
-| 項目 | 動作 | 驗證 |
+| Item | Action | Verification |
 |------|------|------|
-| hooks 無執行權限 | `chmod +x .claude/hooks/*.py` | 實測 guard 可執行 |
-| guard exit code | `return 1` → `return 2` ×2 處 + docstring | block→exit 2 / pass→exit 0 實測通過 |
-| 備份 | pre-tool-use-guard.py.bak、CLAUDE.md.bak | 已存在 |
+| hooks lacked execute permission | `chmod +x .claude/hooks/*.py` | live-tested guard is executable |
+| guard exit code | `return 1` → `return 2` ×2 places + docstring | block→exit 2 / pass→exit 0 live-tested |
+| backups | pre-tool-use-guard.py.bak, CLAUDE.md.bak | exist |

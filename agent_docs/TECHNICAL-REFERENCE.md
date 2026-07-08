@@ -1,67 +1,67 @@
 # {{PROJECT_NAME}} — Technical Reference
 
-> **角色**：本檔是 AI agent 的技術百科。每個 agent 在執行任務前應先查閱相關章節。
-> **更新策略**：重大架構變更後同步更新；不求即時，但求準確。
-> **使用方式**：ExecPlan §2 Context 引用具體章節錨（如 `TECHNICAL-REFERENCE.md §3`）。
+> **Role**: This file is the AI agent's technical encyclopedia. Each agent should consult the relevant section before executing a task.
+> **Update policy**: Sync after major architecture changes; accuracy over immediacy.
+> **Usage**: ExecPlan §2 Context references specific section anchors (e.g. `TECHNICAL-REFERENCE.md §3`).
 
-### 最小可用填寫
+### Minimum Viable Fill-In
 
-填完以下 5 項，本檔即解鎖 `CLAUDE.md` 的「必讀」地位；其餘佔位符可後補：
+Fill in the following 5 items and this file unlocks "must-read" status in `CLAUDE.md`; the remaining placeholders can be filled in later:
 
-1. 核心使命一句話
-2. 技術棧 4 格：前端 / 後端 / 資料庫 / 部署
-3. 頂層模組清單
-4. API base URL（開發 + 生產）
-5. 認證方式
-
----
-
-## 目錄
-
-1. [專案概覽](#1-專案概覽)
-2. [技術棧](#2-技術棧)
-3. [架構設計](#3-架構設計)
-4. [核心模組](#4-核心模組)
-5. [API 規範](#5-api-規範)
-6. [資料模型](#6-資料模型)
-7. [認證與授權](#7-認證與授權)
-8. [測試策略](#8-測試策略)
-9. [部署與環境](#9-部署與環境)
-10. [已知限制與 TODO](#10-已知限制與-todo)
+1. Core mission in one sentence
+2. Tech stack, 4 cells: frontend / backend / database / deployment
+3. Top-level module list
+4. API base URL (dev + production)
+5. Authentication method
 
 ---
 
-## 1. 專案概覽
+## Table of Contents
 
-> TODO：填入專案的核心使命、目標用戶、主要功能。
-
-**核心使命**：{{填入一句話描述}}
-
-**主要功能**：
-- {{功能 1}}
-- {{功能 2}}
-- {{功能 3}}
-
-**當前版本**：{{填入版本號}}
+1. [Project Overview](#1-project-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Architecture Design](#3-architecture-design)
+4. [Core Modules](#4-core-modules)
+5. [API Spec](#5-api-spec)
+6. [Data Models](#6-data-models)
+7. [Authentication & Authorization](#7-authentication--authorization)
+8. [Testing Strategy](#8-testing-strategy)
+9. [Deployment & Environments](#9-deployment--environments)
+10. [Known Limitations & TODO](#10-known-limitations--todo)
 
 ---
 
-## 2. 技術棧
+## 1. Project Overview
 
-> TODO：填入實際使用的技術。
+> TODO: fill in the project's core mission, target users, and main features.
 
-| 層次 | 技術 | 版本 | 備註 |
+**Core mission**: {{fill in a one-sentence description}}
+
+**Main features**:
+- {{feature 1}}
+- {{feature 2}}
+- {{feature 3}}
+
+**Current version**: {{fill in version number}}
+
+---
+
+## 2. Tech Stack
+
+> TODO: fill in the technologies actually used.
+
+| Layer | Technology | Version | Notes |
 |------|------|------|------|
-| 前端 | {{React / SwiftUI / Jetpack Compose / ...}} | {{版本}} | |
-| 後端 | {{Node.js / Python / Go / ...}} | {{版本}} | |
-| 資料庫 | {{PostgreSQL / MySQL / SQLite / ...}} | {{版本}} | |
-| AI 模型 | {{Claude API / Gemini / ...}} | {{版本}} | |
-| 部署 | {{Vercel / AWS / GCP / ...}} | — | |
+| Frontend | {{React / SwiftUI / Jetpack Compose / ...}} | {{version}} | |
+| Backend | {{Node.js / Python / Go / ...}} | {{version}} | |
+| Database | {{PostgreSQL / MySQL / SQLite / ...}} | {{version}} | |
+| AI Model | {{Claude API / Gemini / ...}} | {{version}} | |
+| Deployment | {{Vercel / AWS / GCP / ...}} | — | |
 | CI/CD | {{GitHub Actions / GitLab CI / ...}} | — | |
 
-**本地開發依賴**：
+**Local dev dependencies**:
 ```bash
-# TODO：填入開發環境設置指令
+# TODO: fill in dev environment setup commands
 # e.g.:
 # npm install
 # cp .env.template .env
@@ -70,9 +70,9 @@
 
 ---
 
-## 3. 架構設計
+## 3. Architecture Design
 
-> TODO：填入架構圖與說明。詳見 `docs/architecture/domains.md`。
+> TODO: fill in an architecture diagram and description. See `docs/architecture/domains.md` for details.
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -92,67 +92,67 @@
 └─────────────────────────────────────────────────┘
 ```
 
-**設計原則**：
-- 依賴反轉：上層依賴介面，不依賴具體實作
-- 單一職責：每個模組職責清晰
-- 開放封閉：對擴展開放，對修改封閉
+**Design principles**:
+- Dependency inversion: upper layers depend on interfaces, not concrete implementations
+- Single responsibility: each module has a clear responsibility
+- Open/closed: open for extension, closed for modification
 
 ---
 
-## 4. 核心模組
+## 4. Core Modules
 
-> TODO：逐一填入各模組的職責、輸入/輸出、重要函數。
+> TODO: fill in each module's responsibility, inputs/outputs, and key functions.
 
-### 4.1 {{模組名稱}}
+### 4.1 {{module name}}
 
-**職責**：{{填入職責描述}}
+**Responsibility**: {{fill in responsibility description}}
 
-**關鍵介面**：
+**Key interface**:
 ```
-TODO：填入介面定義
+TODO: fill in interface definition
 ```
 
-**依賴**：{{列出依賴的其他模組}}
+**Dependencies**: {{list other modules this depends on}}
 
 ---
 
-### 4.2 {{模組名稱}}
+### 4.2 {{module name}}
 
-**職責**：{{填入職責描述}}
+**Responsibility**: {{fill in responsibility description}}
 
-**關鍵介面**：
+**Key interface**:
 ```
-TODO：填入介面定義
+TODO: fill in interface definition
 ```
 
 ---
 
-## 5. API 規範
+## 5. API Spec
 
-> TODO：填入 API 端點、請求/回應格式、認證方式。
+> TODO: fill in API endpoints, request/response formats, authentication method.
 
 ### Base URL
 
 ```
-開發：http://localhost:{{port}}
-生產：https://{{your-domain}}
+Dev: http://localhost:{{port}}
+Production: https://{{your-domain}}
 ```
 
-### 認證方式
+### Authentication method
 
 ```
 Authorization: Bearer <token>
 ```
 
-### 端點列表
+### Endpoint list
 
-| Method | Path | 描述 | 認證 |
+| Method | Path | Description | Auth |
 |--------|------|------|------|
-| GET | `/api/health` | 健康檢查 | 否 |
-| POST | `/api/{{resource}}` | {{描述}} | 是 |
-| GET | `/api/{{resource}}/:id` | {{描述}} | 是 |
+| GET | `/api/health` | Health check | No |
+| POST | `/api/{{resource}}` | {{description}} | Yes |
+| GET | `/api/{{resource}}/:id` | {{description}} | Yes |
 
-### 錯誤格式
+### Error format
 
 ```json
 {
@@ -166,102 +166,102 @@ Authorization: Bearer <token>
 
 ---
 
-## 6. 資料模型
+## 6. Data Models
 
-> TODO：填入核心資料模型。
+> TODO: fill in core data models.
 
-### {{Model 名稱}}
+### {{Model name}}
 
 ```
 {
   id: string (UUID)
   created_at: ISO 8601
   updated_at: ISO 8601
-  // TODO：填入其他欄位
+  // TODO: fill in other fields
 }
 ```
 
 ---
 
-## 7. 認證與授權
+## 7. Authentication & Authorization
 
-> TODO：填入認證流程、Token 管理、Permission 模型。
+> TODO: fill in the authentication flow, token management, permission model.
 
-**認證方式**：{{JWT / OAuth2 / Session / ...}}
+**Authentication method**: {{JWT / OAuth2 / Session / ...}}
 
-**Token 有效期**：{{填入}}
+**Token lifetime**: {{fill in}}
 
-**Permission 模型**：
-- {{角色 1}}：{{權限描述}}
-- {{角色 2}}：{{權限描述}}
+**Permission model**:
+- {{role 1}}: {{permission description}}
+- {{role 2}}: {{permission description}}
 
 ---
 
-## 8. 測試策略
+## 8. Testing Strategy
 
-> TODO：填入測試框架、測試覆蓋率要求、測試執行指令。
+> TODO: fill in test framework, coverage requirements, test execution commands.
 
-**測試框架**：{{Jest / pytest / JUnit / ...}}
+**Test framework**: {{Jest / pytest / JUnit / ...}}
 
-**執行指令**：
+**Execution commands**:
 ```bash
-# 單元測試
-{{填入指令}}
+# Unit tests
+{{fill in command}}
 
-# 整合測試
-{{填入指令}}
+# Integration tests
+{{fill in command}}
 
-# 全部測試
-{{填入指令}}
+# All tests
+{{fill in command}}
 ```
 
-**覆蓋率要求**：{{填入，例如 "核心 domain 邏輯 ≥ 80%"}}
+**Coverage requirement**: {{fill in, e.g. "core domain logic ≥ 80%"}}
 
 ---
 
-## 9. 部署與環境
+## 9. Deployment & Environments
 
-> TODO：填入環境變數、部署流程、環境差異。
+> TODO: fill in environment variables, deployment process, environment differences.
 
-### 環境變數
+### Environment variables
 
-| 變數 | 必填 | 描述 | 範例 |
+| Variable | Required | Description | Example |
 |------|------|------|------|
-| `API_KEY` | 是 | 主要 API 金鑰 | `sk-...` |
-| `DATABASE_URL` | 是 | 資料庫連線字串 | `postgres://...` |
-| `NODE_ENV` | 是 | 環境 | `development` / `production` |
+| `API_KEY` | Yes | Primary API key | `sk-...` |
+| `DATABASE_URL` | Yes | Database connection string | `postgres://...` |
+| `NODE_ENV` | Yes | Environment | `development` / `production` |
 
-### 部署流程
+### Deployment process
 
 ```bash
-# TODO：填入部署步驟
-# 1. 建構
-# 2. 測試
-# 3. 部署
+# TODO: fill in deployment steps
+# 1. Build
+# 2. Test
+# 3. Deploy
 ```
 
-### 環境差異
+### Environment differences
 
-| 配置項 | 開發 | 測試 | 生產 |
+| Config item | Dev | Test | Production |
 |--------|------|------|------|
-| 資料庫 | 本地 | 測試 DB | 生產 DB |
-| Log 等級 | DEBUG | INFO | WARN |
-| AI 模型 | haiku（省成本） | sonnet | sonnet/opus |
+| Database | Local | Test DB | Production DB |
+| Log level | DEBUG | INFO | WARN |
+| AI model | haiku (cost-saving) | sonnet | sonnet/opus |
 
 ---
 
-## 10. 已知限制與 TODO
+## 10. Known Limitations & TODO
 
-> 記錄已知的技術債、暫時限制、待改善項目。
+> Record known tech debt, temporary limitations, and pending improvements.
 
-| 項目 | 優先度 | 說明 | 預計解決 |
+| Item | Priority | Description | Expected resolution |
 |------|--------|------|---------|
-| {{限制 1}} | 高/中/低 | {{描述}} | {{版本或日期}} |
+| {{limitation 1}} | High/Medium/Low | {{description}} | {{version or date}} |
 
 ---
 
-## 引用此檔的位置
+## Referenced By
 
-- ExecPlan §2 Context（引用具體章節錨）
+- ExecPlan §2 Context (referencing specific section anchors)
 - `.claude/agents/*.md` frontmatter `always_read`
 - `agent_docs/AI-TEAM-REGISTRY.md`

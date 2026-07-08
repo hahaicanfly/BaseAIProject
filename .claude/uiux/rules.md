@@ -1,191 +1,191 @@
-# UI/UX 設計規則
+# UI/UX Design Rules
 
-> **本規則為強制性指引，所有 UI 實作必須遵守。**
+> **These rules are mandatory guidance — all UI implementation must comply.**
 >
-> 適用技術棧：React/Tailwind、Compose Multiplatform、SwiftUI、Vue 等
+> Applicable tech stacks: React/Tailwind, Compose Multiplatform, SwiftUI, Vue, etc.
 
 ---
 
-## 1. 風格與一致性
+## 1. Style and Consistency
 
-### 1.1 Design Tokens 強制使用
+### 1.1 Design Tokens Are Mandatory
 
 ```
-// ✅ 正確：使用 Design Token
+// ✅ Correct: use a Design Token
 color: var(--color-primary)
 padding: spacing.md  // 16px
 
-// ❌ 錯誤：硬編碼數值
+// ❌ Wrong: hardcoded value
 color: #6750A4
-padding: 16px  // 直接寫數字
+padding: 16px  // writing the number directly
 ```
 
-**規則**：
-- 顏色：只使用 Design Token 或 Theme 定義的色彩
-- 字體：只使用 Typography 系統定義的樣式
-- 間距：只使用 Spacing Scale（4px / 8px 倍數）
-- 圓角：只使用 Shape Token
+**Rules**:
+- Color: only use colors defined by a Design Token or Theme
+- Typography: only use styles defined by the Typography system
+- Spacing: only use the Spacing Scale (multiples of 4px / 8px)
+- Corner radius: only use Shape Tokens
 
-### 1.2 元件一致性
+### 1.2 Component Consistency
 
-| 元件類型 | 要求 |
+| Component Type | Requirement |
 |---------|-----|
-| 按鈕 | 統一使用設計系統 Button 元件 |
-| 卡片 | 統一圓角、陰影規範 |
-| 輸入框 | 統一樣式，包含 label 和 error state |
-| 圖示 | 只用一套圖示庫 |
+| Button | Uniformly use the design system's Button component |
+| Card | Uniform corner radius and shadow rules |
+| Input | Uniform style, including label and error state |
+| Icon | Use only one icon library |
 
-### 1.3 禁止 Random Styling
+### 1.3 No Random Styling
 
 ```
-// ❌ 禁止：隨機顏色、隨機圓角
-border-radius: 13px  // 為什麼是 13？
-color: #ABCDEF  // 沒有意義的顏色
+// ❌ Prohibited: random colors, random corner radii
+border-radius: 13px  // why 13?
+color: #ABCDEF  // meaningless color
 
-// ✅ 正確：使用語義化 Token
+// ✅ Correct: use semantic tokens
 border-radius: var(--radius-card)
 color: var(--color-primary)
 ```
 
 ---
 
-## 2. 排版與留白
+## 2. Layout and Whitespace
 
-### 2.1 Grid 系統
+### 2.1 Grid System
 
-遵循 8px Grid（4px 微調）：
-- 邊距：`16px`（Spacing.md）
-- 卡片間距：`12px`
-- 區塊間距：`24px`（Spacing.lg）
+Follow an 8px grid (4px fine adjustment):
+- Margin: `16px` (Spacing.md)
+- Card spacing: `12px`
+- Section spacing: `24px` (Spacing.lg)
 
-### 2.2 Spacing Scale（強制）
+### 2.2 Spacing Scale (Mandatory)
 
-| Token | 值 | 用途 |
+| Token | Value | Purpose |
 |-------|-----|-----|
-| `spacing.xs` | 4px | 元素內部微間距 |
-| `spacing.sm` | 8px | 相關元素間距 |
-| `spacing.md` | 16px | 區塊內間距、標準 padding |
-| `spacing.lg` | 24px | 區塊間距 |
-| `spacing.xl` | 32px | 主要區塊分隔 |
-| `spacing.xxl` | 48px | 頁面區段分隔 |
+| `spacing.xs` | 4px | Fine spacing within an element |
+| `spacing.sm` | 8px | Spacing between related elements |
+| `spacing.md` | 16px | Spacing within a block, standard padding |
+| `spacing.lg` | 24px | Spacing between blocks |
+| `spacing.xl` | 32px | Separation between major sections |
+| `spacing.xxl` | 48px | Separation between page sections |
 
-### 2.3 文字階層
+### 2.3 Text Hierarchy
 
-標題層級（不可跳級）：
-- Display / Hero 標題
-- 頁面標題 (H1)
-- 區段標題 (H2)
-- 子區段 (H3)
-- 卡片標題
-- 主要內文
-- 次要內文
-- 輔助說明
+Heading levels (must not skip):
+- Display / Hero title
+- Page title (H1)
+- Section title (H2)
+- Subsection (H3)
+- Card title
+- Primary body text
+- Secondary body text
+- Supporting text
 
-**規則**：
-- 每個層級大小差距至少 2-4px
-- 行高：body 1.5-1.75，heading 1.2-1.3
-- 每行最多 65-75 字元（中文 35-40 字）
+**Rules**:
+- At least a 2-4px size difference between adjacent levels
+- Line height: body 1.5-1.75, heading 1.2-1.3
+- Max 65-75 characters per line (35-40 for Chinese)
 
 ---
 
-## 3. 互動細節
+## 3. Interaction Details
 
-### 3.1 狀態完整性（必須實作所有狀態）
+### 3.1 State Completeness (all states must be implemented)
 
-| 狀態 | 視覺變化 | 實作要求 |
+| State | Visual Change | Implementation Requirement |
 |-----|---------|---------|
-| **Default** | 基準樣式 | 必須定義 |
-| **Hover** | 背景淺色、微微放大 | 桌面端 |
-| **Focus** | 可見的 focus ring (2px) | 鍵盤 accessible |
-| **Active/Pressed** | 深色背景、scale 0.98 | 點擊中 |
-| **Disabled** | 50% opacity、無互動 | enabled = false |
-| **Loading** | 內容替換為 spinner | 禁用互動 |
+| **Default** | Baseline style | Must be defined |
+| **Hover** | Lighter background, slight scale-up | Desktop only |
+| **Focus** | Visible focus ring (2px) | Keyboard accessible |
+| **Active/Pressed** | Darker background, scale 0.98 | While clicking |
+| **Disabled** | 50% opacity, no interaction | enabled = false |
+| **Loading** | Content replaced with spinner | Interaction disabled |
 
-### 3.2 Loading 狀態
+### 3.2 Loading State
 
 ```
-// ✅ 正確：Skeleton + 禁用操作
+// ✅ Correct: Skeleton + disabled interaction
 switch (state) {
-  case 'loading': return <SkeletonList />  // 骨架屏
+  case 'loading': return <SkeletonList />  // skeleton screen
   case 'success': return <List items={data} />
   case 'error': return <ErrorState onRetry={retry} />
 }
 
-// ❌ 錯誤：只有 spinner，沒有佈局預告
-<Spinner />  // 不知道會載入什麼
+// ❌ Wrong: only a spinner, no layout preview
+<Spinner />  // no indication of what will load
 ```
 
-### 3.3 Empty State（必須設計）
+### 3.3 Empty State (must be designed)
 
-每個列表/資料區都必須有 Empty State：
-- 圖示（必須）
-- 標題（必須）
-- 說明（必須）
-- CTA（可選）
+Every list/data area must have an Empty State:
+- Icon (required)
+- Title (required)
+- Description (required)
+- CTA (optional)
 
 ---
 
-## 4. 可用性與 a11y（無障礙）
+## 4. Usability and a11y (Accessibility)
 
-### 4.1 鍵盤可操作（強制）
+### 4.1 Keyboard Operability (Mandatory)
 
-- 所有互動元素必須可 focus
-- Tab 順序符合視覺順序
-- Enter/Space 可觸發主要操作
+- All interactive elements must be focusable
+- Tab order matches visual order
+- Enter/Space triggers the primary action
 
-### 4.2 對比度（WCAG AA）
+### 4.2 Contrast Ratio (WCAG AA)
 
-| 元素 | 最低對比度 |
+| Element | Minimum Contrast |
 |-----|-----------|
-| 普通文字 (< 18px) | 4.5:1 |
-| 大文字 (>= 18px bold 或 24px) | 3:1 |
-| 圖示、UI 元素 | 3:1 |
+| Normal text (< 18px) | 4.5:1 |
+| Large text (>= 18px bold or 24px) | 3:1 |
+| Icons, UI elements | 3:1 |
 
-### 4.3 Aria / Label（強制）
+### 4.3 Aria / Label (Mandatory)
 
 ```html
-<!-- 所有圖示按鈕必須有 aria-label -->
-<button aria-label="關閉">
+<!-- All icon buttons must have aria-label -->
+<button aria-label="Close">
   <CloseIcon />
 </button>
 
-<!-- 圖片必須有 alt -->
-<img src="photo.jpg" alt="範例照片" />
+<!-- Images must have alt text -->
+<img src="photo.jpg" alt="Example photo" />
 
-<!-- 表單欄位必須關聯 label -->
-<label for="email">電子郵件</label>
+<!-- Form fields must be associated with a label -->
+<label for="email">Email</label>
 <input id="email" type="email" />
 ```
 
-### 4.4 觸控目標
+### 4.4 Touch Targets
 
-最小觸控區域 44-48px × 44-48px
+Minimum touch area 44-48px × 44-48px
 
 ---
 
-## 5. 效能與視覺穩定
+## 5. Performance and Visual Stability
 
-### 5.1 避免 CLS（Cumulative Layout Shift）
+### 5.1 Avoid CLS (Cumulative Layout Shift)
 
 ```
-// ✅ 正確：預留空間
+// ✅ Correct: reserve space
 <div style="aspect-ratio: 16/9">
   <img src={imageUrl} />
 </div>
 
-// ❌ 錯誤：高度不確定
+// ❌ Wrong: height is indeterminate
 <img src={imageUrl} style="width: 100%" />
-// 載入後高度變化 → CLS
+// height changes after load → CLS
 ```
 
-### 5.2 動畫效能
+### 5.2 Animation Performance
 
 ```
-// ✅ 使用 transform/opacity（GPU 加速）
+// ✅ Use transform/opacity (GPU-accelerated)
 transition: transform 300ms, opacity 300ms
 
-// ❌ 避免動畫 width/height/padding（觸發 layout）
-transition: width 300ms  // 效能差
+// ❌ Avoid animating width/height/padding (triggers layout)
+transition: width 300ms  // poor performance
 ```
 
 ### 5.3 Reduced Motion
@@ -201,38 +201,38 @@ transition: width 300ms  // 效能差
 
 ---
 
-## 6. 檢查清單
+## 6. Checklist
 
-### 實作前檢查
-- [ ] 是否已定義 Design Tokens？
-- [ ] 是否使用專案統一的 Spacing Scale？
-- [ ] 是否規劃了所有狀態（loading/empty/error）？
+### Before Implementation
+- [ ] Have Design Tokens been defined?
+- [ ] Is the project's unified Spacing Scale being used?
+- [ ] Have all states (loading/empty/error) been planned?
 
-### 實作中檢查
-- [ ] 顏色是否來自 Token？
-- [ ] 間距是否使用 Token？
-- [ ] 互動元素是否有 hover/focus/active/disabled？
-- [ ] 圖示按鈕是否有 aria-label / contentDescription？
+### During Implementation
+- [ ] Do colors come from Tokens?
+- [ ] Does spacing use Tokens?
+- [ ] Do interactive elements have hover/focus/active/disabled?
+- [ ] Do icon buttons have aria-label / contentDescription?
 
-### 實作後檢查
-- [ ] 對比度是否符合 4.5:1？
-- [ ] 鍵盤是否可完整操作？
-- [ ] 圖片是否有預留空間？
-- [ ] 動畫是否尊重 reduced motion？
+### After Implementation
+- [ ] Does contrast meet 4.5:1?
+- [ ] Is the UI fully keyboard operable?
+- [ ] Do images have reserved space?
+- [ ] Does animation respect reduced motion?
 
 ---
 
-## 7. 違規處理
+## 7. Violation Handling
 
-| 違規類型 | 嚴重程度 | 處理方式 |
+| Violation Type | Severity | Handling |
 |---------|---------|---------|
-| 硬編碼顏色/間距 | 中 | Code Review 退回 |
-| 缺少 aria-label / contentDescription | 高 | 強制修復 |
-| 對比度不足 | 高 | 強制修復 |
-| 缺少 Loading/Empty State | 中 | 補充實作 |
-| CLS 問題 | 中 | 效能修復 |
+| Hardcoded color/spacing | Medium | Rejected in code review |
+| Missing aria-label / contentDescription | High | Mandatory fix |
+| Insufficient contrast | High | Mandatory fix |
+| Missing Loading/Empty State | Medium | Must be added |
+| CLS issue | Medium | Performance fix |
 
 ---
 
-*最後更新：2026-01-27*
-*適用技術棧：React/Tailwind, Compose Multiplatform, SwiftUI, Vue*
+*Last updated: 2026-01-27*
+*Applicable tech stacks: React/Tailwind, Compose Multiplatform, SwiftUI, Vue*

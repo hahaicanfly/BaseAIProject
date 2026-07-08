@@ -1,46 +1,46 @@
-# G. 給未來 Session 的信
+# G. Letter to Future Sessions
 
-> 寫於 2026-07-04，Fable 5 一次性架構 session。你（讀者）大概是 Sonnet、Opus 或 Haiku。
-> 這封信講三件使用者沒問但最重要的事、這套制度會怎麼腐化、以及還沒做完的工作。
+> Written 2026-07-04, one-off architecture session by Fable 5. You (the reader) are probably Sonnet, Opus, or Haiku.
+> This letter covers three things the user never asked about but that matter most, how this institution will decay, and the work left unfinished.
 
-## 一、三件使用者沒問、但最重要的事
+## I. Three things the user never asked, but that matter most
 
-### 1. 不要相信任何沒有被黑箱實測過的防線
-本專案的 5 個 hooks 從部署起就從未執行過（無執行權限 + guard 用錯 exit code，雙重失效），但 CLAUDE.md 一直宣稱「enforce mode 攔截」。**文件說有防線 ≠ 有防線。** 每次改 hook、每次 fork 這個模板到新專案，都要跑 `harness-maintenance.md` §4 的煙霧測試。
-延伸警報：母專案 `MenuProject/Menu-Android` 的同名 hooks 大概率有同樣問題（同一來源抽取），**未驗證** —— 下次進那個 repo 先做煙霧測試。
+### 1. Do not trust any defense that has not been black-box tested
+This project's 5 hooks had never executed since deployment (no execute permission + wrong exit code in the guard — double failure), yet CLAUDE.md kept claiming "enforce mode interception". **A document saying a defense exists ≠ the defense existing.** Every time you change a hook, and every time you fork this template into a new project, run the smoke test in `harness-maintenance.md` §4.
+Extended alert: the same-named hooks in the parent project `MenuProject/Menu-Android` very likely share the same problem (extracted from the same source) — **unverified**. Next time you enter that repo, run the smoke test first.
 
-### 2. 這套 harness 的真正資產是「教訓管線」，而它有一個正在流血的傷口
-制度的複利來自：踩坑 → ERRORS.md → 人審 → invariants/guard 機械化。Menu-Android 用這條管線長出了 693 行 invariants 與 81 條教訓，證明管線可行。但本專案 `stop-retro-logger.py` 的 dedup hash 把 timestamp 算進去導致永不判重，ERRORS.md 已被重複 noise 灌入 —— **教訓檔一旦充滿 noise，後續模型就會停止讀它，管線整條壞死**。修復方法在下方交接清單第 1 項，優先做。
+### 2. This harness's real asset is the "lessons pipeline", and it has a bleeding wound
+The institution compounds via: mistake → ERRORS.md → human review → mechanization into invariants/guard. Menu-Android grew 693 lines of invariants and 81 lessons through this pipeline, proving it works. But this project's `stop-retro-logger.py` included the timestamp in its dedup hash, so nothing ever deduplicates, and ERRORS.md has been flooded with duplicate noise — **once the lessons file fills with noise, later models stop reading it, and the whole pipeline dies**. The fix is item 1 in the handoff checklist below; do it first.
 
-### 3. 常駐載入面是稀缺預算，每加一行都是對所有未來 session 徵稅
-`.claude/rules/*.md`（frontmatter `always: true`）+ CLAUDE.md 會注入**每一個** session。你會不斷有衝動把新規則塞進常駐面（「這條很重要！」）——絕大多數規則不需要常駐，放 agent_docs/ 或 templates/ 用引用觸達即可。判準：**「每個 session 的第一個決定就需要它」才配常駐**。超過 harness-maintenance.md §5 的觸發線就必須精簡。
+### 3. The always-on load surface is a scarce budget; every added line taxes all future sessions
+`.claude/rules/*.md` (frontmatter `always: true`) + CLAUDE.md are injected into **every** session. You will keep feeling the urge to push new rules into the always-on surface ("this one is important!") — the vast majority of rules do not need to be standing; put them in agent_docs/ or templates/ and reach them by reference. The criterion: **only "needed for the very first decision of every session" earns standing status**. Anything past the trigger line in harness-maintenance.md §5 must be trimmed.
 
-## 二、這套制度最可能的腐化方式與預防
+## II. How this institution is most likely to decay, and prevention
 
-| 腐化模式 | 具體徵兆 | 預防／解法 |
+| Decay mode | Concrete symptom | Prevention / remedy |
 |---------|---------|-----------|
-| **規則堆積** | rules 總量逐月上升、沒有刪除紀錄 | maintenance §5 觸發線；每加一條常駐規則需說明「為何非常駐不可」 |
-| **正典再分裂** | 有人把模型表/名單「順手」複製到新檔案，之後兩份各自演化 | 「只准引用、不准另列」（CLAUDE.md 正典層級）；發現複製即刪，留引用 |
-| **驗收橡皮章** | 驗收報告出現「看起來沒問題」、PASS 無逐條證據 | delegation-templates §6 的格式強制；使用者定期抽查一份驗收報告 |
-| **教訓檔 noise 化** | ERRORS.md 重複條目、無日期、無行號 | dedup 修復 + §3 去重規則；週審清 Pending Review |
-| **死引用累積** | 文件引用的路徑/skill 不存在，模型追空路徑或編造 | 「引用即驗證」紀律；每季跑一次 `/harness-eval` 全面體檢 |
-| **模板佔位符正常化** | 新專案 fork 後不填 {{}}，模型習慣性跳過整份文件 | CLAUDE.md「啟用狀態」節已定義跳過語義；fork 後第一個任務就是填實或刪除 |
+| **Rule accretion** | total rules volume rises month over month, no deletion record | maintenance §5 trigger line; every new standing rule must justify "why it must be standing" |
+| **Canon re-fragmentation** | someone "conveniently" copies the model table/roster into a new file, then the two copies evolve separately | "reference only, never re-list" (CLAUDE.md canon hierarchy); on discovery delete the copy, keep a reference |
+| **Rubber-stamp acceptance** | acceptance reports containing 「看起來沒問題」 ("looks fine"), PASS without item-by-item evidence | format enforcement in delegation-templates §6; user periodically spot-checks one acceptance report |
+| **Lessons-file noise** | duplicate ERRORS.md entries, missing dates, missing line numbers | dedup fix + §3 dedup rule; weekly review clears Pending Review |
+| **Dead-reference buildup** | documents reference paths/skills that don't exist; models chase empty paths or fabricate | "reference = verify" discipline; run a full `/harness-eval` checkup quarterly |
+| **Placeholder normalization** | new projects fork without filling {{}}; models habitually skip whole documents | CLAUDE.md "Activation Status" section defines skip semantics; the first task after forking is to fill in or delete |
 
-最陰險的是**橡皮章**：它讓所有其他防線看起來還在運作。如果只能防一個，防它。
+The most insidious is the **rubber stamp**: it makes every other defense look like it still works. If you can only guard against one, guard against that.
 
-## 三、交接清單（未完成工作，按優先級）
+## III. Handoff checklist (unfinished work, by priority)
 
-> 完成一項就從這裡刪掉（不留墓碑）。動紅級檔案前先問使用者（見 harness-maintenance.md §1）。
+> Delete an item from here once done (no tombstones). Ask the user before touching red-tier files (see harness-maintenance.md §1).
 
-1. **skillopt-loop.md 去留決策**（需使用者決定）：已標為「未接線設計草案」並清除虛構引用（2026-07-04 第三輪）。選項：(a) 保留為草案備將來接線 (b) 刪除（紅級刪檔需同意）。
-2. **session-handoffs 首次運轉驗證**（觀察項）：`state/session-handoffs/` 目前為空——本 session 從未觸發 PreCompact。下次發生 compaction 時，核實該目錄出現新快照檔；若沒有，pre-compact-snapshot.py 可能有同構失效（參照 hooks 煙霧測試教訓）。
-3. **Menu-Android guard 修復已完成但未 commit**（2026-07-04）：exit 2 修復與煙霧測試通過，改動留在該 repo `feat/ga-event-tracking` working tree，隨該分支一起 commit 即可。
-> 2026-07-04 三輪優化全部完成（詳見 §四），26 個原子 commit 在 feat/harness-institution，未 push。
+1. **skillopt-loop.md keep-or-delete decision** (needs user decision): already marked "unwired design draft" with fictitious references removed (2026-07-04 round 3). Options: (a) keep as a draft for future wiring (b) delete (red-tier deletion needs consent).
+2. **First-run verification of session-handoffs** (watch item): `state/session-handoffs/` is currently empty — this session never triggered PreCompact. Next time compaction happens, verify a new snapshot file appears in that directory; if not, pre-compact-snapshot.py may have an isomorphic failure (cf. the hooks smoke-test lesson).
+3. **Menu-Android guard fix done but not committed** (2026-07-04): the exit 2 fix passed its smoke test; the changes sit in that repo's `feat/ga-event-tracking` working tree — commit them along with that branch.
+> All three optimization rounds of 2026-07-04 completed (details in §IV); 26 atomic commits on feat/harness-institution, not pushed.
 
-## 四、本次 session 已完成（供考古）
+## IV. Completed this session (for archaeology)
 
-A 診斷書（docs/harness/DIAGNOSIS.md）、B 重寫 CLAUDE.md（舊版 .bak）、C model-dispatch.md、D judgment-rubrics.md、E delegation-templates.md、F harness-maintenance.md、G 本檔；實體修復：hooks chmod +x、guard exit 1→2（實測通過）、cost-optimization/plan-first 修剪去重（各留 .bak）。
-後續批次（同日，workflow 執行、fresh-context 驗收 PASS）：14 agent 檔樣板收斂（每檔 -9~-20 行）、15 個 SKILL.md 補 YAML frontmatter、AI-TEAM-REGISTRY.md 由 frontmatter 重生成（修 9 處模型矛盾、補 code-reviewer、計數 14 agents/15 skills）、Life-Vault 與 menu.jpg 殘留清除。
-第三輪（同日，三路深度審計→六路實作→隔離驗收 PASS）：四個 review agent 輸出統一至 review-protocol 詞彙；tech-lead 重定位為架構顧問（不做 PR gating）；研究三人組觸發詞互斥化＋輸出模板；ui-ux-designer 併入三階段 Phase 3；模型再平衡 opus 10→4（architect/pm/security-reviewer/plan-reviewer 留 opus）；skillopt-loop 降級為未接線草案（虛構引用清除）；guard 新增 INV-SEC-003 staging 攔截（實測 4/4）；retro 墓碑帳本 state/retro-hashes.jsonl + 30/90 天 rotate；知識地圖五層表（INDEX.md）；multi-agent-guide 去重；TECHNICAL-REFERENCE 最小填寫清單。
-同日事故與修復：驗收 subagent 超範圍誤刪未追蹤的《AI 基礎架構優化目標說明.md》，已從主對話 context 逐字重建；教訓進 ERRORS.md，delegation-templates 補破壞性指令黑名單。
-第四輪（2026-07-06，外部 harness 研究吸收）：並行研究 7 個外部 repo（fable-commander／obra-superpowers／revfactory-harness／walkinglabs 教程／everything-claude-code／aden-hive／deer-flow，星數與內容均實地查證），吸收九項機制：派工範圍宣告＋終止條件（delegation-templates）、驗收 FAIL 限客觀條件＋非阻斷建議欄（model-dispatch §5）、gate-softening 禁令與無改善熔斷與 Red Flags 話術表（judgment-rubrics §2/§3/§7）、agent/skill 品質關卡與五維度體檢（harness-maintenance §6/§7）、init.sh.template、CLAUDE.md 決策樹可驗證性分流、skill-creator-plus 雙向觸發測試量化。7 個原子 commit，隔離驗收 8/8 PASS，ff-merge 入 master。
+A diagnosis (docs/harness/DIAGNOSIS.md), B rewrote CLAUDE.md (old version in .bak), C model-dispatch.md, D judgment-rubrics.md, E delegation-templates.md, F harness-maintenance.md, G this file; physical fixes: hooks chmod +x, guard exit 1→2 (live-tested), cost-optimization/plan-first pruned and deduplicated (each with a .bak).
+Follow-up batch (same day, workflow-executed, fresh-context acceptance PASS): boilerplate collapsed across 14 agent files (−9~−20 lines each), YAML frontmatter added to 15 SKILL.md files, AI-TEAM-REGISTRY.md regenerated from frontmatter (fixed 9 model contradictions, added code-reviewer, counts 14 agents/15 skills), Life-Vault and menu.jpg residue removed.
+Round 3 (same day, three-way deep audit → six-way implementation → isolated acceptance PASS): four review agents' output unified to review-protocol vocabulary; tech-lead repositioned as architecture advisor (no PR gating); research trio's trigger words made mutually exclusive + output templates; ui-ux-designer merged into three-phase Phase 3; model rebalance opus 10→4 (architect/pm/security-reviewer/plan-reviewer stay opus); skillopt-loop demoted to unwired draft (fictitious references removed); guard gained INV-SEC-003 staging interception (live-tested 4/4); retro tombstone ledger state/retro-hashes.jsonl + 30/90-day rotate; five-layer knowledge map table (INDEX.md); multi-agent-guide deduplicated; TECHNICAL-REFERENCE minimal fill-in checklist.
+Same-day incident and fix: an acceptance subagent overstepped scope and deleted the untracked《AI 基礎架構優化目標說明.md》; rebuilt verbatim from the main conversation context; lesson logged in ERRORS.md; delegation-templates gained a destructive-command blacklist.
+Round 4 (2026-07-06, absorption of external harness research): researched 7 external repos in parallel (fable-commander / obra-superpowers / revfactory-harness / walkinglabs tutorial / everything-claude-code / aden-hive / deer-flow — star counts and contents verified on site), absorbing nine mechanisms: delegation scope declaration + termination conditions (delegation-templates), acceptance FAIL restricted to objective criteria + non-blocking suggestions column (model-dispatch §5), gate-softening ban + no-improvement circuit breaker + Red Flags rationalization table (judgment-rubrics §2/§3/§7), agent/skill quality gates and five-dimension checkup (harness-maintenance §6/§7), init.sh.template, CLAUDE.md decision-tree verifiability routing, skill-creator-plus quantified bidirectional trigger tests. 7 atomic commits, isolated acceptance 8/8 PASS, ff-merged into master.

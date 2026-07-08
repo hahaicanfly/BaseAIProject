@@ -1,181 +1,181 @@
-主動 Context 收尾工作流。在 context usage 接近上限前，主動做一次高品質歸檔，確保下次 session 能無痛續接。
+Proactive context wrap-up workflow. Before context usage approaches its limit, proactively perform a high-quality archival pass to ensure the next session can pick up work seamlessly.
 
-觸發時機：context usage 約 40%、使用者準備離開 session、或一個大任務階段性完成。
-**硬性門檻（CLAUDE.md MUST: PHASE HANDOFF GATE）**：階段完成（功能 / Phase N / Mx）進下一任務前，若 context 用量 >50%，**必須**先跑本指令產出 `SESSION-HANDOFF.md`，再 `/clear`，然後讀檔以新 session 續接。
+Trigger points: context usage around 40%, the user is about to leave the session, or a major task phase has just completed.
+**Hard gate (CLAUDE.md MUST: PHASE HANDOFF GATE)**: before moving to the next task after a phase completes (feature / Phase N / Mx), if context usage is >50%, you **must** run this command first to produce `SESSION-HANDOFF.md`, then `/clear`, then read that file to resume in a new session.
 
-> **Phase D 升級**：本指令已對齊 harness 架構。教訓不再寫進 CLAUDE.md，而是分流到 `docs/learnings/ERRORS.md`、`docs/architecture/invariants.md` 與 active ExecPlan。Auto-memory 仍可保留**短期 session 狀態**，但**長期脈絡走 ExecPlan**。
+> **Phase D upgrade**: this command is now aligned with the harness architecture. Lessons are no longer written into CLAUDE.md — they are routed to `docs/learnings/ERRORS.md`, `docs/architecture/invariants.md`, and the active ExecPlan. Auto-memory may still hold **short-term session state**, but **long-term context lives in the ExecPlan**.
 
 ---
 
-請依照以下 8 個步驟逐一執行，每個步驟完成後簡要回報。**禁止跳步**——harness session 收尾的可審核性比速度更重要。
+Execute the following 8 steps in order, briefly reporting after each one. **No skipping steps** — the auditability of a harness session wrap-up matters more than speed.
 
-## Step 1: 回顧對話 + 識別 marker
+## Step 1: Review the conversation + identify markers
 
-回顧整個 session 的對話內容，提取四類資訊：
+Review the entire session's conversation and extract four categories of information:
 
-| 類型 | 範例 | 後續去向 |
-|------|------|---------|
-| **卡點 / 教訓** | 「修了一上午才發現某 bug」 | `docs/learnings/ERRORS.md` 或 `invariants.md` |
-| **有效做法 / pattern** | 「抽出 base fake 一次解決所有 stub」 | 同上（標 success pattern）|
-| **未完成工作** | 「F-NNN ExecPlan §4 step 3 還沒驗證」 | 對應 ExecPlan §6 + §9 |
-| **Session 內主動 marker** | `[VERIFY_FAILED:*]` / `[HUMAN_ATTENTION_REQUIRED:*]` 紀錄 | 等 `stop-retro-logger.py` 自動 harvest（or 手動補） |
+| Category | Example | Downstream destination |
+|------|---------|---------|
+| **Blocker / lesson** | "spent a whole morning fixing this before finding the bug" | `docs/learnings/ERRORS.md` or `invariants.md` |
+| **Working approach / pattern** | "extracting a base fake solved all the stub issues at once" | same as above (tag as success pattern) |
+| **Unfinished work** | "F-NNN ExecPlan §4 step 3 still not verified" | corresponding ExecPlan §6 + §9 |
+| **In-session proactive markers** | `[VERIFY_FAILED:*]` / `[HUMAN_ATTENTION_REQUIRED:*]` records | wait for `stop-retro-logger.py` to auto-harvest (or supplement manually) |
 
-## Step 2: 教訓分流歸檔（取代舊 CLAUDE.md 累積教訓）
+## Step 2: Route lessons to the correct archive (replaces the old pattern of accumulating lessons in CLAUDE.md)
 
-依下表把 Step 1 的 finding 寫到正確位置：
+Route each Step 1 finding to the correct location per this table:
 
-| 判斷條件 | 歸檔位置 | 操作 |
+| Judgment condition | Archive location | Action |
 |---------|---------|------|
-| 可機械驗證（grep / lint pattern 可寫） | `docs/architecture/invariants.md` | 加一條 INV-`<NS>`-`<NNN>`，標 CHECK / HOOK / SOURCE（invariants.md 屬紅級，見 `harness-maintenance.md` §1，寫入前需提示使用者確認） |
-| 不可機械驗證但通用（design-level） | `docs/learnings/ERRORS.md` `## Pending Review` | 用 `<!-- harvest:HASH -->` 包，等下週 promote |
-| 與**特定 feature 設計決策**有關 | 對應 `docs/plans/active/F-NNN.md` §7 Decision Log | 一行 summary + 必要時升級為 ADR |
-| 已在 git commit / GitHub issue 追蹤 | **不存** | 避免重複噪音 |
-| Session 一次性狀態（如「F-NNN 做到 step 3」） | Auto-memory **或** ExecPlan §6 Progress Log | ExecPlan 優先；memory 僅補無 ExecPlan 的暫態 |
+| Mechanically verifiable (a grep / lint pattern can be written) | `docs/architecture/invariants.md` | add an INV-`<NS>`-`<NNN>` entry, tagged CHECK / HOOK / SOURCE (invariants.md is red-tier, see `harness-maintenance.md` §1 — confirm with the user before writing) |
+| Not mechanically verifiable but general (design-level) | `docs/learnings/ERRORS.md` `## Pending Review` | wrap in `<!-- harvest:HASH -->`, awaiting promotion next week |
+| Related to a **specific feature's design decision** | corresponding `docs/plans/active/F-NNN.md` §7 Decision Log | one-line summary, escalate to an ADR if warranted |
+| Already tracked in a git commit / GitHub issue | **don't store** | avoid duplicate noise |
+| One-off session state (e.g. "F-NNN reached step 3") | Auto-memory **or** ExecPlan §6 Progress Log | ExecPlan takes priority; memory only fills gaps where no ExecPlan exists |
 
-**實際執行歸檔**（編輯 `docs/learnings/ERRORS.md`、`docs/architecture/invariants.md`、active ExecPlan 段落，**不要動 CLAUDE.md**）。
+**Actually perform the archiving** (edit `docs/learnings/ERRORS.md`, `docs/architecture/invariants.md`, the active ExecPlan section — **do not touch CLAUDE.md**).
 
-> CLAUDE.md 是「地圖」（≤150 行），不再是教訓堆放處。
+> CLAUDE.md is "the map" (≤150 lines) — it is no longer where lessons pile up.
 
-## Step 3: ExecPlan 進度同步
+## Step 3: Sync ExecPlan progress
 
-對 session 中觸碰過的每一份 `docs/plans/active/F-NNN-*.md`：
+For every `docs/plans/active/F-NNN-*.md` touched during this session:
 
-1. 在 §6 Progress Log append 一行 summary（含 timestamp + agent + 一句話）
-2. 在 §9 Handoff Manifest 更新 `Current state marker`：
-   - 全部完成 → `[HANDOFF: code-reviewer]` / `[HANDOFF: human-pr-review]` / `[HANDOFF: done]`
-   - 有 invariant 違反未修 → `[VERIFY_FAILED: <INV-id>]`
-   - 卡在外部依賴 → `[HUMAN_ATTENTION_REQUIRED: <reason>]`
-3. 如 status 有變更，同步 `state/feature-list.json`（若該檔存在）
+1. Append one summary line to §6 Progress Log (including timestamp + agent + one-sentence summary)
+2. Update `Current state marker` in §9 Handoff Manifest:
+   - fully complete → `[HANDOFF: code-reviewer]` / `[HANDOFF: human-pr-review]` / `[HANDOFF: done]`
+   - an unfixed invariant violation exists → `[VERIFY_FAILED: <INV-id>]`
+   - blocked on an external dependency → `[HUMAN_ATTENTION_REQUIRED: <reason>]`
+3. If status changed, sync `state/feature-list.json` (if that file exists)
 
-如果整個 session 都不在 ExecPlan 範疇（純探索 / 純文件 / hot-fix < 3 檔案），跳過此步驟。
+If the entire session falls outside ExecPlan scope (pure exploration / pure documentation / a hot-fix touching <3 files), skip this step.
 
-## Step 4: 交接 prompt → 寫入 `SESSION-HANDOFF.md`（給下一個 session）
+## Step 4: Write the handoff prompt → into `SESSION-HANDOFF.md` (for the next session)
 
-如果 session 結束時還有未完成工作，**用 Write 工具把下列交接 prompt 寫入專案根目錄的 `SESSION-HANDOFF.md`**（覆寫舊內容，此檔為單一 session 的暫態交接區，不累積）。這是「階段交接門檻」（CLAUDE.md MUST: PHASE HANDOFF GATE）的落地產物——使用者 `/clear` 後會直接讀此檔以新 session 續接。
+If work remains unfinished at the end of the session, **use the Write tool to write the following handoff prompt into `SESSION-HANDOFF.md` at the project root** (overwrite any prior content — this file is a single session's transient handoff zone, not a cumulative log). This is the concrete artifact of the "phase handoff gate" (CLAUDE.md MUST: PHASE HANDOFF GATE) — after the user runs `/clear`, they read this file directly to resume in a new session.
 
-`SESSION-HANDOFF.md` 內容範本：
+`SESSION-HANDOFF.md` content template:
 
 ```
 # SESSION-HANDOFF — <YYYY-MM-DD HH:MM>
 
-> 由 /last-word 產出。`/clear` 後請讀本檔續接；續接完成後本檔可刪或被下次 /last-word 覆寫。
+> Produced by /last-word. After `/clear`, read this file to resume; once resumption is complete this file may be deleted or will be overwritten by the next /last-word.
 
-## 交接 prompt（直接貼上即可續接）
+## Handoff prompt (paste directly to resume)
 
-我正在進行 [F-NNN — 功能名]（ExecPlan: docs/plans/active/F-NNN-<slug>.md）。
+I'm working on [F-NNN — feature name] (ExecPlan: docs/plans/active/F-NNN-<slug>.md).
 
-**已完成（§6 Progress Log 最新一筆）：**
+**Completed (latest entry in §6 Progress Log):**
 - [...]
 
-**待完成（§4 Step 標記未打勾）：**
+**Remaining (unchecked steps in §4):**
 - [...]
 
-**當前 marker：** [HANDOFF: <next>] 或 [VERIFY_FAILED: <INV-id>]
+**Current marker:** [HANDOFF: <next>] or [VERIFY_FAILED: <INV-id>]
 
-**接手 SOP：**
-1. 讀 ExecPlan §3 Constraints + §9 Handoff Manifest
-2. 確認 git branch（應為 `feat/<slug>`）
-3. 從 §4 step <N> 開始
+**Pickup SOP:**
+1. Read ExecPlan §3 Constraints + §9 Handoff Manifest
+2. Confirm the git branch (should be `feat/<slug>`)
+3. Start from §4 step <N>
 
-**相關資訊：**
-- Branch: `feat/<slug>`（最新 commit: <hash>）
-- Linked PR: #<NNN> 或 (尚未開 PR)
-- 相關 invariants：INV-... / INV-...
+**Related info:**
+- Branch: `feat/<slug>` (latest commit: <hash>)
+- Linked PR: #<NNN> or (no PR yet)
+- Related invariants: INV-... / INV-...
 
-## 本次歸檔摘要
-- invariants.md 新增：INV-... × N
-- ERRORS.md Pending Review 新增：N 條
-- ExecPlan 更新：F-NNN（§6 + §9）
+## This session's archive summary
+- invariants.md additions: INV-... × N
+- ERRORS.md Pending Review additions: N entries
+- ExecPlan updates: F-NNN (§6 + §9)
 ```
 
-寫檔後在對話中回報 `SESSION-HANDOFF.md` 路徑。如果所有工作都已完成，跳過此步驟、**不產生** `SESSION-HANDOFF.md`，並改輸出「無待續事項」。
+After writing the file, report the `SESSION-HANDOFF.md` path in the conversation. If all work is complete, skip this step, **do not generate** `SESSION-HANDOFF.md`, and instead output "nothing pending."
 
-## Step 5: GitHub Issue / PR 整理
+## Step 5: GitHub issue / PR cleanup
 
-- 檢查本次 session 涉及的 GitHub issues / PR
-- 確認 issue 狀態（open / closed）與實際程式碼進度一致
-- 如有完成但未關閉的 issue，提醒使用者
-- ExecPlan 已 merge → 從 `docs/plans/active/` 移到 `docs/plans/completed/` 並更新 `state/feature-list.json`
+- Check the GitHub issues / PRs touched during this session
+- Confirm issue status (open / closed) matches actual code progress
+- If any issue is done but not yet closed, remind the user
+- If an ExecPlan has been merged → move it from `docs/plans/active/` to `docs/plans/completed/` and update `state/feature-list.json`
 
-## Step 6: 清理 stale 內容
+## Step 6: Clean up stale content
 
-掃描以下三處：
+Scan the following three locations:
 
-| 檔案 | 清理重點 |
-|------|---------|
-| `docs/learnings/ERRORS.md` `## Pending Review` 區 | promote 已驗證可用的 lesson 到 `## Active Lessons`；刪除 noise |
-| `docs/plans/active/` | 已停滯 > 4 週的 ExecPlan 標記 BLOCKED 或移到 completed/ + 加 Rejection Reason |
-| Auto-memory | 移除 ExecPlan 已記載 / git 已追蹤的 暫態 |
-| Claude Code 原生 memory（專案 memory 目錄） | 已 promote 進 ERRORS.md/invariants 的內容，從 memory 檔刪除、只留指標 |
+| File | Cleanup focus |
+|------|--------|
+| `docs/learnings/ERRORS.md` `## Pending Review` section | promote validated, usable lessons to `## Active Lessons`; delete noise |
+| `docs/plans/active/` | any ExecPlan stalled >4 weeks gets marked BLOCKED or moved to completed/ + a Rejection Reason added |
+| Auto-memory | remove transient state already recorded in an ExecPlan / already tracked by git |
+| Claude Code native memory (project memory directory) | content already promoted into ERRORS.md/invariants should be deleted from the memory file, leaving only a pointer |
 
-**禁止**清理 `docs/architecture/invariants.md` —— 一條 INV 一旦立過就保留。
-**禁止**動 CLAUDE.md —— 該檔已是壓縮地圖，內容由 ADR 流程管控。
-保守原則：不確定是否過期 → 留著。
+**Forbidden**: cleaning up `docs/architecture/invariants.md` — once an INV is established, it stays.
+**Forbidden**: touching CLAUDE.md — that file is already a compressed map, governed by the ADR process.
+Conservative principle: if unsure whether something is stale, leave it.
 
-## Step 7: 檢查 uncommitted changes + branch
+## Step 7: Check for uncommitted changes + branch
 
-執行：
+Run:
 ```bash
 git status
 git branch --show-current
 ```
 
-確認：
-- 沒有 staged 但未 commit 的修改
-- 沒有重要的 unstaged 修改被遺忘
-- 當前 branch **不為 master/main**（INV-GIT-001 / INV-GIT-002）
-- 若有 uncommitted changes，**提醒使用者先 commit 再 /clear**
+Confirm:
+- no staged-but-uncommitted changes
+- no important unstaged changes have been forgotten
+- current branch is **not** master/main (INV-GIT-001 / INV-GIT-002)
+- if uncommitted changes exist, **remind the user to commit before `/clear`**
 
-## Step 8: 收尾報告 + 安全 /clear 確認
+## Step 8: Wrap-up report + safe `/clear` confirmation
 
-完成所有步驟後向使用者回報：
+After completing all steps, report to the user:
 
 ```
-✓ 教訓歸檔：
-  - invariants.md 新增：INV-... × N
-  - ERRORS.md Pending Review 新增：N 條
-  - ExecPlan 更新：F-NNN（§6 + §9）
+✓ Lessons archived:
+  - invariants.md additions: INV-... × N
+  - ERRORS.md Pending Review additions: N entries
+  - ExecPlan updates: F-NNN (§6 + §9)
 
-✓ Starter Prompt：[已輸出 / 不需要]
+✓ Starter Prompt: [output / not needed]
 
-✓ Git 狀態：
+✓ Git status:
   - Branch: feat/<slug>
-  - Uncommitted: <檔案數>（需 commit / clean）
+  - Uncommitted: <file count> (needs commit / clean)
 
-→ 是否可以安全執行 /clear：[YES / NO（請先處理 ...）]
+→ Safe to run /clear: [YES / NO (please resolve ... first)]
 ```
 
-最終以 harness marker 收尾：
-- 全程無 issue → `[HANDOFF: next-session]`
-- 有未解決 → `[HUMAN_ATTENTION_REQUIRED: <reason>]`
+Close out with a harness marker:
+- no issues throughout → `[HANDOFF: next-session]`
+- unresolved issues remain → `[HUMAN_ATTENTION_REQUIRED: <reason>]`
 
 ---
 
-## 與 stop-retro-logger.py 的關係
+## Relationship to stop-retro-logger.py
 
-`/last-word` 是**主動式人工收尾**；`stop-retro-logger.py`（Phase D sentinel）是**被動式自動 harvest**。兩者**互補不重複**：
+`/last-word` is **proactive, manual wrap-up**; `stop-retro-logger.py` (the Phase D sentinel) is **passive, automatic harvesting**. The two are **complementary, not redundant**:
 
-| 觀察 | `/last-word` 處理 | `stop-retro-logger.py` 處理 |
+| Observation | Handled by `/last-word` | Handled by `stop-retro-logger.py` |
 |------|-------------------|------------------------------|
-| `[VERIFY_FAILED:*]` 在對話中出現 | 結構化分類 + 必要時升級 invariant | 自動原文 append 到 Pending Review |
-| 對話中明顯但無 marker 的 lesson | 由 agent 主動識別歸檔 | 不處理（無 marker 抓不到） |
-| ExecPlan §6 / §9 更新 | 必須做 | 不做 |
-| Auto-memory 清理 | 評估後執行 | 不做 |
+| `[VERIFY_FAILED:*]` appears in the conversation | structured classification + escalate to invariant if warranted | appended verbatim to Pending Review automatically |
+| A lesson is evident in conversation but has no marker | identified and archived proactively by the agent | not handled (no marker to catch it) |
+| ExecPlan §6 / §9 updates | must be done | not done |
+| Auto-memory cleanup | evaluated and performed | not done |
 
-> **建議使用順序**：先跑 `/last-word`（結構化收尾），再讓 session 自然結束（觸發 stop-retro-logger 自動 harvest 漏網 marker）。
+> **Recommended order of use**: run `/last-word` first (structured wrap-up), then let the session end naturally (triggering stop-retro-logger's automatic harvest of any markers that slipped through).
 
 ---
 
-## 參考
+## References
 
-- `.claude/protocols/handoff-protocol.md` — 三種 marker 規範
-- `.claude/protocols/execplan-lifecycle.md` — ExecPlan 10 階段
-- `docs/plans/PLANS.md` — ExecPlan 9 段規格
-- `docs/learnings/ERRORS.md` — Pending Review 區規範
-- `docs/architecture/invariants.md` — INV-* 條目格式
+- `.claude/protocols/handoff-protocol.md` — spec for the three marker types
+- `.claude/protocols/execplan-lifecycle.md` — the 10 ExecPlan phases
+- `docs/plans/PLANS.md` — the 9-section ExecPlan spec
+- `docs/learnings/ERRORS.md` — Pending Review section spec
+- `docs/architecture/invariants.md` — INV-* entry format
 
-### 自動快照 vs 本命令的分工
+### Division of labor: automatic snapshot vs. this command
 
-- `pre-compact-snapshot.py` → `state/session-handoffs/`：**自動快照**，PreCompact 時觸發，機器可讀，不需人介入。
-- `/last-word` → `SESSION-HANDOFF.md`：**手動交接**，人主動觸發，含可直接貼上續接的 prompt，供下個 session 的人類/agent 讀。
-- 兩者互補：自動快照保底（compact 隨時可能發生），手動交接才有結構化的續接 prompt。
+- `pre-compact-snapshot.py` → `state/session-handoffs/`: **automatic snapshot**, triggered on PreCompact, machine-readable, requires no human involvement.
+- `/last-word` → `SESSION-HANDOFF.md`: **manual handoff**, triggered proactively by a human, contains a paste-ready resume prompt for the next session's human/agent to read.
+- The two are complementary: the automatic snapshot is the safety net (compaction can happen at any time), while the manual handoff is the only one with a structured resume prompt.

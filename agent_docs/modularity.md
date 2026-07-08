@@ -1,91 +1,91 @@
 ---
 name: modularity
-description: 模組化與復用性規則（非常駐，按需引用）
+description: Modularity and reuse rules (non-standing, referenced on demand)
 ---
 
 # Modularity Rules
 
-> 2026-07-07 自 `.claude/rules/` 降級為非常駐（代碼設計指引不符「首決策必需」常駐判準）。
-> 引用入口：code-review skill 架構維度、tech-lead agent 檢查清單。
+> 2026-07-07 demoted from `.claude/rules/` to non-standing (code-design guidance doesn't meet the "needed for first decision" standing-rule bar).
+> Reference entry points: code-review skill architecture dimension, tech-lead agent checklist.
 
-## 核心原則
+## Core Principle
 
-**所有代碼設計都必須考慮跨專案復用性。**
+**All code design must consider cross-project reusability.**
 
-## 模組劃分原則
+## Module Partitioning Principle
 
-### 共享模組
-放入以下內容：
-- 領域模型 (Domain Models)
-- 業務邏輯 (Business Logic)
-- 介面定義 (Interfaces)
-- 工具類 (Utilities)
-- 平台無關的抽象
+### Shared Modules
+Put the following in shared modules:
+- Domain Models
+- Business Logic
+- Interfaces
+- Utilities
+- Platform-independent abstractions
 
-### 平台/應用特定模組
-放入以下內容：
-- 平台 API 調用
-- UI 實作
-- 配置
-- 進入點 (Entry Points)
+### Platform/App-Specific Modules
+Put the following in platform/app-specific modules:
+- Platform API calls
+- UI implementation
+- Configuration
+- Entry Points
 
-## 設計準則
+## Design Guidelines
 
-### 1. 依賴反轉
+### 1. Dependency Inversion
 ```
-// ✅ 依賴抽象
-class Parser(provider: Provider)  // 介面
+// ✅ Depend on abstraction
+class Parser(provider: Provider)  // interface
 
-// ❌ 依賴具體實作
-class Parser(google: GoogleProvider)  // 具體類別
+// ❌ Depend on concrete implementation
+class Parser(google: GoogleProvider)  // concrete class
 ```
 
-### 2. 介面優先
+### 2. Interface First
 ```
-// 先定義介面
+// Define the interface first
 interface Provider {
     process(input): Result
 }
 
-// 再實作具體類別
+// Then implement concrete classes
 class ProviderA implements Provider { ... }
 class ProviderB implements Provider { ... }
 ```
 
-### 3. 單一職責
+### 3. Single Responsibility
 ```
-// ✅ 職責單一
-class ImageProcessor { ... }  // 只處理圖片
-class TextParser { ... }      // 只解析文字
+// ✅ Single responsibility
+class ImageProcessor { ... }  // only handles images
+class TextParser { ... }      // only parses text
 
-// ❌ 職責混雜
-class ImageTextProcessor { ... }  // 做太多事
+// ❌ Mixed responsibilities
+class ImageTextProcessor { ... }  // does too much
 ```
 
-### 4. 開放封閉
-- 對擴展開放：容易新增 Provider
-- 對修改封閉：不需改動核心代碼
+### 4. Open/Closed
+- Open for extension: easy to add a new Provider
+- Closed for modification: no need to touch core code
 
-## 避免重複造輪子
+## Avoid Reinventing the Wheel
 
-在實作新功能前：
-1. 檢查專案中是否已有類似功能
-2. 搜尋共享模組
-3. 考慮是否能擴展現有代碼
-4. 搜尋是否有現成的開源解決方案
+Before implementing a new feature:
+1. Check whether similar functionality already exists in the project
+2. Search shared modules
+3. Consider whether existing code can be extended
+4. Search for an existing open-source solution
 
-## 復用性檢查清單
+## Reusability Checklist
 
-新增代碼時問自己：
-- [ ] 這個邏輯是否平台無關？→ 放共享模組
-- [ ] 這個類別是否依賴具體實作？→ 抽出介面
-- [ ] 這個功能是否可能被其他模組使用？→ 設計成可復用
-- [ ] 是否有硬編碼的值？→ 抽成配置
-- [ ] 測試容易嗎？→ 使用依賴注入
+Ask yourself when adding code:
+- [ ] Is this logic platform-independent? → put it in a shared module
+- [ ] Does this class depend on a concrete implementation? → extract an interface
+- [ ] Could this feature be used by other modules? → design it to be reusable
+- [ ] Are there hardcoded values? → extract them into configuration
+- [ ] Is it easy to test? → use dependency injection
 
-## 命名規範
+## Naming Conventions
 
-### 共享模組常見命名
+### Common Shared-Module Names
 ```
 shared/
 core/
@@ -93,14 +93,14 @@ common/
 lib/
 ```
 
-### 介面命名
+### Interface Naming
 ```
 Provider, Repository, Service, Handler
 Parser, Processor, Validator, Formatter
 ```
 
-### 實作命名
+### Implementation Naming
 ```
-[具體名稱] + [介面名稱]
-例如：GeminiProvider, LocalRepository
+[concrete name] + [interface name]
+e.g.: GeminiProvider, LocalRepository
 ```

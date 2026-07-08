@@ -1,239 +1,239 @@
 # Style Spec Template
 
-> **每個畫面實作前必須填寫此規格，經 UIUX Agent 評審後才可進入實作。**
+> **This spec must be filled in before implementing any screen, and reviewed by the UIUX Agent before implementation may begin.**
 >
-> 複製此模板，填入具體內容，存為 `design-system/pages/{screen-name}.md`
+> Copy this template, fill in the specifics, and save as `design-system/pages/{screen-name}.md`
 
 ---
 
-## Screen: [畫面名稱]
+## Screen: [screen name]
 
-### 基本資訊
+### Basic Info
 
-| 項目 | 內容 |
+| Item | Content |
 |-----|------|
 | **Screen ID** | `screen_xxx` |
-| **所屬流程** | 例：主流程 |
-| **前置畫面** | 例：HomeScreen |
-| **後續畫面** | 例：DetailScreen |
-| **設計師** | @uiux-agent |
-| **開發者** | 待指派 |
-| **狀態** | 草圖 / 評審中 / 核准 / 實作中 / 完成 |
+| **Flow** | e.g. Main flow |
+| **Previous Screen** | e.g. HomeScreen |
+| **Next Screen** | e.g. DetailScreen |
+| **Designer** | @uiux-agent |
+| **Developer** | Unassigned |
+| **Status** | Wireframe / In Review / Approved / In Progress / Done |
 
 ---
 
-## 1. 使用者目標
+## 1. User Goals
 
-### 主要目標
-用戶來到這個畫面想要達成什麼？
-- [ ] 目標 1：_______
-- [ ] 目標 2：_______
+### Primary Goal
+What does the user come to this screen to accomplish?
+- [ ] Goal 1: _______
+- [ ] Goal 2: _______
 
-### 核心操作（Primary Action）
-用戶最可能/最應該執行的操作是什麼？
+### Primary Action
+What is the action the user is most likely / most expected to take?
 
-| 操作 | 優先級 | 觸發方式 |
+| Action | Priority | Trigger |
 |-----|-------|---------|
-| ______ | Primary | 按鈕 / 滑動 / 點擊 |
+| ______ | Primary | Button / swipe / tap |
 | ______ | Secondary | |
 | ______ | Tertiary | |
 
-### 成功指標
-- 用戶在 ___ 秒內完成 ___
-- 錯誤率低於 ___%
-- 放棄率低於 ___%
+### Success Metrics
+- User completes ___ within ___ seconds
+- Error rate below ___%
+- Abandonment rate below ___%
 
 ---
 
-## 2. Layout（區塊結構）
+## 2. Layout (Block Structure)
 
-### 視覺結構圖（ASCII Wireframe）
+### Visual Structure Diagram (ASCII Wireframe)
 
 ```
 ┌─────────────────────────────────┐
-│        [Top App Bar]            │  ← 固定 / 滾動
+│        [Top App Bar]            │  ← fixed / scrolling
 ├─────────────────────────────────┤
 │                                 │
-│        [Hero / Header]          │  ← 區塊 A
+│        [Hero / Header]          │  ← block A
 │                                 │
 ├─────────────────────────────────┤
 │                                 │
-│        [Main Content]           │  ← 區塊 B（可滾動）
+│        [Main Content]           │  ← block B (scrollable)
 │                                 │
 │                                 │
 ├─────────────────────────────────┤
-│        [Bottom Action]          │  ← 固定底部
+│        [Bottom Action]          │  ← fixed footer
 └─────────────────────────────────┘
 ```
 
-### 區塊定義
+### Block Definitions
 
-| 區塊 | 內容 | 高度/比例 | 是否固定 |
+| Block | Content | Height/Ratio | Fixed? |
 |-----|------|---------|---------|
-| Top App Bar | 標題、返回、操作 | 56px / 64px | 固定 |
+| Top App Bar | Title, back, actions | 56px / 64px | Fixed |
 | Hero | | | |
-| Main Content | | flex | 可滾動 |
-| Bottom Action | | 80px | 固定 |
+| Main Content | | flex | Scrollable |
+| Bottom Action | | 80px | Fixed |
 
 ---
 
-## 3. Components（元件清單）
+## 3. Components (Component List)
 
-### 元件列表
+### Component List
 
-| 元件 | 類型 | 狀態 | Props / 參數 |
+| Component | Type | States | Props / Params |
 |-----|-----|-----|-------------|
-| `TopAppBar` | 導航 | default, scrolled | title, onBack, actions |
-| `ItemCard` | 卡片 | default, selected, disabled, loading | item, onSelect |
-| `PrimaryButton` | 按鈕 | default, hover, pressed, disabled, loading | label, onClick, enabled |
+| `TopAppBar` | Navigation | default, scrolled | title, onBack, actions |
+| `ItemCard` | Card | default, selected, disabled, loading | item, onSelect |
+| `PrimaryButton` | Button | default, hover, pressed, disabled, loading | label, onClick, enabled |
 | | | | |
 
-### 各元件狀態詳述
+### Per-Component State Details
 
-#### 元件：`[元件名稱]`
+#### Component: `[component name]`
 
-| 狀態 | 視覺表現 | 觸發條件 |
+| State | Visual Behavior | Trigger Condition |
 |-----|---------|---------|
-| Default | 基準樣式 | 初始 |
-| Hover | 背景輕微變色 | 滑鼠移入 |
-| Pressed | scale 0.98, 背景變深 | 點擊中 |
-| Selected | 邊框高亮, 背景變色 | 選中後 |
-| Disabled | opacity 0.5, 無互動 | enabled=false |
-| Loading | 內容替換為 spinner | isLoading=true |
+| Default | Baseline style | Initial |
+| Hover | Slight background color change | Mouse enter |
+| Pressed | scale 0.98, darker background | While clicking |
+| Selected | Highlighted border, background change | After selection |
+| Disabled | opacity 0.5, no interaction | enabled=false |
+| Loading | Content replaced with spinner | isLoading=true |
 
 ---
 
 ## 4. Design Tokens
 
-### 顏色
+### Color
 
-| Token | 色碼 | 用途 |
+| Token | Hex | Purpose |
 |-------|------|-----|
-| `background` | #FFFBF5 | 頁面背景 |
-| `surface` | #FFFFFF | 卡片背景 |
-| `primary` | #_______ | 主要操作、強調 |
-| `secondary` | #_______ | 次要操作 |
-| `onSurface` | #1C1B1F | 主要文字 |
-| `error` | #B3261E | 錯誤狀態 |
+| `background` | #FFFBF5 | Page background |
+| `surface` | #FFFFFF | Card background |
+| `primary` | #_______ | Primary action, emphasis |
+| `secondary` | #_______ | Secondary action |
+| `onSurface` | #1C1B1F | Primary text |
+| `error` | #B3261E | Error state |
 
-### 字體
+### Typography
 
-| Token | 大小 | 行高 | 字重 | 用途 |
+| Token | Size | Line Height | Weight | Purpose |
 |-------|------|------|------|-----|
-| `headlineLarge` | 32px | 40px | Bold | 頁面標題 |
-| `titleLarge` | 22px | 28px | SemiBold | 區段標題 |
-| `titleMedium` | 16px | 24px | Medium | 卡片標題 |
-| `bodyLarge` | 16px | 24px | Regular | 主要內文 |
-| `bodyMedium` | 14px | 20px | Regular | 次要內文 |
-| `labelSmall` | 11px | 16px | Medium | 標籤、輔助 |
+| `headlineLarge` | 32px | 40px | Bold | Page title |
+| `titleLarge` | 22px | 28px | SemiBold | Section title |
+| `titleMedium` | 16px | 24px | Medium | Card title |
+| `bodyLarge` | 16px | 24px | Regular | Primary body text |
+| `bodyMedium` | 14px | 20px | Regular | Secondary body text |
+| `labelSmall` | 11px | 16px | Medium | Label, supporting text |
 
-### 間距
+### Spacing
 
-| Token | 值 | 用途 |
+| Token | Value | Purpose |
 |-------|-----|-----|
-| `xs` | 4px | 元素內微間距 |
-| `sm` | 8px | 相關元素間 |
-| `md` | 16px | 標準 padding |
-| `lg` | 24px | 區塊間距 |
-| `xl` | 32px | 主區塊分隔 |
-| `xxl` | 48px | 頁面區段 |
+| `xs` | 4px | Fine spacing within an element |
+| `sm` | 8px | Between related elements |
+| `md` | 16px | Standard padding |
+| `lg` | 24px | Between blocks |
+| `xl` | 32px | Major block separation |
+| `xxl` | 48px | Page section separation |
 
-### 圓角（Radius）
+### Corner Radius
 
-| Token | 值 | 用途 |
+| Token | Value | Purpose |
 |-------|-----|-----|
-| `sm` | 8px | 小元件（tag, chip） |
-| `md` | 12px | 按鈕 |
-| `lg` | 16px | 卡片 |
-| `xl` | 24px | 大型容器 |
-| `full` | 50% | 圓形 |
+| `sm` | 8px | Small components (tag, chip) |
+| `md` | 12px | Buttons |
+| `lg` | 16px | Cards |
+| `xl` | 24px | Large containers |
+| `full` | 50% | Circular |
 
 ---
 
 ## 5. Edge Cases
 
-### 空狀態（Empty State）
+### Empty State
 
-**觸發條件**：______
+**Trigger condition**: ______
 
-**視覺呈現**：
+**Visual presentation**:
 ```
 ┌─────────────────────────────────┐
 │                                 │
-│         [插圖/圖示]              │
+│         [illustration/icon]     │
 │                                 │
-│      [標題：提示訊息]            │
-│      [說明：引導文字]            │
+│      [title: prompt message]    │
+│      [description: guidance]    │
 │                                 │
-│       [ CTA 按鈕 ]              │
+│       [ CTA button ]            │
 │                                 │
 └─────────────────────────────────┘
 ```
 
 ---
 
-### 錯誤狀態（Error State）
+### Error State
 
-**類型 1：網路錯誤**
-- 標題：______
-- 說明：______
-- 操作：重試 / 離線模式
+**Type 1: Network Error**
+- Title: ______
+- Description: ______
+- Action: Retry / Offline mode
 
-**類型 2：API 錯誤**
-- 標題：______
-- 說明：______
-- 操作：重試 / 回報問題
+**Type 2: API Error**
+- Title: ______
+- Description: ______
+- Action: Retry / Report issue
 
-**類型 3：驗證錯誤**
-- 顯示位置：欄位下方
-- 文案樣式：error 色、小字
+**Type 3: Validation Error**
+- Display location: below the field
+- Copy style: error color, small text
 
 ---
 
-### 長文字處理
+### Long Text Handling
 
-| 元素 | 策略 | 最大行數 |
+| Element | Strategy | Max Lines |
 |-----|------|---------|
-| 標題 | 截斷 + ellipsis | 2 行 |
-| 描述 | 截斷 + ellipsis | 3 行 |
-| 價格/數字 | 不截斷，縮小字體 | 1 行 |
+| Title | Truncate + ellipsis | 2 lines |
+| Description | Truncate + ellipsis | 3 lines |
+| Price/number | No truncation, shrink font | 1 line |
 
 ---
 
-## 6. Acceptance Criteria（驗收項）
+## 6. Acceptance Criteria
 
-### 功能驗收
+### Functional Acceptance
 
-- [ ] Primary action 可正常執行
-- [ ] 所有互動元件有正確的狀態回饋
-- [ ] Loading state 正確顯示
-- [ ] Error state 有重試機制
-- [ ] Empty state 有引導 CTA
+- [ ] Primary action executes correctly
+- [ ] All interactive components have correct state feedback
+- [ ] Loading state displays correctly
+- [ ] Error state has a retry mechanism
+- [ ] Empty state has a guiding CTA
 
-### 視覺驗收
+### Visual Acceptance
 
-- [ ] 顏色來自 Design Token
-- [ ] 間距符合 Spacing Scale
-- [ ] 字體符合 Typography 層級
+- [ ] Colors come from Design Tokens
+- [ ] Spacing matches the Spacing Scale
+- [ ] Typography matches the type hierarchy
 
-### 可用性驗收
+### Usability Acceptance
 
-- [ ] 對比度 >= 4.5:1
-- [ ] 觸控目標 >= 44-48px
-- [ ] 鍵盤可完整操作
-- [ ] 所有圖示有 aria-label / contentDescription
+- [ ] Contrast >= 4.5:1
+- [ ] Touch targets >= 44-48px
+- [ ] Fully keyboard operable
+- [ ] All icons have aria-label / contentDescription
 
 ---
 
-## 簽核
+## Sign-off
 
-| 角色 | 姓名/代號 | 日期 | 狀態 |
+| Role | Name/Handle | Date | Status |
 |-----|----------|------|------|
-| UIUX Agent | @uiux-agent | | 草圖 / 評審中 / 核准 |
-| 開發者 | | | 待實作 / 實作中 / 完成 |
-| 驗收者 | | | 待驗收 / 通過 / 退回 |
+| UIUX Agent | @uiux-agent | | Wireframe / In Review / Approved |
+| Developer | | | Not started / In progress / Done |
+| Reviewer | | | Pending / Passed / Rejected |
 
 ---
 
-*模板版本：v1.0*
-*最後更新：2026-01-27*
+*Template version: v1.0*
+*Last updated: 2026-01-27*

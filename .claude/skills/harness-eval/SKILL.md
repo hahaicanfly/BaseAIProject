@@ -1,97 +1,97 @@
 ---
 name: harness-eval
-description: 掃描目標 repo，評估 Harness Engineering 成熟度並輸出 0–100 分數、缺口清單與優先改善建議；當使用者要評估工程基礎設施成熟度或提及「harness eval」時觸發。
+description: Scans a target repo, evaluates Harness Engineering maturity, and outputs a 0-100 score, a gap list, and prioritized improvement recommendations; triggers when the user wants to assess engineering infrastructure maturity or mentions "harness eval".
 ---
 
 # Skill: harness-eval
 
-> **用途**：掃描目標 repo，輸出 Harness Engineering 成熟度分數（0–100）、各維度缺口清單、優先改善建議。
-> **觸發**：`/harness-eval [repo_path]`（省略 path 則預設為當前工作目錄）
-> **輸出**：Maturity Report — 分數卡 + 改善路線圖
+> **Purpose**: Scan a target repo and output a Harness Engineering maturity score (0-100), a per-dimension gap list, and prioritized improvement recommendations.
+> **Trigger**: `/harness-eval [repo_path]` (omit path to default to the current working directory)
+> **Output**: Maturity Report — score card + improvement roadmap
 
 ---
 
-## 執行步驟
+## Execution Steps
 
-### Step 0：定位目標 repo
+### Step 0: Locate the Target Repo
 
-確認以下路徑存在，否則報錯並中止：
-- `CLAUDE.md` 或 `.claude/`（任一即可視為有 harness 意圖）
+Confirm the following path exists, otherwise error and abort:
+- `CLAUDE.md` or `.claude/` (either counts as harness intent)
 
-### Step 1：讀取 rubric
+### Step 1: Read the Rubric
 
-讀 `.claude/skills/harness-eval/rubric.md`，取得 8 個維度的評分標準。
+Read `.claude/skills/harness-eval/rubric.md` to get the scoring standard for the 8 dimensions.
 
-### Step 2：逐維度掃描
+### Step 2: Scan Dimension by Dimension
 
-**D1 — Constitutional Layer（CLAUDE.md + rules/）**
-- [ ] `CLAUDE.md` 是否存在且非空
-- [ ] 是否有角色定義（`## 角色` 或 `## Role`）
-- [ ] 是否有 Token 預算策略（3 層讀取或等效）
-- [ ] 是否有隱私規則 / 禁讀區
-- [ ] `.claude/rules/` 目錄中 rules 數量（0/1-2/3-5/5+）
+**D1 — Constitutional Layer (CLAUDE.md + rules/)**
+- [ ] Does `CLAUDE.md` exist and is non-empty
+- [ ] Is there a role definition section (`## 角色` or `## Role`)
+- [ ] Is there a token budget strategy (3-tier reading or equivalent)
+- [ ] Are there privacy rules / no-read zones
+- [ ] Number of rules in `.claude/rules/` (0/1-2/3-5/5+)
 
 **D2 — Agent Coverage**
-- [ ] `.claude/agents/` 存在
-- [ ] agent 數量（0/1-3/4-7/8-11/12+）
-- [ ] 核心 5 人是否齊全：pm、architect、tech-lead、security-reviewer、qa-engineer
+- [ ] `.claude/agents/` exists
+- [ ] Number of agents (0/1-3/4-7/8-11/12+)
+- [ ] Are the core 5 roles present: pm, architect, tech-lead, security-reviewer, qa-engineer
 
-**D3 — Hook System（最高權重）**
-- [ ] `pre-tool-use-guard.py` 存在
-- [ ] `post-edit-lint.py` 存在
-- [ ] `pre-compact-snapshot.py` 存在
-- [ ] `stop-retro-logger.py` 存在
-- [ ] `.claude/settings.json` 中 hooks 是否對應 `PreToolUse`、`PostToolUse`、`PreCompact`、`Stop`
-- [ ] `post-edit-lint.py` 中 `QUICK_CHECKS` 是否有實際填入（非空陣列）
-- [ ] `pre-tool-use-guard.py` 是否有 enforce 邏輯（非 pass-through）
+**D3 — Hook System (highest weight)**
+- [ ] `pre-tool-use-guard.py` exists
+- [ ] `post-edit-lint.py` exists
+- [ ] `pre-compact-snapshot.py` exists
+- [ ] `stop-retro-logger.py` exists
+- [ ] Do the hooks in `.claude/settings.json` map to `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`
+- [ ] Is `QUICK_CHECKS` in `post-edit-lint.py` actually populated (non-empty array)
+- [ ] Does `pre-tool-use-guard.py` have real enforce logic (not pass-through)
 
-**D4 — Invariants（INV-\*）**
-- [ ] `docs/architecture/invariants.md` 存在
-- [ ] `INV-GIT-*` 規則已定義
-- [ ] `INV-SEC-*` 規則已定義（含實際 pattern，非 template TODO）
-- [ ] 專案特定 INV 規則數量（0/1-2/3+）
-- [ ] `post-edit-lint.py` 中是否引用 INV-id
+**D4 — Invariants (INV-\*)**
+- [ ] `docs/architecture/invariants.md` exists
+- [ ] `INV-GIT-*` rules are defined
+- [ ] `INV-SEC-*` rules are defined (with real patterns, not template TODOs)
+- [ ] Number of project-specific INV rules (0/1-2/3+)
+- [ ] Does `post-edit-lint.py` reference an INV-id
 
 **D5 — ExecPlan System**
-- [ ] `docs/plans/PLANS.md` 存在
-- [ ] `docs/plans/active/` + `docs/plans/completed/` 目錄存在
-- [ ] 有過至少 1 個 completed ExecPlan（否則 "未曾啟用"）
-- [ ] `.claude/protocols/execplan-lifecycle.md` 存在
+- [ ] `docs/plans/PLANS.md` exists
+- [ ] `docs/plans/active/` + `docs/plans/completed/` directories exist
+- [ ] At least 1 completed ExecPlan exists (otherwise "never activated")
+- [ ] `.claude/protocols/execplan-lifecycle.md` exists
 
 **D6 — Memory & Retro Loop**
-- [ ] `docs/learnings/ERRORS.md` 存在
-- [ ] `ERRORS.md` 的 Active Lessons 非空（有實際 lesson）
-- [ ] `state/SCHEMA.md` 存在
-- [ ] `state/` 有 `.gitignore`（防止 jsonl 入版控）
-- [ ] `state/hook-events.jsonl` 或 `session-handoffs/` 有實際資料（代表系統曾真實運行）
+- [ ] `docs/learnings/ERRORS.md` exists
+- [ ] `ERRORS.md`'s Active Lessons section is non-empty (has real lessons)
+- [ ] `state/SCHEMA.md` exists
+- [ ] `state/` has a `.gitignore` (to keep jsonl out of version control)
+- [ ] `state/hook-events.jsonl` or `session-handoffs/` has real data (indicating the system has actually run)
 
 **D7 — Skills & Commands**
-- [ ] `.claude/skills/` 目錄存在
-- [ ] skill 數量（0/1-3/4-7/8+）
-- [ ] 關鍵 skill 是否有實質內容（非純 stub）：code-review、multi-agent-review 任一
-- [ ] `.claude/commands/last-word.md` 存在（session hygiene）
+- [ ] `.claude/skills/` directory exists
+- [ ] Number of skills (0/1-3/4-7/8+)
+- [ ] Do key skills have substantive content (not pure stubs): either code-review or multi-agent-review
+- [ ] `.claude/commands/last-word.md` exists (session hygiene)
 
-**D8 — SkillOpt Loop Readiness**（SkillOpt 論文標準）
-- [ ] 有 rollout evidence 收集機制（hook 記錄執行結果到 jsonl）
-- [ ] 有 validation gate 概念（改 skill 前後能比較效果）
-- [ ] `ERRORS.md` 結構符合：Pending Review → Active Lessons 雙區（rejected-edit buffer + epoch update）
-- [ ] 是否定義了 skill update 觸發條件（何時更新哪個 agent/skill 文件）
+**D8 — SkillOpt Loop Readiness** (SkillOpt paper standard)
+- [ ] Is there a rollout evidence collection mechanism (hook logging execution results to jsonl)
+- [ ] Is there a validation gate concept (can compare before/after effects of skill changes)
+- [ ] Does `ERRORS.md`'s structure match: Pending Review → Active Lessons dual sections (rejected-edit buffer + epoch update)
+- [ ] Are skill update trigger conditions defined (when to update which agent/skill file)
 
-### Step 3：計算分數
+### Step 3: Calculate the Score
 
-參閱 `rubric.md` 中的計分矩陣，加總各維度得分，標準化為 0–100。
+Refer to the scoring matrix in `rubric.md`, sum the per-dimension scores, normalize to 0-100.
 
-### Step 4：產出報告
+### Step 4: Produce the Report
 
-輸出格式：
+Output format:
 
 ```
 ## Harness Maturity Report — [repo_path]
-**日期**：[今天]
-**總分**：XX / 100 → Level N [等級名稱]
+**Date**: [today]
+**Total score**: XX / 100 → Level N [level name]
 
-### 分數卡
-| 維度 | 得分 | 滿分 | 評語 |
+### Score Card
+| Dimension | Score | Max | Comment |
 |------|------|------|------|
 | D1 Constitutional | X | 15 | ... |
 | D2 Agents         | X | 10 | ... |
@@ -102,42 +102,42 @@ description: 掃描目標 repo，評估 Harness Engineering 成熟度並輸出 0
 | D7 Skills/Cmds    | X | 10 | ... |
 | D8 SkillOpt Ready | X |  5 | ... |
 
-### 缺口清單（依優先度排序）
+### Gap List (priority-ordered)
 1. [HIGH] ...
 2. [MED] ...
 3. [LOW] ...
 
-### 最小改善路徑（3 步）
+### Minimum Improvement Path (3 steps)
 1. ...
 2. ...
 3. ...
 
-### SkillOpt Readiness 指數
-[是否具備自動改善能力的前提條件分析]
+### SkillOpt Readiness Index
+[analysis of whether the preconditions for automatic self-improvement are met]
 ```
 
-### Step 5：寫回外部知識庫或寫到 docs/
+### Step 5: Write Back to External Knowledge Base or to docs/
 
-- （若專案有外部知識庫，寫回該處；否則略過）
-- 否則 → 輸出到 `docs/harness-eval-[日期].md`
+- (If the project has an external knowledge base, write there; otherwise skip)
+- Otherwise → output to `docs/harness-eval-[date].md`
 
 ---
 
-## 成熟度等級定義
+## Maturity Level Definitions
 
-| 等級 | 分數 | 名稱 | 特徵 |
+| Level | Score | Name | Characteristics |
 |------|------|------|------|
-| 0 | 0–20 | No Harness | 無 CLAUDE.md 或只有空殼 |
-| 1 | 21–40 | Basic | 有 CLAUDE.md + 少量 rules，無 hooks |
-| 2 | 41–60 | Structured | 有 agents + hooks（至少 guard），有 INV-GIT-* |
-| 3 | 61–80 | Process-Aware | ExecPlan 曾實際使用，ERRORS.md 有 lessons |
-| 4 | 81–95 | Self-Monitoring | 全 8 hooks 運行，INV-* 有專案規則，retro loop 運轉中 |
-| 5 | 96–100 | SkillOpt-Ready | D8 完整，skill doc 有版本歷史，validation gate 定義完成 |
+| 0 | 0–20 | No Harness | No CLAUDE.md, or an empty shell only |
+| 1 | 21–40 | Basic | Has CLAUDE.md + a few rules, no hooks |
+| 2 | 41–60 | Structured | Has agents + hooks (at least a guard), has INV-GIT-* |
+| 3 | 61–80 | Process-Aware | ExecPlan actually used, ERRORS.md has lessons |
+| 4 | 81–95 | Self-Monitoring | All 8 hooks running, INV-* has project rules, retro loop active |
+| 5 | 96–100 | SkillOpt-Ready | D8 complete, skill docs have version history, validation gate fully defined |
 
 ---
 
-## 注意事項
+## Notes
 
-- 掃描只讀不寫（除了最後的 report 輸出）
-- 掃描時間應在 2 分鐘內完成（不要讀大型原始碼）
-- 重點看結構與配置，不評估 skill/agent 內容品質（那是 skill-quality-review 的任務）
+- Scanning is read-only (except for the final report output)
+- Scan time should stay under 2 minutes (don't read large source files)
+- Focus on structure and configuration, not skill/agent content quality (that's the job of skill-quality-review)

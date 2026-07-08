@@ -1,13 +1,13 @@
 ---
 name: security-audit
-description: 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 OWASP 標準檢查；當使用者要做安全稽核、弱點掃描或提及「安全審查」「security audit」時觸發。
+description: Full security review covering authentication, key leakage, dependency vulnerabilities, and OWASP standard checks; triggers when the user wants a security audit, vulnerability scan, or mentions "安全審查", "security audit".
 ---
 
 # Skill: security-audit
 
-> **用途**：基於 OWASP 2025 標準的系統性資安審計，涵蓋 auth / secret / 依賴漏洞 4 個 domain（Web/API、Mobile Android、Cloud Infra、API 補充），可依專案技術棧裁剪範圍。
-> **觸發**：`/security-audit [scope]`
-> **Agent**：security-reviewer（opus，見 `.claude/agents/security-reviewer.md`）
+> **Purpose**: A systematic security audit based on the OWASP 2025 standards, covering auth / secrets / dependency-vulnerability across 4 domains (Web/API, Mobile Android, Cloud Infra, API Supplement); scope can be tailored to the project's tech stack.
+> **Trigger**: `/security-audit [scope]`
+> **Agent**: security-reviewer (opus, see `.claude/agents/security-reviewer.md`)
 
 ## Usage
 
@@ -17,13 +17,13 @@ description: 完整安全審查，涵蓋認證、密鑰洩漏、依賴漏洞與 
 
 | Scope | Description | Reference Files Loaded |
 |-------|-------------|----------------------|
-| `full` | 完整 4-domain 審計 | 全部 4 個 reference 檔 |
-| `mobile` | Android MASVS 檢查（Android 專案適用） | `references/domain2-mobile-android.md` |
-| `api` | 後端 API 安全 | `references/domain1-web-api.md` + `references/domain4-api-supplement.md` |
-| `cloud` | 雲端基礎設施 | `references/domain3-cloud-infra.md` |
-| `quick` | 快速 secrets/config/deps 掃描 | 無（inline checklist） |
+| `full` | Full 4-domain audit | All 4 reference files |
+| `mobile` | Android MASVS checks (for Android projects) | `references/domain2-mobile-android.md` |
+| `api` | Backend API security | `references/domain1-web-api.md` + `references/domain4-api-supplement.md` |
+| `cloud` | Cloud infrastructure | `references/domain3-cloud-infra.md` |
+| `quick` | Quick secrets/config/deps scan | none (inline checklist) |
 
-Default scope：`full`
+Default scope: `full`
 
 ---
 
@@ -45,13 +45,13 @@ SEVERITY:
 
 ## Execution Workflow
 
-### Phase 0 — Pre-flight（永遠先執行）
+### Phase 0 — Pre-flight (always run first)
 
-不論 scope 為何，先執行以下檢查：
+Regardless of scope, run the following checks first:
 
 **0.1 — Secrets Scan**
 
-對整個代碼庫掃描以下 pattern（排除 build 產出目錄、`node_modules/`、`.gradle/` 等）：
+Scan the entire codebase for the following patterns (excluding build output directories, `node_modules/`, `.gradle/`, etc.):
 ```
 api[_-]?key\s*=\s*["'][^"']+
 secret[_-]?key\s*=\s*["'][^"']+
@@ -65,81 +65,81 @@ ghp_[a-zA-Z0-9]{36}
 goog_[a-zA-Z0-9]{20,}
 ```
 
-檔案類型依專案技術棧調整，例如 `*.ts`, `*.js`, `*.py`, `*.go`；Android 專案適用：另掃 `*.kt`, `*.java`, `*.xml`, `*.gradle.kts`。
+File types depend on the project's tech stack, e.g. `*.ts`, `*.js`, `*.py`, `*.go`; for Android projects also scan `*.kt`, `*.java`, `*.xml`, `*.gradle.kts`.
 
 **0.2 — Configuration Validation**
 ```
-[ ] .gitignore 涵蓋：.env*、*secret*、*credential*、*.pem、*.key、*.p12
-[ ] Android 專案適用：.gitignore 另涵蓋 local.properties、*.keystore、*.jks、google-services.json
-[ ] 機敏設定檔（local.properties / .env.production 等）未被 commit 到 git
-[ ] repo 中沒有 keystore / 私鑰檔案
-[ ] 建置設定中的 secrets 來自環境變數或 CI secret store，非硬編碼
+[ ] .gitignore covers: .env*, *secret*, *credential*, *.pem, *.key, *.p12
+[ ] For Android projects: .gitignore also covers local.properties, *.keystore, *.jks, google-services.json
+[ ] Sensitive config files (local.properties / .env.production, etc.) are not committed to git
+[ ] No keystore / private key files in the repo
+[ ] Secrets in build config come from environment variables or the CI secret store, not hardcoded
 ```
 
 **0.3 — Dependency Audit**
 
-依專案技術棧擇一執行（詳見 CLAUDE.md Quick Commands）：
+Choose based on the project's tech stack (see CLAUDE.md Quick Commands for details):
 ```bash
 npm audit            # Node.js
 pip-audit             # Python
 cargo audit           # Rust
 ```
-Android 專案適用：透過 Gradle 執行相依性檢查任務（如 OWASP Dependency-Check plugin）與列出完整相依套件清單供人工複核。
+For Android projects: run a dependency-check task via Gradle (e.g. the OWASP Dependency-Check plugin) and list the full dependency tree for manual review.
 
-若 scope = `quick`，到此為止並輸出報告。
+If scope = `quick`, stop here and output the report.
 
 ---
 
 ### Phase 1 — Domain Execution
 
-依 scope 依序執行對應 domain。每個 domain 先讀對應 reference 檔，再逐項評估。
+Run the domains corresponding to the given scope, in order. For each domain, read the corresponding reference file first, then assess item by item.
 
 | Order | Domain | Reference File | Scopes |
 |-------|--------|---------------|--------|
 | 1 | Web & API Security (A01-A10) | `references/domain1-web-api.md` | `full`, `api` |
-| 2 | Mobile Android (MASVS)（Android 專案適用） | `references/domain2-mobile-android.md` | `full`, `mobile` |
+| 2 | Mobile Android (MASVS) (for Android projects) | `references/domain2-mobile-android.md` | `full`, `mobile` |
 | 3 | Cloud Infrastructure (C01-C06) | `references/domain3-cloud-infra.md` | `full`, `cloud` |
 | 4 | API Supplement (API-1~10) | `references/domain4-api-supplement.md` | `full`, `api` |
 
-> `references/domain2-mobile-android.md` 與 `references/domain3-cloud-infra.md` 內含具體範例（Ktor / Cloudflare Workers 等）；若專案技術棧不同，把該內容當作檢查項的參考範例，逐項對照到專案實際的等價機制（例如換成專案自己的 HTTP client、雲端平台）。
+> `references/domain2-mobile-android.md` and `references/domain3-cloud-infra.md` contain concrete examples (Ktor / Cloudflare Workers, etc.); if the project's tech stack differs, treat that content as a reference example for the check item and map it to the project's actual equivalent mechanism (e.g. the project's own HTTP client, cloud platform).
 
-**Per-Item Assessment Protocol：**
+**Per-Item Assessment Protocol:**
 
-對 reference 檔中的每個 check item：
+For each check item in the reference file:
 
-1. **Read** 相關的專案檔案以取得證據
-2. **Assess** 對照 check criteria
+1. **Read** the relevant project files to gather evidence
+2. **Assess** against the check criteria
 3. **Assign status:** `PASS` | `FAIL` | `PARTIAL` | `N/A`
-4. **Record** 依下方輸出格式記錄
-5. **CRITICAL findings** — 立即標記，不等完整報告產出後才提出
+4. **Record** per the output format below
+5. **CRITICAL findings** — flag immediately, don't wait for the full report
 
 ---
 
 ### Phase 2 — Scoring & Report
 
-所有 domain 評估完成後，產出評分摘要與優先修復清單。
+Once all domains are assessed, produce a scoring summary and prioritized remediation list.
 
 ---
 
-## 專案安全基線（Project Security Baseline）
+## Project Security Baseline
 
-正式審計前，先盤點專案既有的安全措施，聚焦「已實作什麼」與「已知落差」，把審計精力放在差異與新增程式碼上。基線資料的來源：`agent_docs/TECHNICAL-REFERENCE.md`（填實後）或專案自有安全文件；若尚未整理，先用下表當作盤點範本自行填寫，不要臆造內容。
+Before a formal audit, inventory the project's existing security measures first, focusing on "what's already implemented" and "known gaps" — this focuses audit effort on deltas and new code. Baseline data comes from `agent_docs/TECHNICAL-REFERENCE.md` (once filled in) or a project's own security documentation; if that hasn't been assembled yet, use the table below as an inventory template to fill in yourself — don't fabricate content.
 
 | Area | Status | Key Files |
 |------|--------|-----------|
-| Token / secret 加密儲存 | [依專案填入] | [依專案填入] |
-| 日誌脫敏（避免 token/PII 進 log） | [依專案填入] | [依專案填入] |
-| 傳輸層安全（TLS 設定 / cert pinning） | [依專案填入] | [依專案填入] |
-| Android 專案適用：備份與元件匯出限制（`allowBackup`、`exported`） | [依專案填入] | `AndroidManifest.xml` |
-| 建置產出強化（obfuscation / minification） | [依專案填入] | [依專案填入] |
+| Token / secret encrypted storage | [fill in per project] | [fill in per project] |
+| Log redaction (avoid token/PII in logs) | [fill in per project] | [fill in per project] |
+| Transport security (TLS config / cert pinning) | [fill in per project] | [fill in per project] |
+| For Android projects: backup and component export restrictions (`allowBackup`, `exported`) | [fill in per project] | `AndroidManifest.xml` |
+| Build hardening (obfuscation / minification) | [fill in per project] | [fill in per project] |
 
-**已知落差（Known Gaps）**：把尚未修復或刻意延後的風險項列在這裡（例如：cert pinning 尚未啟用、資料庫未加密、缺少 root/jailbreak 偵測），做為優先審計標的，避免重複發現已知問題卻沒有排入修復排程。
+**Known Gaps**: list unresolved or intentionally deferred risk items here (e.g. cert pinning not yet enabled, database not encrypted, no root/jailbreak detection) — treat these as priority audit targets, to avoid rediscovering known issues without scheduling a fix.
 
 ---
 
 ## Finding Output Format
 
-對每個 `FAIL` 或 `PARTIAL` 項目：
+For each `FAIL` or `PARTIAL` item:
 
 ```markdown
 ### FINDING #[N]
@@ -147,14 +147,14 @@ Android 專案適用：透過 Gradle 執行相依性檢查任務（如 OWASP Dep
 | Field | Value |
 |-------|-------|
 | **Check ID** | [e.g., S-1.7, A01-1.6, API-2] |
-| **Title** | [簡短標題] |
+| **Title** | [short title] |
 | **Severity** | CRITICAL / HIGH / MEDIUM / LOW |
 | **Status** | FAIL / PARTIAL |
-| **Description** | [發現了什麼] |
-| **Evidence** | [檔案路徑 + 行號，或 grep 結果] |
+| **Description** | [what was found] |
+| **Evidence** | [file path + line number, or grep result] |
 | **CWE** | CWE-[XXX] |
-| **Remediation** | [具體修復方式與程式碼指引] |
-| **OWASP Ref** | [標準 + 章節，例如 MASVS-STORAGE S-1.7] |
+| **Remediation** | [concrete fix and code guidance] |
+| **OWASP Ref** | [standard + section, e.g. MASVS-STORAGE S-1.7] |
 ```
 
 ---
@@ -163,17 +163,17 @@ Android 專案適用：透過 Gradle 執行相依性檢查任務（如 OWASP Dep
 
 | Condition | Action |
 |-----------|--------|
-| 出現任何單一 CRITICAL finding | **立即升級** — 在繼續審計前先告知使用者 |
-| 同一 domain 內出現 3+ HIGH findings | 該 domain 標記為 **HIGH RISK** |
-| 發現主動遭利用的證據 | **停止評估** — 升級處理 |
-| 代碼中發現 secret / credential | **立即警示** — 建議輪替金鑰 |
+| Any single CRITICAL finding | **Escalate immediately** — notify the user before continuing the audit |
+| 3+ HIGH findings within the same domain | mark that domain as **HIGH RISK** |
+| Evidence of active exploitation found | **Stop the assessment** — escalate |
+| A secret / credential found in code | **Warn immediately** — recommend key rotation |
 
 ---
 
 ## Scoring Summary Template
 
 ```markdown
-## OWASP Security Audit Report — [專案名稱]
+## OWASP Security Audit Report — [Project Name]
 
 ### Audit Metadata
 - **Date:** [YYYY-MM-DD]
@@ -215,10 +215,10 @@ Android 專案適用：透過 Gradle 執行相依性檢查任務（如 OWASP Dep
 | ... | | | |
 
 ### Recommendations
-1. **Immediate** (< 24h)：[CRITICAL fixes]
-2. **Short-term** (< 7 days)：[HIGH fixes]
-3. **Next release**：[MEDIUM fixes]
-4. **Backlog**：[LOW/INFO items]
+1. **Immediate** (< 24h): [CRITICAL fixes]
+2. **Short-term** (< 7 days): [HIGH fixes]
+3. **Next release**: [MEDIUM fixes]
+4. **Backlog**: [LOW/INFO items]
 ```
 
 ---
@@ -227,53 +227,53 @@ Android 專案適用：透過 Gradle 執行相依性檢查任務（如 OWASP Dep
 
 | Severity | CVSS v3 Range | Response SLA | Example |
 |----------|--------------|-------------|---------|
-| CRITICAL | 9.0 - 10.0 | < 24 hours | 明文儲存 token、public bucket 含 PII、硬編碼 API key |
-| HIGH | 7.0 - 8.9 | < 7 days | 未啟用 cert pinning、TLS 驗證被關閉、auth 端點無 rate limiting |
-| MEDIUM | 4.0 - 6.9 | < 30 days | 錯誤訊息過於詳細、缺少安全 headers、弱密碼政策 |
-| LOW | 0.1 - 3.9 | Next release | Server banner 洩漏版本資訊、cookie flag 缺失 |
-| INFO | N/A | Backlog | 最佳實踐建議、文件缺口 |
+| CRITICAL | 9.0 - 10.0 | < 24 hours | Plaintext-stored token, public bucket with PII, hardcoded API key |
+| HIGH | 7.0 - 8.9 | < 7 days | Cert pinning not enabled, TLS validation disabled, no rate limiting on auth endpoint |
+| MEDIUM | 4.0 - 6.9 | < 30 days | Overly verbose error messages, missing security headers, weak password policy |
+| LOW | 0.1 - 3.9 | Next release | Server banner leaking version info, missing cookie flags |
+| INFO | N/A | Backlog | Best-practice suggestion, documentation gap |
 
 ---
 
 ## Re-assessment Triggers
 
-以下情況需重新執行本審計：
-- 任何 CRITICAL finding 已修復（需驗證修復是否確實生效）
-- 發生重大架構變更
-- 部署新的主要版本
-- 確認發生資安事件
-- 新增第三方 SDK
-- Auth 流程或金流相關流程被修改
+Re-run this audit under the following circumstances:
+- Any CRITICAL finding has been fixed (verify the fix actually took effect)
+- A major architectural change occurred
+- A new major version was deployed
+- A confirmed security incident occurred
+- A new third-party SDK was added
+- The auth flow or a payment-related flow was modified
 
 ---
 
 ## Quick Reference — Scan Targets
 
-以下為常見掃描標的分類，具體檔案路徑依專案結構調整（可對照 `agent_docs/TECHNICAL-REFERENCE.md`）：
+Below are common scan-target categories; specific file paths depend on the project structure (cross-reference `agent_docs/TECHNICAL-REFERENCE.md`):
 
-### Android 用戶端（Android 專案適用）
+### Android Client (for Android projects)
 ```
-AndroidManifest.xml                       — 權限、exported components、backup 設定
-res/xml/network_security_config.xml       — TLS、cert pinning
-res/xml/file_paths.xml (若使用 FileProvider) — FileProvider 範圍
-build.gradle.kts                          — 相依套件、build config、minification
-proguard-rules.pro                        — obfuscation 規則
-[專案自訂] token 儲存實作                   — token 加密與生命週期管理
-[專案自訂] HTTP client 設定                 — TLS 設定、憑證驗證
-[專案自訂] auth 流程管理                    — token 生命週期、登入/登出/撤銷
-[專案自訂] API client 實作                  — API 呼叫、header 注入
-[專案自訂] 日誌工具                         — log 脫敏
-[專案自訂] 加密儲存設定                     — encryption at rest 設定
-[專案自訂] 本地資料庫設定                    — DB 加密設定
+AndroidManifest.xml                       — permissions, exported components, backup settings
+res/xml/network_security_config.xml       — TLS, cert pinning
+res/xml/file_paths.xml (if using FileProvider) — FileProvider scope
+build.gradle.kts                          — dependencies, build config, minification
+proguard-rules.pro                        — obfuscation rules
+[project-specific] token storage implementation — token encryption and lifecycle management
+[project-specific] HTTP client config     — TLS config, certificate validation
+[project-specific] auth flow management   — token lifecycle, login/logout/revocation
+[project-specific] API client implementation — API calls, header injection
+[project-specific] logging utility        — log redaction
+[project-specific] encrypted storage config — encryption-at-rest settings
+[project-specific] local database config  — DB encryption settings
 ```
 
-### 後端服務（如可存取）
+### Backend Services (if accessible)
 ```
-環境 / secrets 設定檔（.env、wrangler 類設定、IaC 變數檔）— 綁定、secrets 參照
-API handler / middleware 原始碼             — 存取控制、輸入驗證
-API 規格文件（OpenAPI/Swagger 等）           — API 契約與實際路由比對
-管理後台（若有）                            — 是否有獨立於一般使用者的存取控制
-.gitignore                                — 機敏檔案排除規則
+Environment / secrets config files (.env, wrangler-style config, IaC variable files) — bindings, secret references
+API handler / middleware source            — access control, input validation
+API spec document (OpenAPI/Swagger, etc.)  — API contract vs. actual routes
+Admin dashboard (if any)                   — whether access control is separated from regular users
+.gitignore                                 — sensitive-file exclusion rules
 ```
 
 ---
@@ -291,16 +291,16 @@ API 規格文件（OpenAPI/Swagger 等）           — API 契約與實際路�
 
 ---
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：OWASP-style 安全報告，覆蓋 4 domains（Web/API、Mobile MASVS、Cloud Infra、API Top 10）。
-- **必查 invariants**：`docs/architecture/invariants.md` 中 `INV-SEC-001` ~ `INV-SEC-003`（依 invariants.md 現行清單；無對應 INV 時自行列出 auth/secret 風險項）；secret 掃描 `grep -rE 'API_KEY|TOKEN|PASSWORD'` 無命中。
-- **發現項處置**：Critical/High 發現升級為新 ExecPlan（`docs/plans/active/`，格式見 `docs/plans/PLANS.md`）或寫入既有 ExecPlan 的 Open Questions 區塊；Medium 文件化即可；Low 進 backlog。
-- **嚴重度**：Critical / High → 必須阻止 merge；Medium → ExecPlan 文件化；Low → backlog。
-- **交接 marker**：通過時 `[HANDOFF: human-pr-review]`；發現 Critical/High 則 `[HUMAN_ATTENTION_REQUIRED: <reason>]`。
+- **Output form**: an OWASP-style security report covering 4 domains (Web/API, Mobile MASVS, Cloud Infra, API Top 10).
+- **Required invariants check**: `INV-SEC-001` ~ `INV-SEC-003` in `docs/architecture/invariants.md` (per the current list in invariants.md; if no corresponding INV exists, list auth/secret risk items independently); secret scan `grep -rE 'API_KEY|TOKEN|PASSWORD'` returns no hits.
+- **Finding disposition**: Critical/High findings are escalated into a new ExecPlan (`docs/plans/active/`, format per `docs/plans/PLANS.md`) or written into the Open Questions section of an existing ExecPlan; Medium is documented only; Low goes to backlog.
+- **Severity**: Critical / High → must block merge; Medium → documented in an ExecPlan; Low → backlog.
+- **Handoff marker**: on pass, `[HANDOFF: human-pr-review]`; if Critical/High findings exist, `[HUMAN_ATTENTION_REQUIRED: <reason>]`.
 
-## 參考
+## References
 
 - `.claude/agents/security-reviewer.md`
 - `docs/architecture/invariants.md` INV-SEC-*
-- `references/domain1-web-api.md`、`references/domain2-mobile-android.md`、`references/domain3-cloud-infra.md`、`references/domain4-api-supplement.md`
+- `references/domain1-web-api.md`, `references/domain2-mobile-android.md`, `references/domain3-cloud-infra.md`, `references/domain4-api-supplement.md`

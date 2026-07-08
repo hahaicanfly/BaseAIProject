@@ -1,21 +1,21 @@
 # {{PROJECT_NAME}} — Mechanically Verifiable Invariants
 
-> **角色**：本檔列出可以**機械化驗證**的硬規則（與 `docs/learnings/ERRORS.md` 不同：ERRORS.md 是知識庫，本檔是 lint/test/grep 對應表）。
-> **使用對象**：`.claude/hooks/post-edit-lint.py` / `code-reviewer` agent / 人類 reviewer。
-> **驗證原則**：能寫成 lint rule、grep pattern、test assertion、build check 才放這裡；無法機械驗證的 lesson 留在 ERRORS.md。
+> **Role**: This file lists hard rules that can be **mechanically verified** (unlike `docs/learnings/ERRORS.md`, which is a knowledge base — this file is a lint/test/grep mapping table).
+> **Audience**: `.claude/hooks/post-edit-lint.py` / `code-reviewer` agent / human reviewers.
+> **Inclusion principle**: only rules that can be written as a lint rule, grep pattern, test assertion, or build check belong here; lessons that can't be mechanically verified stay in ERRORS.md.
 
 ---
 
-## 規則格式
+## Rule Format
 
 ```
-INV-<NS>-<NNN>  <一句話規則>
-  CHECK    <可執行的 grep/lint/test 指令>
-  HOOK     <哪個 hook 該攔截，或留 manual review>
-  SOURCE   <對應 ERRORS.md 中 lesson 的日期>
+INV-<NS>-<NNN>  <one-sentence rule>
+  CHECK    <executable grep/lint/test command>
+  HOOK     <which hook should intercept it, or leave as manual review>
+  SOURCE   <date of the corresponding lesson in ERRORS.md>
 ```
 
-命名空間（NS）建議：
+Suggested namespaces (NS):
 - `COR` — Coroutines / Async / Concurrency
 - `SEC` — Security / Auth / Secrets
 - `API` — API / Serialization / Data Models
@@ -30,126 +30,126 @@ INV-<NS>-<NNN>  <一句話規則>
 
 ## INV-GIT-* — Git / Branch / PR
 
-### INV-GIT-001 — Commit 前必須 `git branch --show-current`
+### INV-GIT-001 — Must run `git branch --show-current` before commit
 
 ```
-RULE     每次 commit / 啟動 subagent / PR merge 後必須確認 branch
+RULE     Confirm the current branch before every commit / subagent launch / PR merge
 CHECK    git symbolic-ref HEAD | grep -E 'refs/heads/(master|main)$'
-HOOK     pre-tool-use-guard.py（攔截 git commit on master）
-SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
+HOOK     pre-tool-use-guard.py (intercepts git commit on master)
+SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
 ```
 
-### INV-GIT-002 — 禁止 `git commit` 直接到 master / main
+### INV-GIT-002 — Never `git commit` directly to master / main
 
 ```
-RULE     不得在 master/main 直接 commit
+RULE     Direct commits to master/main are forbidden
 CHECK    git symbolic-ref HEAD | grep -E 'refs/heads/(master|main)$'
-HOOK     pre-tool-use-guard.py（enforce — hard guard）
-SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
+HOOK     pre-tool-use-guard.py (enforce — hard guard)
+SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
 ```
 
-### INV-GIT-003 — 禁止 `git push --force` 到 master / main
+### INV-GIT-003 — Never `git push --force` to master / main
 
 ```
-RULE     禁止對共享分支 force push
+RULE     Force push to shared branches is forbidden
 CHECK    grep -E 'git push.*--force.*\b(master|main)\b'
-HOOK     pre-tool-use-guard.py（enforce）
+HOOK     pre-tool-use-guard.py (enforce)
 SOURCE   ADR-0001 D5
 ```
 
-### INV-GIT-004 — 禁止 `git reset --hard origin/master`
+### INV-GIT-004 — Never `git reset --hard origin/master`
 
 ```
-RULE     fast-forward 失敗時改用 git rebase origin/master
+RULE     Use git rebase origin/master instead when a fast-forward fails
 CHECK    grep -E 'git reset --hard origin/(master|main)'
-HOOK     pre-tool-use-guard.py（enforce）
-SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
+HOOK     pre-tool-use-guard.py (enforce)
+SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
 ```
 
-### INV-GIT-005 — 新功能 branch 必須從 master 開出
+### INV-GIT-005 — New feature branches must be cut from master
 
 ```
-RULE     git checkout -b feat/xxx 前必須在 master pull 完最新
-CHECK    PR 建立前確認 base branch
-HOOK     code-reviewer agent（手動）
-SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
+RULE     Pull the latest master before git checkout -b feat/xxx
+CHECK    Confirm base branch before opening a PR
+HOOK     code-reviewer agent (manual)
+SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
 ```
 
 ---
 
 ## INV-SEC-* — Security / Secrets
 
-### INV-SEC-001 — 禁止硬編碼 API key / token / password
+### INV-SEC-001 — Never hardcode API keys / tokens / passwords
 
 ```
-RULE     任何原始碼檔案中不得出現明文 API key 或 token 賦值
+RULE     No source file may contain a plaintext API key or token assignment
 CHECK    grep -rEn 'api[_-]?key\s*=\s*["\'][A-Za-z0-9_\-]{20,}["\']' src/
-HOOK     post-edit-lint.py（sentinel）
-SOURCE   通用安全最佳實踐
+HOOK     post-edit-lint.py (sentinel)
+SOURCE   General security best practice
 ```
 
-### INV-SEC-002 — 禁止 token / secret 出現在 log / print 語句
+### INV-SEC-002 — Tokens / secrets must not appear in log / print statements
 
 ```
-RULE     logger.debug/info/warn/error 及 print/console.log 中不得包含 token、key、password、secret 等敏感字
+RULE     logger.debug/info/warn/error and print/console.log must not contain sensitive words like token, key, password, secret
 CHECK    grep -rEn '(print|console\.log|logger\.\w+)\s*\(.*\b(token|api_key|secret|password)\b' src/
-HOOK     post-edit-lint.py（sentinel）
-SOURCE   通用安全最佳實踐
+HOOK     post-edit-lint.py (sentinel)
+SOURCE   General security best practice
 ```
 
-### INV-SEC-003 — 禁止敏感檔案出現在 git staging
+### INV-SEC-003 — Sensitive files must never enter git staging
 
 ```
-RULE     .env、*.pem、*.key、*.keystore、*secret* 不得被 git add
+RULE     .env, *.pem, *.key, *.keystore, *secret* must never be git added
 CHECK    git diff --cached --name-only | grep -E '\.(env|pem|key|keystore|p12)$|secret|credential'
-HOOK     pre-tool-use-guard.py（enforce：攔截 git add 敏感檔，指令字面比對；已 staged 內容不在覆蓋範圍，靠 code-reviewer 與人審）
-SOURCE   通用安全最佳實踐
+HOOK     pre-tool-use-guard.py (enforce: intercepts git add of sensitive files via literal command matching; already-staged content is out of scope for this hook — relies on code-reviewer and human review)
+SOURCE   General security best practice
 ```
 
-> **採用此模板時**：把 `src/` 替換為你的實際原始碼目錄，並將 INV-SEC-001 / INV-SEC-002 的 pattern 複製到 `post-edit-lint.py` 的 `QUICK_CHECKS`。
+> **When adopting this template**: replace `src/` with your actual source directory, and copy the INV-SEC-001 / INV-SEC-002 patterns into `post-edit-lint.py`'s `QUICK_CHECKS`.
 
 ---
 
 ## INV-TEST-* — Testing
 
-> 填入專案的測試 invariants，例如：
+> Fill in project test invariants, e.g.:
 
 ```
-INV-TEST-001  新增 interface method 後必須補所有 fakes/mocks
+INV-TEST-001  Every new interface method must have all fakes/mocks updated
   CHECK    grep -rn ': InterfaceName' --include='*.ts' | grep -i 'fake\|mock'
-  HOOK     code-reviewer agent（手動，列入 ExecPlan checklist）
-  SOURCE   （範例條目，無來源 lesson）
+  HOOK     code-reviewer agent (manual, added to ExecPlan checklist)
+  SOURCE   (example entry, no source lesson)
 ```
 
 ---
 
 ## INV-API-* — API / Data Models
 
-> 填入專案的 API invariants。
+> Fill in project API invariants.
 
 ---
 
 ## INV-ARC-* — Architecture
 
-> 填入專案的架構 invariants。
+> Fill in project architecture invariants.
 
 ---
 
 ## INV-BLD-* — Build
 
-> 填入專案的 build invariants。
+> Fill in project build invariants.
 
 ---
 
-## 不符合機械驗證的 lessons（留在 ERRORS.md）
+## Lessons Not Suited to Mechanical Verification (stay in ERRORS.md)
 
-以下 lessons 因為 pattern 過於 contextual / 涉及人類判斷，不放本檔，僅留 ERRORS.md。
+The following lessons are not included here because their patterns are too contextual / require human judgment; they remain in ERRORS.md only.
 
 ---
 
-## 引用此檔的位置
+## Where This File Is Referenced
 
-- `.claude/hooks/post-edit-lint.py` — 載入 INV-* 中標 `post-edit-lint.py` 的規則
-- `.claude/hooks/pre-tool-use-guard.py` — 載入 INV-* 中標 `pre-tool-use-guard.py` 的規則
-- `.claude/agents/code-reviewer.md` — review checklist 引用本檔
-- `docs/learnings/ERRORS.md` — 每條 lesson 反向引用 INV-id
+- `.claude/hooks/post-edit-lint.py` — loads INV-* rules tagged `post-edit-lint.py`
+- `.claude/hooks/pre-tool-use-guard.py` — loads INV-* rules tagged `pre-tool-use-guard.py`
+- `.claude/agents/code-reviewer.md` — review checklist references this file
+- `docs/learnings/ERRORS.md` — each lesson back-references its INV-id

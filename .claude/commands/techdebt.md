@@ -1,2 +1,2 @@
-掃描本專案的技術債，使用 techdebt-scanner skill 產出優先級報告。
-掃描範圍：專案原始碼目錄（依專案結構，例如 src/、app/、lib/ 等；根據專案技術棧調整副檔名）。
+Scan this project for technical debt using the techdebt-scanner skill and produce a prioritized report.
+Scan scope: the project's source directories (per project structure, e.g. src/, app/, lib/; adjust file extensions to match the project's tech stack).

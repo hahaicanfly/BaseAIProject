@@ -1,74 +1,74 @@
-# UI/UX Skills 狀態清單
+# UI/UX Skills Status List
 
-> 本專案使用 Claude Code 內建的 Skills 系統（`.claude/skills/`）。
-> 以下是已預設的 UI/UX 相關 Skills，使用前請確認是否需要填充實際實作。
+> This project uses Claude Code's built-in Skills system (`.claude/skills/`).
+> Below are the preset UI/UX-related skills — confirm whether the actual implementation needs to be filled in before use.
 
 ---
 
-## 已預設的 UI/UX 相關 Skills
+## Preset UI/UX-Related Skills
 
 ### 1. ui-ux-pro-max
 
-| 項目 | 值 |
+| Item | Value |
 |------|-----|
-| **名稱** | ui-ux-pro-max |
-| **來源** | 專案內建 (`.claude/skills/ui-ux-pro-max/`) |
-| **安裝狀態** | ⚠️ Stub（需填充實作） |
-| **觸發指令** | `/ui-ux-pro-max` |
+| **Name** | ui-ux-pro-max |
+| **Source** | Built into project (`.claude/skills/ui-ux-pro-max/`) |
+| **Install Status** | ⚠️ Stub (needs implementation) |
+| **Trigger Command** | `/ui-ux-pro-max` |
 
-**用途**：生成完整設計系統（色彩調色盤、字體配對、UI 風格）。
+**Purpose**: Generate a complete design system (color palette, font pairing, UI style).
 
 ---
 
 ### 2. frontend-design
 
-| 項目 | 值 |
+| Item | Value |
 |------|-----|
-| **名稱** | frontend-design |
-| **來源** | 專案內建 (`.claude/skills/frontend-design/`) |
-| **安裝狀態** | ⚠️ Stub（需填充實作） |
-| **觸發指令** | `/frontend-design` |
+| **Name** | frontend-design |
+| **Source** | Built into project (`.claude/skills/frontend-design/`) |
+| **Install Status** | ⚠️ Stub (needs implementation) |
+| **Trigger Command** | `/frontend-design` |
 
-**用途**：以設計哲學（Typography, Color, Motion）為核心，產生高品質 UI 元件。
+**Purpose**: Produce high-quality UI components centered on design philosophy (Typography, Color, Motion).
 
 ---
 
-## 已預設的 UI/UX 相關 Agents
+## Preset UI/UX-Related Agents
 
 ### 1. ui-ux-designer
 
-| 項目 | 值 |
+| Item | Value |
 |------|-----|
-| **名稱** | ui-ux-designer |
-| **來源** | 專案內建 (`.claude/agents/ui-ux-designer.md`) |
-| **模型** | opus |
-| **觸發詞** | UI、UX、設計、界面、畫面、流程 |
+| **Name** | ui-ux-designer |
+| **Source** | Built into project (`.claude/agents/ui-ux-designer.md`) |
+| **Model** | opus |
+| **Trigger Words** | UI, UX, design, interface, screen, flow |
 
 ### 2. uiux-agent
 
-| 項目 | 值 |
+| Item | Value |
 |------|-----|
-| **名稱** | uiux-agent |
-| **來源** | 專案內建 (`.claude/agents/uiux-agent.md`) |
-| **模型** | sonnet |
-| **觸發詞** | 草圖、wireframe、評審、三階段流程 |
+| **Name** | uiux-agent |
+| **Source** | Built into project (`.claude/agents/uiux-agent.md`) |
+| **Model** | sonnet |
+| **Trigger Words** | wireframe, sketch, critique, three-phase workflow |
 
 ---
 
-## 如何使用
+## How to Use
 
-### 方法 1：直接呼叫 Skill
+### Method 1: Call the Skill Directly
 ```
 /ui-ux-pro-max
 /frontend-design
 ```
 
-### 方法 2：使用 Agent（在對話中）
-提及觸發詞即可自動啟用：
-- "幫我設計 UI"
-- "這個畫面的 UX 流程..."
-- "界面設計建議"
+### Method 2: Use an Agent (in conversation)
+Mentioning a trigger word auto-activates it:
+- "help me design a UI"
+- "the UX flow for this screen..."
+- "interface design suggestions"
 
 ---
 
-*最後更新：2026-05-28*
+*Last updated: 2026-05-28*

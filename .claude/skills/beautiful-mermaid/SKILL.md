@@ -1,51 +1,51 @@
 ---
 name: beautiful-mermaid
-description: 生成美觀、清晰的 Mermaid 圖表（架構圖、流程圖、序列圖、類別圖、ER 圖、狀態圖），可輸出終端 ASCII 藝術或 SVG 檔案；當使用者要求畫圖表、視覺化架構或繪製流程圖時觸發。
+description: Generates beautiful, clear Mermaid diagrams (architecture, flowcharts, sequence, class, ER, state diagrams), output as terminal ASCII art or SVG files; triggers when the user asks to draw a diagram, visualize architecture, or create a flowchart, or mentions "畫圖表", "視覺化架構", "繪製流程圖".
 argument-hint: "[diagram description or 'file:path']"
 allowed-tools: Bash(node *), Write
 ---
 
 # Skill: beautiful-mermaid
 
-> **用途**：生成美觀、清晰的 Mermaid 圖表（架構圖、流程圖、序列圖、類別圖、ER 圖、狀態圖），輸出終端 ASCII 藝術或 SVG 檔案。
-> **觸發**：`/beautiful-mermaid`
+> **Purpose**: Generate beautiful, clear Mermaid diagrams (architecture, flowcharts, sequence, class, ER, state diagrams), output as terminal ASCII art or SVG files.
+> **Trigger**: `/beautiful-mermaid`
 
-你是一個圖表渲染助手。被呼叫時，產生 Mermaid 圖表並用 `beautiful-mermaid` library 渲染。
+You are a diagram-rendering assistant. When invoked, generate a Mermaid diagram and render it with the `beautiful-mermaid` library.
 
-## Library 位置
+## Library Location
 
 ```
 /Users/a17/ForSkillsProject/beautiful-mermaid/dist/index.js
 ```
 
-> 若目標機器上此路徑不存在，改用純文字方式輸出 Mermaid 原始碼（見下方「Rules」第 2 條），不要編造替代路徑。
+> If this path doesn't exist on the target machine, fall back to plain-text output of the Mermaid source (see Rule 2 below) — do not fabricate an alternative path.
 
-## 能力範圍
+## Capabilities
 
-- 系統架構圖（C4 風格）
-- 資料流程圖
-- 序列圖（agent interactions）
-- ER 圖（資料模型）
-- 狀態機圖
+- System architecture diagrams (C4-style)
+- Data flow diagrams
+- Sequence diagrams (agent interactions)
+- ER diagrams (data models)
+- State machine diagrams
 
-## 設計原則
+## Design Principles
 
-- 使用語義化節點命名
-- 添加適當的顏色主題
-- 保持圖表可讀性（不超過 20 節點）
-- 每個圖表附說明文字
+- Use semantic node naming
+- Add an appropriate color theme
+- Keep the diagram readable (no more than 20 nodes)
+- Attach explanatory text to every diagram
 
-## 工作流程
+## Workflow
 
-### Step 1: 決定圖表內容
+### Step 1: Determine Diagram Content
 
-- 若 `$ARGUMENTS` 已含 Mermaid 語法（如 `graph TD`、`sequenceDiagram`），直接使用。
-- 若 `$ARGUMENTS` 是自然語言描述，先轉換成合法的 Mermaid 語法。
-- 若 `$ARGUMENTS` 是 `file:<path>`，讀取該檔案內容作為 Mermaid 原始碼。
+- If `$ARGUMENTS` already contains Mermaid syntax (e.g. `graph TD`, `sequenceDiagram`), use it directly.
+- If `$ARGUMENTS` is a natural-language description, convert it to valid Mermaid syntax first.
+- If `$ARGUMENTS` is `file:<path>`, read that file's content as the Mermaid source.
 
-### Step 2: 渲染為 ASCII（預設 — 終端輸出）
+### Step 2: Render as ASCII (default — terminal output)
 
-透過 Bash 執行以下 Node.js 腳本，將圖表渲染成終端 ASCII 藝術：
+Run the following Node.js script via Bash to render the diagram as terminal ASCII art:
 
 ```bash
 node -e "
@@ -55,12 +55,12 @@ console.log(renderMermaidAscii(diagram, { useAscii: false }));
 "
 ```
 
-- 使用 `useAscii: false` 產生 Unicode box-drawing（較美觀，預設）。
-- 使用 `useAscii: true` 產生純 ASCII（相容模式）。
+- Use `useAscii: false` to produce Unicode box-drawing (more attractive, default).
+- Use `useAscii: true` to produce plain ASCII (compatibility mode).
 
-### Step 3: 渲染為 SVG（使用者明確要求時）
+### Step 3: Render as SVG (when the user explicitly requests it)
 
-若使用者明確要求輸出 SVG 檔案，執行：
+If the user explicitly requests SVG file output, run:
 
 ```bash
 node -e "
@@ -71,21 +71,21 @@ process.stdout.write(svg);
 " > output.svg
 ```
 
-可用主題：`zinc-light`、`zinc-dark`、`tokyo-night`、`tokyo-night-storm`、`tokyo-night-light`、`catppuccin-mocha`、`catppuccin-latte`、`nord`、`nord-light`、`dracula`、`github-light`、`github-dark`、`solarized-light`、`solarized-dark`、`one-dark`。
+Available themes: `zinc-light`, `zinc-dark`, `tokyo-night`, `tokyo-night-storm`, `tokyo-night-light`, `catppuccin-mocha`, `catppuccin-latte`, `nord`, `nord-light`, `dracula`, `github-light`, `github-dark`, `solarized-light`, `solarized-dark`, `one-dark`.
 
-## 支援的圖表類型
+## Supported Diagram Types
 
-| 類型 | Header 關鍵字 |
+| Type | Header Keyword |
 |------|---------------|
-| 流程圖 | `graph TD`、`graph LR`、`flowchart TD`、`flowchart LR` |
-| 狀態圖 | `stateDiagram-v2` |
-| 序列圖 | `sequenceDiagram` |
-| 類別圖 | `classDiagram` |
-| ER 圖 | `erDiagram` |
+| Flowchart | `graph TD`, `graph LR`, `flowchart TD`, `flowchart LR` |
+| State diagram | `stateDiagram-v2` |
+| Sequence diagram | `sequenceDiagram` |
+| Class diagram | `classDiagram` |
+| ER diagram | `erDiagram` |
 
-## Mermaid 語法速查
+## Mermaid Syntax Quick Reference
 
-### 流程圖
+### Flowchart
 ```
 graph TD
     A[Start] --> B{Decision}
@@ -93,7 +93,7 @@ graph TD
     B -->|No| D[End]
 ```
 
-### 序列圖
+### Sequence Diagram
 ```
 sequenceDiagram
     participant A as Client
@@ -102,7 +102,7 @@ sequenceDiagram
     B-->>A: Response
 ```
 
-### 類別圖
+### Class Diagram
 ```
 classDiagram
     class Animal {
@@ -113,14 +113,14 @@ classDiagram
     Animal <|-- Cat
 ```
 
-### ER 圖
+### ER Diagram
 ```
 erDiagram
     CUSTOMER ||--o{ ORDER : places
     ORDER ||--|{ LINE_ITEM : contains
 ```
 
-### 狀態圖
+### State Diagram
 ```
 stateDiagram-v2
     [*] --> Idle
@@ -129,48 +129,48 @@ stateDiagram-v2
     Done --> [*]
 ```
 
-## 已知限制（beautiful-mermaid）
+## Known Limitations (beautiful-mermaid)
 
-### 1. 節點標籤內絕對不要用雙引號
+### 1. Never use double quotes inside node labels
 
-beautiful-mermaid 不會剝離 Mermaid 語法中 `["..."]` 的雙引號，會把引號作為文字內容渲染到 SVG/ASCII 輸出中。
+beautiful-mermaid does not strip the double quotes from `["..."]` in Mermaid syntax — the quotes get rendered as literal text in the SVG/ASCII output.
 
 ```
-# 錯誤 — SVG 會顯示 "App Store"（含引號）
+# Wrong — SVG will display "App Store" (with quotes)
 A["App Store"]
 
-# 正確 — SVG 會顯示 App Store（無引號）
+# Correct — SVG will display App Store (no quotes)
 A[App Store]
 ```
 
-即使文字包含 `/`、`:`、`,`、`→`、空格等特殊字元，也**不需要**引號包裹，直接寫即可。
+Even if the text contains special characters like `/`, `:`, `,`, `→`, or spaces, quoting is **not** needed — just write it directly.
 
-### 2. `<br/>` 換行標籤不被支援
+### 2. The `<br/>` line-break tag is not supported
 
-beautiful-mermaid 不處理 HTML 標籤，`<br/>` 會被轉義為字面文字 `<br/>`。
-長文字請用 ` - ` 或 ` / ` 分隔，保持單行。
+beautiful-mermaid does not process HTML tags — `<br/>` will be escaped and rendered as the literal text `<br/>`.
+For long text, use ` - ` or ` / ` as a separator to keep it on a single line.
 
 ```
-# 錯誤 — 會顯示字面 <br/>
+# Wrong — will display the literal <br/>
 A["Line1<br/>Line2"]
 
-# 正確 — 用分隔符號替代換行
+# Correct — use a separator instead of a line break
 A[Line1 - Line2]
 ```
 
 ## Rules
 
-1. 一律直接在對話中顯示渲染後的 ASCII 輸出。
-2. 若渲染失敗，改用 fenced code block 顯示 Mermaid 原始碼。
-3. 輸出 SVG 時，存成檔案並告知用戶檔案路徑。
-4. 除非用戶要求 ASCII，否則優先使用 Unicode box-drawing。
-5. 若用戶提供自然語言描述，先展示產生的 Mermaid 語法，再渲染。
-6. **節點標籤 `[]`、`{}`、`()` 內絕對不要用雙引號 `"`**——會在輸出中顯示為字面引號。
-7. **絕對不要用 `<br/>` 換行**——改用 ` - ` 或 ` / ` 分隔符。
+1. Always display the rendered ASCII output directly in the conversation.
+2. If rendering fails, fall back to displaying the Mermaid source in a fenced code block.
+3. When outputting SVG, save it to a file and tell the user the file path.
+4. Prefer Unicode box-drawing unless the user requests plain ASCII.
+5. If the user provides a natural-language description, show the generated Mermaid syntax first, then render it.
+6. **Never use double quotes `"` inside node labels `[]`, `{}`, `()`** — they will render as literal quotes in the output.
+7. **Never use `<br/>` for line breaks** — use ` - ` or ` / ` as a separator instead.
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：SVG 檔（文件用）或 terminal ASCII art（CLI 回報用）。
-- **機械檢查**：SVG 產出後跑 `xmllint --noout <file.svg>` 確認 well-formed XML。
-- **架構變更整合**：每次更動 module 依賴 / data flow 時，若專案有對應圖表檔案，需同步更新。
-- **交接 marker**：純文件產出 → `[HANDOFF: main]`。
+- **Output form**: an SVG file (for documentation use) or terminal ASCII art (for CLI reporting).
+- **Mechanical check**: after producing an SVG, run `xmllint --noout <file.svg>` to confirm well-formed XML.
+- **Architecture-change integration**: whenever a module dependency / data flow changes, update the corresponding diagram file if the project has one.
+- **Handoff marker**: for pure documentation output → `[HANDOFF: main]`.

@@ -1,129 +1,129 @@
-# E. 派工 Prompt 模板（Delegation Templates）
+# E. Delegation Prompt Templates
 
-> 配套規則：`.claude/rules/model-dispatch.md`（何時派工、升降級）。
-> 用法：複製對應模板 → 填 `[…]` 空格 → 作為 Agent tool 的 prompt。**三件套（目標與動機／驗收條件／回報格式）缺一不派。**
-> 每個模板末尾的「回報格式」直接約束 subagent，不要刪。
+> Companion rule: `.claude/rules/model-dispatch.md` (when to delegate, escalation/de-escalation).
+> Usage: copy the matching template → fill in the `[…]` blanks → use as the Agent tool's prompt. **The trio (goal & motivation / acceptance criteria / report format) — missing any one, don't delegate.**
+> Each template's closing "report format" section directly constrains the subagent — don't remove it.
 
-## 通用規範（所有模板共用，派工時附在 prompt 末尾）
-
-```
-回報規範：
-- 回報 ≤ 40 行；只回結論與 檔案:行號，禁止貼超過 10 行的代碼/原文
-- 超過 40 行的產物寫入檔案，回報只給路徑
-- 如實回報失敗：卡在哪、試過什麼；禁止回報「大致完成」
-- 最後一行必須是 [HANDOFF: main] 或 [VERIFY_FAILED: <原因>] 或 [HUMAN_ATTENTION_REQUIRED: <原因>]（`main` = 回報主對話，已列入 handoff-protocol.md 白名單）
-- 破壞性指令黑名單：禁止對「非指派檔案」執行 rm、git checkout --、git restore、git clean、mv 覆蓋——即使是為了測試清理。未追蹤檔案不受 git 保護，刪了就是永久（教訓：ERRORS.md 2026-07-04 誤刪事故）
-```
-
-## 範圍宣告（每次派工必填，接在 prompt 的「目標」之後）
-
-黑名單擋破壞性指令；本節是它的正向補集——白名單界定可動範圍，終止條件界定何時停手。
+## Common Conventions (shared by all templates, append to the end of the delegation prompt)
 
 ```
-範圍宣告：
-- 允許讀：[檔案/目錄清單，或「全 repo 唯讀」]
-- 允許寫：[明確清單；未列出的檔案一律禁止修改/刪除/移動/建立]
-- 禁止觸碰：[高風險路徑，如 .env*、state/、其他任務的 worktree]
-- 終止條件：驗收條件全數滿足即停；同一驗收項嘗試 2 次未過即停，回報 [VERIFY_FAILED:*]；發現需要動「允許寫」以外的檔案即停，回報 [HUMAN_ATTENTION_REQUIRED:*]
+Report conventions:
+- Report ≤ 40 lines; return only conclusions and file:line references — no pasting more than 10 lines of code/raw text
+- Anything over 40 lines goes into a file; report only the path
+- Report failures honestly: where you're stuck, what you tried; reporting "大致完成" (roughly done) is forbidden
+- The last line must be [HANDOFF: main] or [VERIFY_FAILED: <reason>] or [HUMAN_ATTENTION_REQUIRED: <reason>] (`main` = report back to the main conversation, already whitelisted in handoff-protocol.md)
+- Destructive-command blacklist: no rm, git checkout --, git restore, git clean, or overwriting mv on any "non-assigned file" — even for test cleanup. Untracked files aren't protected by git; deleting them is permanent (lesson: ERRORS.md 2026-07-04 accidental-deletion incident)
+```
+
+## Scope Declaration (required for every delegation, placed right after the prompt's "Goal")
+
+The blacklist blocks destructive commands; this section is its positive complement — an allowlist defining the workable scope, and a termination condition defining when to stop.
+
+```
+Scope declaration:
+- Allowed to read: [file/directory list, or "whole repo, read-only"]
+- Allowed to write: [explicit list; any file not listed may not be modified/deleted/moved/created]
+- Do not touch: [high-risk paths, e.g. .env*, state/, other tasks' worktrees]
+- Termination condition: stop once all acceptance criteria are met; stop after 2 failed attempts on the same acceptance item and report [VERIFY_FAILED:*]; stop immediately if a file outside "allowed to write" needs changing and report [HUMAN_ATTENTION_REQUIRED:*]
 ```
 
 ---
 
-## 1. 搜尋定位（找檔案／符號／用法）
+## 1. Search & Locate (find files / symbols / usages)
 
-- 建議：`Explore` agent；廣度小用 quick、跨多處用 very thorough。不需指定 model。
-
-```
-在 [repo/目錄] 中定位 [目標：函式/設定/字串/呼叫點]。
-動機：[找到後要做什麼，讓你能判斷哪些結果相關]。
-搜尋線索：[已知關鍵字/命名慣例/可能位置]。
-驗收條件：
-- 每個結果附 檔案:行號 與一句話說明為何相關
-- 若搜不到，列出你試過的 3 種以上搜法與關鍵字
-回報格式：結果清單（檔案:行號 — 說明），或「未找到 + 已試搜法」。
-```
-
-**填好範例**：「在 src/ 中定位所有直接呼叫 fetch() 而未經 apiClient 包裝的呼叫點。動機：要統一加上 retry 與 auth header。搜尋線索：`fetch(`、`axios`。驗收條件：每個呼叫點附檔案:行號；若為 0 個，列出試過的搜法。回報格式：清單。」
-
-## 2. 功能實作
-
-- 建議：`general-purpose`，`model: "sonnet"`；涉架構決策才用 `opus`。多人並行改檔時加 `isolation: "worktree"`。
+- Recommended: `Explore` agent; use `quick` for narrow scope, `very thorough` for spanning multiple locations. No need to specify a model.
 
 ```
-實作 [功能一句話]。
-動機與背景：[為什麼要做、使用者場景、相關 ExecPlan/issue 路徑]。
-範圍：只改 [檔案/模組清單]；不要動 [排除清單]。
-技術約束：[介面簽名/依賴方向/命名，引用 docs/architecture/domains.md 相關節]。
-驗收條件（全部滿足才算完成）：
-- [測試指令] 通過，貼出實際輸出的最後 10 行
-- 新增/修改的每個公開函式有 [測試/使用範例]
-- 改動檔案清單與計劃一致，無計劃外改動
-回報格式：改動檔案清單（檔案:行號範圍）＋ 測試輸出尾段 ＋ 未決項（若有）。
+Locate [target: function/config/string/call site] in [repo/directory].
+Motivation: [what you'll do once found, so you can judge which results are relevant].
+Search hints: [known keywords/naming conventions/likely locations].
+Acceptance criteria:
+- Each result comes with file:line and a one-sentence reason it's relevant
+- If nothing is found, list 3+ search approaches and keywords you tried
+Report format: a result list (file:line — explanation), or "not found + search approaches tried."
 ```
 
-## 3. 代碼重構
+**Filled-in example**: "Locate every call site in src/ that calls fetch() directly without going through the apiClient wrapper. Motivation: unifying retry and auth-header handling. Search hints: `fetch(`, `axios`. Acceptance criteria: each call site with file:line; if zero found, list the search approaches tried. Report format: a list."
 
-- 建議：`general-purpose`，`model: "sonnet"`；重構前後行為必須可證明不變。
+## 2. Feature Implementation
 
-```
-重構 [目標範圍]，目的：[消除重複/抽介面/降耦合，一句話]。
-動機：[現況痛點，附 檔案:行號]。
-不變式（重構後必須保持）：
-- 對外行為不變：[現有測試清單/黃金輸出] 全數通過
-- 公開 API 簽名 [不變 / 允許哪些變更]
-禁止事項：不改測試遷就代碼；不放寬型別；不註解掉檢查（judgment-rubrics §4）。
-驗收條件：重構前先跑一次測試記錄基線，重構後同指令輸出一致；diff 行數 [上限]。
-回報格式：重構摘要（模式一句話）＋ 前後測試輸出對照 ＋ 改動檔案:行號清單。
-```
-
-## 4. 研究調查（網頁／文件）
-
-- 建議：`general-purpose`，`model: "sonnet"`；重大選型加派第二個獨立 agent 比對結論。
+- Recommended: `general-purpose`, `model: "sonnet"`; use `opus` only for architecture decisions. Add `isolation: "worktree"` when multiple people are editing files in parallel.
 
 ```
-研究問題：[一句話問題]。
-動機：[這個答案會決定什麼]。
-必查來源：[官方文件/repo/指定網址]；優先一手來源。
-驗收條件：
-- 每個結論附來源（URL 或 檔案:行號）與日期
-- 區分「事實（有來源）」與「推論（你的判斷）」兩節
-- 查不到的明確寫「未確認」，禁止編造
-回報格式：結論（≤5 條，每條附來源）＋ 未確認清單 ＋ 建議（≤3 行）。
+Implement [feature, one sentence].
+Motivation & background: [why, user scenario, relevant ExecPlan/issue path].
+Scope: only touch [file/module list]; do not touch [exclusion list].
+Technical constraints: [interface signatures/dependency direction/naming, referencing the relevant section of docs/architecture/domains.md].
+Acceptance criteria (all must be met to count as done):
+- [test command] passes; paste the last 10 lines of actual output
+- Every new/modified public function has [a test/usage example]
+- The list of changed files matches the plan, with no out-of-plan changes
+Report format: list of changed files (file:line ranges) + tail of test output + open items (if any).
 ```
 
-## 5. 代碼審查
+## 3. Code Refactoring
 
-- 建議：`code-reviewer` agent（frontmatter 已定 sonnet）；輸出格式以 `.claude/protocols/review-protocol.md` 為準。
-
-```
-審查 [分支/PR/檔案清單]，變更意圖：[這次改動想達成什麼]。
-重點維度：[正確性/安全/效能/可讀性，至少一個]。
-驗收條件：
-- 每個 finding 附 檔案:行號、嚴重度（Blocker/Warning/Suggestion，同 review-protocol.md 分級）、具體失敗情境（什麼輸入會壞）
-- 無 finding 也要列出「檢查過的維度與方法」
-- 不確定是否為 bug 的，在該條 finding 註明「未確認，需人工驗證」，不要寫成斷言
-回報格式：依 review-protocol.md 的格式輸出；finding 依嚴重度排序。
-```
-
-## 6. Fresh-Context 驗收（驗證不自驗，配 model-dispatch §5）
-
-- 建議：新開 `general-purpose`，`model: "sonnet"`。**prompt 不得含實作過程敘述**，只給驗收條件與檔案路徑——防止驗收員被實作者的自述帶偏。
+- Recommended: `general-purpose`, `model: "sonnet"`; behavior before and after the refactor must be provably unchanged.
 
 ```
-你是驗收員，對以下產出做獨立驗證（你沒有參與實作，不要假設它是對的）。
-待驗產出：[檔案路徑清單]。
-驗收條件（逐條檢查）：
-1. [條件一，可機械判定]
-2. [條件二]
-驗證方法：
-- 文件類：重新讀檔，逐條對照驗收條件，引用 檔案:行號 作證據
-- 代碼類：實跑 [測試/指令]，貼實際輸出最後 10 行
-驗收報告只允許兩種結論：
-- PASS：逐條列「條件 → 證據（檔案:行號 或 輸出）」
-- FAIL：列未過項 → 證據 → 一句話修復建議
-FAIL 只准基於上列可機械檢查的驗收條件；風格/寫法/觀點類意見寫入獨立的
-「建議（非阻斷，可空）」欄，不得作為 FAIL 理由（model-dispatch §5）。
-禁止「看起來沒問題」「應該可以」等無證據結論。
+Refactor [target scope], purpose: [eliminate duplication/extract an interface/reduce coupling, one sentence].
+Motivation: [current pain point, with file:line].
+Invariants (must hold after refactoring):
+- External behavior unchanged: [existing test list/golden outputs] all pass
+- Public API signature [unchanged / which changes are allowed]
+Prohibited: don't change tests to accommodate the code; don't loosen types; don't comment out checks (judgment-rubrics §4).
+Acceptance criteria: run tests once before refactoring to record a baseline; the same command's output must match after refactoring; diff line count [cap].
+Report format: refactor summary (pattern, one sentence) + before/after test output comparison + changed files file:line list.
 ```
 
-**填好範例**：「你是驗收員。待驗產出：docs/harness/DIAGNOSIS.md。驗收條件：1) 三大類痛點各恰好 3 項且各附修法 2) 每項至少一個 檔案:行號 證據 3) 含能力極限一節 4) 無 {{佔位符}} 殘留。驗證方法：重新讀檔逐條對照。輸出 PASS/FAIL 報告。」
+## 4. Research Investigation (web/documentation)
+
+- Recommended: `general-purpose`, `model: "sonnet"`; for major technology-selection decisions, dispatch a second independent agent to cross-check the conclusion.
+
+```
+Research question: [one-sentence question].
+Motivation: [what this answer will decide].
+Required sources: [official docs/repo/specified URLs]; prefer primary sources.
+Acceptance criteria:
+- Every conclusion has a source (URL or file:line) and a date
+- Separate "facts (sourced)" from "inference (your judgment)" into two sections
+- Anything not found is explicitly marked "unconfirmed" — fabrication is forbidden
+Report format: conclusions (≤5 items, each with a source) + unconfirmed list + recommendation (≤3 lines).
+```
+
+## 5. Code Review
+
+- Recommended: `code-reviewer` agent (frontmatter already sets sonnet); output format follows `.claude/protocols/review-protocol.md`.
+
+```
+Review [branch/PR/file list], change intent: [what this change is meant to achieve].
+Focus dimensions: [correctness/security/performance/readability — at least one].
+Acceptance criteria:
+- Every finding has file:line, a severity (Blocker/Warning/Suggestion, per review-protocol.md's tiers), and a concrete failure scenario (what input breaks it)
+- Even with no findings, list "dimensions checked and methods used"
+- If unsure whether something is a bug, mark that finding "unconfirmed, needs human verification" — don't state it as fact
+Report format: follow review-protocol.md's format; findings sorted by severity.
+```
+
+## 6. Fresh-Context Acceptance Review (verification-not-self-certified, pairs with model-dispatch §5)
+
+- Recommended: spawn a new `general-purpose`, `model: "sonnet"`. **The prompt must not narrate the implementation process** — give only acceptance criteria and file paths, to prevent the reviewer from being biased by the implementer's self-report.
+
+```
+You are the reviewer, performing an independent verification of the following deliverable (you did not participate in the implementation — do not assume it is correct).
+Deliverable under review: [file path list].
+Acceptance criteria (check each one):
+1. [criterion one, mechanically decidable]
+2. [criterion two]
+Verification method:
+- Documents: re-read the file, check against each acceptance criterion, cite file:line as evidence
+- Code: actually run [tests/commands], paste the last 10 lines of actual output
+The acceptance report allows only two conclusions:
+- PASS: list each "criterion → evidence (file:line or output)"
+- FAIL: list unmet items → evidence → a one-sentence fix suggestion
+FAIL may only be based on the mechanically checkable acceptance criteria listed above; style/writing/opinion-type
+feedback goes into a separate "Suggestions (non-blocking, may be empty)" section and must not be used as a FAIL reason (model-dispatch §5).
+Evidence-free conclusions such as "看起來沒問題" (looks fine) or "應該可以" (should be OK) are forbidden.
+```
+
+**Filled-in example**: "You are the reviewer. Deliverable under review: docs/harness/DIAGNOSIS.md. Acceptance criteria: 1) exactly 3 items in each of the three major pain-point categories, each with a fix 2) each item has at least one file:line piece of evidence 3) includes a Capability Limits section 4) no leftover `{{placeholders}}`. Verification method: re-read the file and check against each criterion. Output a PASS/FAIL report."
