@@ -1,144 +1,144 @@
 ---
 name: pr-review-cycle-mob
-description: 以 Cascade 梯級策略平衡成本、速度與品質，執行 AI 完成程式後的最佳 PR Review 流程；當使用者要審查 PR 或提及「review cycle」「cascade review」時觸發。需要成本分級 cascade 策略時用。
+description: Uses a Cascade tiering strategy to balance cost, speed, and quality, running the optimal PR review flow after AI finishes writing code; triggers when the user wants to review a PR or mentions "review cycle" "cascade review". Use when a cost-tiered cascade strategy is needed.
 ---
 
 # Skill: pr-review-cycle-mob
 
-> **用途**：AI 寫完程式後的最佳 PR Review 流程——用 Cascade（梯級）策略平衡 cost / speed / quality。
-> **觸發**：`/pr-review-cycle-mob [PR描述或diff路徑]`
-> **核心洞察**：不是找「一個甜蜜點」，而是三層過濾——便宜的先跑，只有需要時才升級。
+> **Purpose**: The optimal PR review flow after AI finishes writing code — using a Cascade (tiered) strategy to balance cost / speed / quality.
+> **Trigger**: `/pr-review-cycle-mob [PR description or diff path]`
+> **Core insight**: not about finding "one sweet spot," but three layers of filtering — run the cheap check first, only escalate when necessary.
 
 ---
 
-> 此為風險分級 cascade，與 `model-dispatch.md` 的失敗升級是兩套獨立機制，勿混用。
+> This is a risk-tiering cascade, a separate mechanism from the failure-escalation path in `model-dispatch.md` — do not conflate the two.
 
-## Cascade 架構
+## Cascade Architecture
 
 ```
-[Level 1] haiku — 機械性掃描（<10s, 最低成本）
-     │ pass → DONE（60-70% PR 在此結束）
+[Level 1] haiku — Mechanical scan (<10s, lowest cost)
+     │ pass → DONE (60-70% of PRs end here)
      │ flag →
-[Level 2] sonnet — 邏輯與設計 Review（<60s, 中等成本）
+[Level 2] sonnet — Logic & design review (<60s, medium cost)
      │ pass → DONE
      │ flag HIGH_RISK →
-[Level 3] opus — 深度仲裁（<3min, 高成本）
-     │ 只用於：auth 變更、DB schema、公共 API、安全漏洞
+[Level 3] opus — Deep arbitration (<3min, high cost)
+     │ Only used for: auth changes, DB schema, public APIs, security vulnerabilities
 ```
 
-**原則**：Level N 的輸入必須包含 Level N-1 的完整輸出，不重複工作。
+**Principle**: Level N's input must include Level N-1's complete output — no duplicated work.
 
 ---
 
-## Level 1 — Mechanical Scan（haiku）
+## Level 1 — Mechanical Scan (haiku)
 
-**適合**: 格式、安全 antipattern、INV-* 規則
+**Good for**: formatting, security antipatterns, INV-* rules
 
-### 執行清單
+### Checklist
 
-**1.1 Security Antipatterns**（對照 `docs/architecture/invariants.md` INV-SEC-*）
-- [ ] 無硬編碼 API key / token / password
-- [ ] 無敏感檔案被新增（`.env`, `*.pem`, `*.keystore`）
-- [ ] Log 中無 secret 字串（grep `console.log.*key|log.*password|print.*token`）
+**1.1 Security Antipatterns** (against `docs/architecture/invariants.md` INV-SEC-*)
+- [ ] No hardcoded API key / token / password
+- [ ] No sensitive files added (`.env`, `*.pem`, `*.keystore`)
+- [ ] No secret strings in logs (grep `console.log.*key|log.*password|print.*token`)
 
-**1.2 Git Hygiene**（INV-GIT-*）
-- [ ] 無直接 commit 到 main/master
-- [ ] Branch 命名符合 `feat/*` / `fix/*` / `refactor/*`
+**1.2 Git Hygiene** (INV-GIT-*)
+- [ ] No direct commits to main/master
+- [ ] Branch naming follows `feat/*` / `fix/*` / `refactor/*`
 
-**1.3 Code Structure**（INV-ARC-* / INV-API-*，若已定義）
-- [ ] 對照 `post-edit-lint.py` 中 `QUICK_CHECKS` 的每條 pattern
+**1.3 Code Structure** (INV-ARC-* / INV-API-*, if defined)
+- [ ] Checked against every pattern in `QUICK_CHECKS` in `post-edit-lint.py`
 
 **1.4 File Footprint**
-- [ ] 變更檔案數（> 15 個警告，> 30 個升級 Level 2）
-- [ ] 是否有意外改動（`.gitignore`, `package-lock.json`, `*.lock`）
+- [ ] Number of files changed (> 15 warns, > 30 escalates to Level 2)
+- [ ] Any unintended changes (`.gitignore`, `package-lock.json`, `*.lock`)
 
-**輸出格式**：
+**Output format**:
 ```
-L1 結果: PASS / FLAG
+L1 Result: PASS / FLAG
 - [SEC] ...
 - [GIT] ...
 - [ARC] ...
-升級原因（若 FLAG）: ...
+Escalation reason (if FLAG): ...
 ```
 
 ---
 
-## Level 2 — Logic & Design Review（sonnet）
+## Level 2 — Logic & Design Review (sonnet)
 
-**觸發條件**：L1 FLAG，或 PR 涉及以下任一：
-- 新函數/類別/介面定義
-- 現有 API 行為改變
-- 狀態管理變更
-- 測試覆蓋率變化
+**Trigger condition**: L1 FLAG, or the PR involves any of the following:
+- New function/class/interface definitions
+- Changed behavior of an existing API
+- State management changes
+- Test coverage changes
 
-### 執行清單
+### Checklist
 
-**2.1 邏輯正確性**
-- [ ] 函數行為是否符合 PR 描述的意圖
-- [ ] Edge case 是否有處理（null/empty/boundary）
-- [ ] 非同步/並發邏輯是否安全
+**2.1 Logical Correctness**
+- [ ] Does function behavior match the intent described in the PR
+- [ ] Are edge cases handled (null/empty/boundary)
+- [ ] Is async/concurrent logic safe
 
-**2.2 設計一致性**
-- [ ] 命名是否符合 `agent_docs/code-conventions.md`
-- [ ] 是否違反 `docs/architecture/domains.md` 的模組依賴規則
-- [ ] 新增的介面是否保持單一職責
+**2.2 Design Consistency**
+- [ ] Does naming follow `agent_docs/code-conventions.md`
+- [ ] Does it violate module dependency rules in `docs/architecture/domains.md`
+- [ ] Do new interfaces maintain single responsibility
 
-**2.3 測試品質**
-- [ ] 新功能是否有對應測試
-- [ ] 測試是否遵循 Given/When/Then 結構
-- [ ] 是否有 mock 替換了真實 DB/外部 API（若不應 mock 則標記）
+**2.3 Test Quality**
+- [ ] Does the new functionality have corresponding tests
+- [ ] Do tests follow Given/When/Then structure
+- [ ] Was a real DB/external API replaced with a mock (flag if it shouldn't be mocked)
 
-**2.4 文件更新**
-- [ ] `TECHNICAL-REFERENCE.md` 是否需要更新
-- [ ] ExecPlan §6 Progress Log 是否已更新
-- [ ] ADR 是否需要新增（若有架構決策）
+**2.4 Documentation Updates**
+- [ ] Does `TECHNICAL-REFERENCE.md` need updating
+- [ ] Has ExecPlan §6 Progress Log been updated
+- [ ] Is a new ADR needed (if there's an architectural decision)
 
-**高風險觸發條件**（升級到 Level 3）：
-- 涉及 auth / token / session 邏輯
-- DB schema 變更（migration）
-- 公共 API 介面改變（breaking change 可能性）
-- `docs/architecture/invariants.md` 中標記 `multi-agent review: 是` 的變更類型
+**High-risk trigger conditions** (escalate to Level 3):
+- Involves auth / token / session logic
+- DB schema change (migration)
+- Public API interface change (potential breaking change)
+- A change type marked `multi-agent review: yes` in `docs/architecture/invariants.md`
 
-**輸出格式**：
+**Output format**:
 ```
-L2 結果: PASS / FLAG / HIGH_RISK
+L2 Result: PASS / FLAG / HIGH_RISK
 Blockers:
   - [BLOCK] ...
 Suggestions:
   - [SUGGEST] ...
-升級原因（若 HIGH_RISK）: ...
+Escalation reason (if HIGH_RISK): ...
 ```
 
 ---
 
-## Level 3 — Deep Arbitration（opus）
+## Level 3 — Deep Arbitration (opus)
 
-**觸發條件**：L2 HIGH_RISK
-**使用限制**：每週不超過 5 次（成本控制）
+**Trigger condition**: L2 HIGH_RISK
+**Usage limit**: no more than 5 times per week (cost control)
 
-### 執行清單
+### Checklist
 
-**3.1 安全深度審計**
-- [ ] auth 邏輯是否有繞過可能
-- [ ] Token/session 生命週期是否正確
-- [ ] 輸入驗證是否完整（注入、XSS、SSRF 等）
+**3.1 Deep Security Audit**
+- [ ] Can auth logic be bypassed
+- [ ] Is the token/session lifecycle correct
+- [ ] Is input validation complete (injection, XSS, SSRF, etc.)
 
-**3.2 資料一致性**
-- [ ] Migration 是否有 rollback plan
-- [ ] 並發寫入是否有 race condition
-- [ ] 外鍵/約束是否正確
+**3.2 Data Consistency**
+- [ ] Does the migration have a rollback plan
+- [ ] Are there race conditions in concurrent writes
+- [ ] Are foreign keys/constraints correct
 
-**3.3 Breaking Change 評估**
-- [ ] 現有 client 是否需要同步更新
-- [ ] 版本相容性策略是否合適
+**3.3 Breaking Change Assessment**
+- [ ] Do existing clients need a coordinated update
+- [ ] Is the version compatibility strategy appropriate
 
-**3.4 架構影響評估**
-- [ ] 此變更是否應該升級為 ADR
-- [ ] 是否影響 `docs/architecture/domains.md` 的邊界定義
+**3.4 Architecture Impact Assessment**
+- [ ] Should this change be escalated to an ADR
+- [ ] Does it affect boundary definitions in `docs/architecture/domains.md`
 
-**輸出格式**：
+**Output format**:
 ```
-L3 結果: APPROVED / CHANGES_REQUIRED / ESCALATE_HUMAN
+L3 Result: APPROVED / CHANGES_REQUIRED / ESCALATE_HUMAN
 Critical Issues:
   - [CRITICAL] ...
 Architecture Impact:
@@ -148,43 +148,43 @@ Final Verdict: ...
 
 ---
 
-## Mob Review 模式（高風險 PR 的額外選項）
+## Mob Review Mode (extra option for high-risk PRs)
 
-當 L3 結果為 `CHANGES_REQUIRED` 或有 `CRITICAL` 時，啟動並行審查：
+When L3 result is `CHANGES_REQUIRED` or has a `CRITICAL`, launch a parallel review:
 
 ```
-同時啟動（單一訊息多個 Agent 調用）：
-Agent(tech-lead, "審查代碼品質與設計一致性", background=true)
-Agent(security-reviewer, "審查安全性", background=true)
-Agent(qa-engineer, "審查可測試性與測試覆蓋", background=true)
+Launch simultaneously (multiple Agent calls in a single message):
+Agent(tech-lead, "review code quality and design consistency", background=true)
+Agent(security-reviewer, "review security", background=true)
+Agent(qa-engineer, "review testability and test coverage", background=true)
 ```
 
-每次派工必須照 `.claude/templates/delegation-templates.md` 三件套（目標動機/驗收條件/回報格式）。
+Every dispatch must follow the three-part template (goal/motivation, acceptance criteria, report format) in `.claude/templates/delegation-templates.md`.
 
-整合三個結果，按嚴重度排序，輸出統一 Mob Review 報告。
+Merge the three results, sort by severity, and output a unified Mob Review report.
 
-**最終輸出需映射到 `review-protocol.md` 詞彙**：`PASS` → `Pass`、`FLAG` → `Conditional Pass`、`HIGH_RISK` / `CRITICAL` → `Block`。
+**Final output must map to `review-protocol.md` terminology**: `PASS` → `Pass`, `FLAG` → `Conditional Pass`, `HIGH_RISK` / `CRITICAL` → `Block`.
 
 ---
 
-## 成本估算指引
+## Cost Estimation Guide
 
-| PR 類型 | 預期觸達 Level | 估算成本 |
+| PR Type | Expected Level Reached | Estimated Cost |
 |---------|-------------|---------|
-| 簡單 bug fix（1-3 檔案） | L1 | < $0.01 |
-| 一般功能（5-15 檔案） | L2 | $0.05–0.20 |
-| 涉及 auth/schema（任意大小） | L3 | $0.20–1.00 |
-| Mob Review 觸發 | L3 + 3 agents | $1.00–3.00 |
+| Simple bug fix (1-3 files) | L1 | < $0.01 |
+| General feature (5-15 files) | L2 | $0.05–0.20 |
+| Involves auth/schema (any size) | L3 | $0.20–1.00 |
+| Mob Review triggered | L3 + 3 agents | $1.00–3.00 |
 
-**原則**：L3 + Mob 加起來一個月不超過 $20，就是非常健康的 review 支出。
+**Principle**: L3 + Mob totaling under $20/month is very healthy review spend.
 
 ---
 
-## 與 pr-retro 的接口
+## Interface with pr-retro
 
-每次 Cascade 完成後，`pr-retro` skill 應：
-1. 收集所有 Flag/Block/Critical 條目
-2. 分析是否對應 ERRORS.md 已有的 lesson（若對應 → lesson 被再次觸發）
-3. 若為新模式 → 寫入 ERRORS.md Pending Review
+After every Cascade completes, the `pr-retro` skill should:
+1. Collect all Flag/Block/Critical entries
+2. Check whether they match an existing lesson in ERRORS.md (if matched → the lesson recurred)
+3. If it's a new pattern → write into ERRORS.md Pending Review
 
-詳見 `.claude/skills/pr-retro/SKILL.md`。
+See `.claude/skills/pr-retro/SKILL.md`.

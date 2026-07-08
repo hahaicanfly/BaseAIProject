@@ -1,169 +1,169 @@
 ---
 name: feature-pipeline
-description: 大型新功能的端對端開發流水線，從需求分析、架構設計、UI/UX 到多代理審查一次串接；當使用者要開發新功能、跨模組變更或提及「新功能」「完整開發流程」時觸發。
+description: End-to-end development pipeline for large new features — requirements analysis, architecture design, UI/UX, through multi-agent review in one chain; triggers when the user wants to develop a new feature, make a cross-module change, or mentions "新功能", "完整開發流程".
 ---
 
 # Feature Pipeline Skill
 
-模擬 Feature Factory 模式，按流水線順序執行完整的功能開發流程，對應 ExecPlan 10 階段生命週期（`.claude/protocols/execplan-lifecycle.md`）。
+Simulates a Feature Factory pattern, executing the full feature-development flow in pipeline order, mapped to the ExecPlan 10-phase lifecycle (`.claude/protocols/execplan-lifecycle.md`).
 
-## 使用方式
+## Usage
 
 ```
-/feature-pipeline [功能描述]
+/feature-pipeline [feature description]
 ```
 
-## 流水線階段
+## Pipeline Stages
 
 ```
 ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│   PM    │ ─▶ │Architect│ ─▶ │UI/UX    │ ─▶ │開發實作 │ ─▶ │ Review  │
-│需求分析 │    │架構設計 │    │界面設計 │    │         │    │多代理審查│
+│   PM    │ ─▶ │Architect│ ─▶ │ UI/UX   │ ─▶ │  Dev    │ ─▶ │ Review  │
+│Requirements│ │Architecture│ │  Design │    │Implement│    │Multi-agent│
 └─────────┘    └─────────┘    └─────────┘    └─────────┘    └─────────┘
 ```
 
-### Stage 1: 需求分析（pm agent）
+### Stage 1: Requirements Analysis (pm agent)
 
-**觸發條件**：收到功能請求
-**輸出**：建立 ExecPlan `docs/plans/active/F-NNN-<slug>.md`，填 §1 Goal + §2 Context（部分）、用戶故事、驗收條件
+**Trigger condition**: a feature request is received
+**Output**: create ExecPlan `docs/plans/active/F-NNN-<slug>.md`, filling in §1 Goal + §2 Context (partial), user stories, acceptance criteria
 
 ```markdown
-## 需求分析
+## Requirements Analysis
 
-### 用戶故事
-作為 [角色]，我想要 [功能]，以便 [價值]
+### User Story
+As a [role], I want [feature], so that [value]
 
-### 驗收條件
-- [ ] AC1: [條件]
-- [ ] AC2: [條件]
+### Acceptance Criteria
+- [ ] AC1: [condition]
+- [ ] AC2: [condition]
 
-### 優先級
+### Priority
 [P0/P1/P2]
 
-### 範圍界定
-- 包含: [範圍內的功能]
-- 排除: [明確不做的事]
+### Scope
+- Included: [in-scope features]
+- Excluded: [explicitly out of scope]
 ```
 
-**Exit**：`[HANDOFF: architect]`
+**Exit**: `[HANDOFF: architect]`
 
-### Stage 2: 架構設計（architect agent）
+### Stage 2: Architecture Design (architect agent)
 
-**觸發條件**：需求分析完成
-**輸出**：補完 ExecPlan §3 Constraints（含 INV-id）+ §4 Step-by-step + §5 Verification Strategy
+**Trigger condition**: requirements analysis complete
+**Output**: complete ExecPlan §3 Constraints (with INV-ids) + §4 Step-by-step + §5 Verification Strategy
 
 ```markdown
-## 架構設計
+## Architecture Design
 
-### 技術方案
-[設計概述]
+### Technical Approach
+[design overview]
 
-### 影響範圍
-- 檔案: [列表]
-- 模組: [列表]
+### Impact Scope
+- Files: [list]
+- Modules: [list]
 
-### API 設計 (如適用)
-[介面定義]
+### API Design (if applicable)
+[interface definitions]
 
-### 資料模型變更 (如適用)
-[模型變更]
+### Data Model Changes (if applicable)
+[model changes]
 
-### 風險評估
-[潛在風險，引用 docs/architecture/invariants.md 相關 INV-id]
+### Risk Assessment
+[potential risks, referencing relevant INV-ids in docs/architecture/invariants.md]
 ```
 
-**Exit**：`[HANDOFF: plan-reviewer]` → `plan-reviewer` 審查通過後 `[HANDOFF: human-approval]`（人類核可 ExecPlan §1-§5，見 execplan-lifecycle.md Phase 3）
+**Exit**: `[HANDOFF: plan-reviewer]` → once `plan-reviewer` approves, `[HANDOFF: human-approval]` (human approval of ExecPlan §1-§5, see execplan-lifecycle.md Phase 3)
 
-### Stage 3: UI 設計（uiux-agent，如涉及 UI）
+### Stage 3: UI Design (uiux-agent, if UI is involved)
 
-**觸發條件**：架構設計完成且涉及 UI 變更
-**執行**：進入 `.claude/uiux/WORKFLOW.md` 三階段流程（草圖 → 評審 → 實作），每階段須獲用戶「OK」才進下一階段，禁止跳階段
-**輸出**：UI 規格、組件設計、互動流程
+**Trigger condition**: architecture design complete and UI changes are involved
+**Execution**: enter the three-phase flow in `.claude/uiux/WORKFLOW.md` (sketch → review → implement); each phase requires the user's "OK" before proceeding — skipping phases is prohibited
+**Output**: UI spec, component design, interaction flow
 
 ```markdown
-## UI 設計
+## UI Design
 
-### 畫面規格
-[規格描述]
+### Screen Spec
+[spec description]
 
-### 組件設計
-[使用/新增的組件]
+### Component Design
+[components used/added]
 
-### 互動流程
-[用戶操作流程]
+### Interaction Flow
+[user interaction flow]
 ```
 
-**跳過條件**：純後端 / 無 UI 變更的功能可跳過本階段，直接進 Stage 4
+**Skip condition**: pure backend / no UI change features can skip this stage and go directly to Stage 4
 
-### Stage 4: 開發實作（dev = 主對話 + 具 Bash 的實作 subagent）
+### Stage 4: Development (dev = main conversation + implementation sub-agent with Bash)
 
-**觸發條件**：人類核可 ExecPlan（Stage 2 human-approval gate 通過），開 `feat/<slug>` 分支
-**執行**：按 ExecPlan §4 逐步實作，每完成一步立即 commit 並 append 一行到 §6 Progress Log；`tech-lead` 僅負責 review / 規範檢查，不執行 commit
-**鐵律**：每次 commit 前 `git branch --show-current`（不得在 master/main 上 commit）
-**Exit**：§4 全打勾 → `[HANDOFF: code-reviewer]`
+**Trigger condition**: human approves the ExecPlan (Stage 2 human-approval gate passed), open a `feat/<slug>` branch
+**Execution**: implement step by step per ExecPlan §4, committing immediately after each step and appending one line to §6 Progress Log; `tech-lead` only handles review / convention checks, and does not commit
+**Hard rule**: `git branch --show-current` before every commit (must not commit on master/main)
+**Exit**: all §4 items checked → `[HANDOFF: code-reviewer]`
 
-### Stage 5: 多代理審查
+### Stage 5: Multi-Agent Review
 
-**觸發條件**：實作完成
-**執行**：自動觸發 `/multi-agent-review` skill（code-reviewer + security-reviewer + qa-engineer 並行審查）
-**Exit**：全 Pass → `[HANDOFF: human-pr-review]`；有 Blocker → 回 Stage 4 修復
+**Trigger condition**: implementation complete
+**Execution**: auto-triggers the `/multi-agent-review` skill (parallel review by code-reviewer + security-reviewer + qa-engineer)
+**Exit**: all Pass → `[HANDOFF: human-pr-review]`; if there's a Blocker → back to Stage 4 for fixes
 
-## 中斷機制
+## Interrupt Mechanism
 
-任何階段發現阻礙問題時：
-1. 暫停流水線，於 ExecPlan §8 Open Questions 寫明阻礙
-2. 輸出 `[HUMAN_ATTENTION_REQUIRED: <reason>]`，回報問題給用戶
-3. 等待用戶決策
-4. 根據決策繼續或調整（見 execplan-lifecycle.md Phase 9 BLOCKED）
+If any stage encounters a blocking issue:
+1. Pause the pipeline, document the blocker in ExecPlan §8 Open Questions
+2. Output `[HUMAN_ATTENTION_REQUIRED: <reason>]`, report the issue to the user
+3. Wait for the user's decision
+4. Continue or adjust based on the decision (see execplan-lifecycle.md Phase 9 BLOCKED)
 
-## 輸出範本
+## Output Template
 
 ```markdown
-## Feature Pipeline: [功能名稱]
+## Feature Pipeline: [Feature Name]
 
-### 進度追蹤
+### Progress Tracking
 
-| 階段 | 狀態 | 負責 |
+| Stage | Status | Owner |
 |------|------|------|
-| 需求分析 | ✅ | pm |
-| 架構設計 | ✅ | architect |
-| UI 設計 | ⏳ | uiux-agent |
-| 開發實作 | ⬜ | dev |
-| 代碼審查 | ⬜ | multi-agent-review |
+| Requirements Analysis | ✅ | pm |
+| Architecture Design | ✅ | architect |
+| UI Design | ⏳ | uiux-agent |
+| Development | ⬜ | dev |
+| Code Review | ⬜ | multi-agent-review |
 
-### 當前階段輸出
-[當前階段的產出]
+### Current Stage Output
+[current stage's output]
 
-### 下一步
-[接下來要做什麼]
+### Next Step
+[what comes next]
 ```
 
-## 適用場景
+## Applicable Scenarios
 
-- 新功能開發
-- 重大功能重構
-- 跨模組變更
+- New feature development
+- Major feature refactoring
+- Cross-module changes
 
-## 注意事項
+## Notes
 
-- 每個階段完成後需用戶確認（人類 gate 見 execplan-lifecycle.md Phase 3、Phase 7）
-- 可以跳過不適用的階段（如無 UI 變更可跳過 Stage 3）
-- 保持階段產出簡潔，避免過度設計
-- 每次派工必須照 `.claude/templates/delegation-templates.md` 三件套（目標動機 / 驗收條件 / 回報格式）
+- Each stage requires user confirmation before proceeding (human gates — see execplan-lifecycle.md Phase 3, Phase 7)
+- Inapplicable stages can be skipped (e.g. skip Stage 3 if there's no UI change)
+- Keep stage outputs concise; avoid over-engineering
+- Every dispatch must follow the three-part template in `.claude/templates/delegation-templates.md` (goal & motivation / acceptance criteria / report format)
 
-## ExecPlan 路徑
+## ExecPlan Path
 
 `docs/plans/active/F-NNN-<slug>.md`
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：完整 ExecPlan `docs/plans/active/F-NNN-*.md`（9 段齊全）+ commits 序列 + PR。
-- **必經閘門**：pm → architect → plan-reviewer → human-approval → dev → code-reviewer → human-pr-review。
-- **每階段 marker**：依 `.claude/protocols/handoff-protocol.md` 規範，逐步 `[HANDOFF: <next>]`。
-- **完成判定**：PR merged → ExecPlan 移到 `docs/plans/completed/` + `state/feature-list.json` `status: done`。
-- **失敗模式**：任一階段違反 invariant → `[VERIFY_FAILED: INV-id]` 退回上一階段。
+- **Output form**: a complete ExecPlan `docs/plans/active/F-NNN-*.md` (all 9 sections filled) + commit sequence + PR.
+- **Required gates**: pm → architect → plan-reviewer → human-approval → dev → code-reviewer → human-pr-review.
+- **Per-stage marker**: `[HANDOFF: <next>]` at each step, per `.claude/protocols/handoff-protocol.md`.
+- **Completion criteria**: PR merged → ExecPlan moved to `docs/plans/completed/` + `state/feature-list.json` `status: done`.
+- **Failure mode**: any stage violating an invariant → `[VERIFY_FAILED: INV-id]`, rolled back to the previous stage.
 
-## 參考
+## References
 
 - `.claude/protocols/execplan-lifecycle.md`
 - `docs/plans/PLANS.md`

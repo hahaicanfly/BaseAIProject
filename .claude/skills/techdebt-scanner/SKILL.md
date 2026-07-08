@@ -1,90 +1,90 @@
 ---
 name: techdebt-scanner
-description: 系統性掃描專案技術債（TODO/FIXME、複雜函式、重複程式碼等），產出分級優先報告；當使用者要分析代碼健康度或提及「技術債」「techdebt」時觸發。
+description: Systematically scans a project for technical debt (TODO/FIXME, complex functions, duplicated code, etc.) and produces a prioritized report; triggers when the user wants to analyze code health or mentions "技術債", "techdebt".
 ---
 
 # Skill: techdebt-scanner
 
-> **用途**：系統性掃描技術債，產出優先級報告。
-> **觸發**：`/techdebt`（via `.claude/commands/techdebt.md`）
-> **Agent**：techdebt-scanner（sonnet）
+> **Purpose**: Systematically scan for technical debt and produce a prioritized report.
+> **Trigger**: `/techdebt` (via `.claude/commands/techdebt.md`)
+> **Agent**: techdebt-scanner (sonnet)
 
-## 使用方式
+## Usage
 
 ```
-/techdebt [範圍: full | 指定路徑；未指定則掃描 CLAUDE.md Quick Commands 定義的專案原始碼目錄]
+/techdebt [scope: full | a specific path; if unspecified, scans the project source directory defined in CLAUDE.md Quick Commands]
 ```
 
-## 掃描流程
+## Scan Flow
 
-### Step 1: 快速概覽
-- 統計專案原始碼檔案數量（副檔名依專案技術棧調整，如 .ts/.py/.go/.kt）
-- 掃描 TODO/FIXME/HACK/WORKAROUND/XXX 標記
-- 統計 suppress/ignore 註解與 deprecated 標記（如 `@Deprecated`、`# noqa`、`eslint-disable`）使用量
-- 產出初步數字摘要
+### Step 1: Quick Overview
+- Count the project's source files (extensions depend on tech stack, e.g. .ts/.py/.go/.kt)
+- Scan for TODO/FIXME/HACK/WORKAROUND/XXX markers
+- Count usage of suppress/ignore comments and deprecated markers (e.g. `@Deprecated`, `# noqa`, `eslint-disable`)
+- Produce a preliminary numeric summary
 
-### Step 2: 深入分析
-- 識別超過 50 行的函式、超過 4 層巢狀、超過 5 個參數的函式
-- 檢查缺失測試的核心模組
-- 掃描硬編碼的 URL、路徑、端口
-- 檢查未使用的 import / 未使用的程式碼
-- 評估模組間依賴方向（循環依賴、跨層直接調用）
+### Step 2: Deep Analysis
+- Identify functions over 50 lines, nesting over 4 levels deep, or with more than 5 parameters
+- Check core modules for missing tests
+- Scan for hardcoded URLs, paths, ports
+- Check for unused imports / dead code
+- Assess inter-module dependency direction (circular dependencies, direct cross-layer calls)
 
-### Step 3: 產出報告
-- 按優先級（P0/P1/P2）分類所有發現
-- 為每個問題標記具體位置（`file:line`）
-- 提供修復建議和預估工作量
-- 列出建議的行動順序
+### Step 3: Produce Report
+- Classify all findings by priority (P0/P1/P2)
+- Tag each issue with a specific location (`file:line`)
+- Provide remediation suggestions and effort estimates
+- List a recommended action order
 
-## 掃描範圍
+## Scan Scope
 
-預設掃描目錄：依專案 CLAUDE.md Quick Commands 定義的原始碼目錄；未定義時掃描整個 repo，排除編譯輸出目錄與套件管理快取（如 `build/`、`dist/`、`node_modules/`、`.gradle/`、`vendor/`）。
+Default scan directory: the source directory defined in the project's CLAUDE.md Quick Commands; if undefined, scan the whole repo, excluding build output directories and package-manager caches (e.g. `build/`, `dist/`, `node_modules/`, `.gradle/`, `vendor/`).
 
-## 掃描指令參考
+## Scan Command Reference
 
 ```bash
-# <SRC_DIR> = 專案原始碼目錄（依 CLAUDE.md 填入，如 src/、app/、lib/）
-# TODO/FIXME 標記
+# <SRC_DIR> = project source directory (fill in from CLAUDE.md, e.g. src/, app/, lib/)
+# TODO/FIXME markers
 grep -rn "TODO\|FIXME\|HACK\|WORKAROUND\|XXX" <SRC_DIR>
 
-# 硬編碼值
+# Hardcoded values
 grep -rn "http://\|localhost\|127.0.0.1" <SRC_DIR>
 ```
 
-## 輸出範本
+## Output Template
 
 ```markdown
-## 技術債報告
+## Technical Debt Report
 
-### 掃描範圍
-- 目錄：<SRC_DIR>
-- 檔案數：N 個
-- 日期：YYYY-MM-DD
+### Scan Scope
+- Directory: <SRC_DIR>
+- File count: N
+- Date: YYYY-MM-DD
 
-### 摘要
-| 優先級 | 數量 |
+### Summary
+| Priority | Count |
 |--------|------|
-| P0（高）| X |
-| P1（中）| X |
-| P2（低）| X |
+| P0 (High) | X |
+| P1 (Medium) | X |
+| P2 (Low) | X |
 
-### 詳細發現
-[按優先級列出，含 file:line 與修復建議]
+### Detailed Findings
+[Listed by priority, with file:line and remediation suggestions]
 
-### 行動建議
-[排序的修復清單]
+### Recommended Actions
+[Ordered remediation list]
 ```
 
-## 參考文件
+## Reference Documents
 
-開始前先檢查：
-- CLAUDE.md（專案規範、Quick Commands）
-- `agent_docs/TECHNICAL-REFERENCE.md`（架構，填實後適用；仍含未填佔位符則跳過，判準見 CLAUDE.md「啟用狀態」節）
+Check before starting:
+- CLAUDE.md (project conventions, Quick Commands)
+- `agent_docs/TECHNICAL-REFERENCE.md` (architecture; applies once fully filled in — if it still has unfilled placeholders, skip it, per CLAUDE.md's "Activation Status" section)
 
-## 驗證項目
+## Verification Items
 
-- **產出形式**：技術債報告（含優先級 P0/P1/P2 + 影響範圍 + 估時）。
-- **整合**：每筆 P0/P1 候選 → 由 PM agent 起新 ExecPlan 進入 `docs/plans/active/`。
-- **去重**：與 `docs/learnings/ERRORS.md` Active Lessons 比對，避免重複立項。
-- **觸發頻率**：建議季度執行，非每次 PR。
-- **交接 marker**：`[HUMAN_ATTENTION_REQUIRED: 技術債掃描完成，請人類決定優先處理哪些項目]`
+- **Output form**: technical debt report (with P0/P1/P2 priorities + impact scope + time estimate).
+- **Integration**: each P0/P1 candidate → the PM agent starts a new ExecPlan under `docs/plans/active/`.
+- **Deduplication**: cross-check against Active Lessons in `docs/learnings/ERRORS.md` to avoid opening duplicate items.
+- **Trigger frequency**: recommended quarterly, not per PR.
+- **Handoff marker**: `[HUMAN_ATTENTION_REQUIRED: technical debt scan complete, human decision needed on which items to prioritize]`

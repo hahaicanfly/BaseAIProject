@@ -1,189 +1,189 @@
 ---
 name: spectra-amplifier
-description: 將薄弱的需求描述或 PRD 草稿強化為每項需求皆附可驗證 acceptance criteria 的完整規格；當使用者要補強 spec 或提及「spectra-amplifier」「acceptance criteria」時觸發。
+description: Strengthens a thin requirements description or PRD draft into a complete spec where every requirement carries verifiable acceptance criteria; triggers when the user wants to strengthen a spec or mentions "spectra-amplifier" "acceptance criteria".
 ---
 
 # Skill: spectra-amplifier
 
-> **用途**：接收薄的 spec（需求描述、PRD 草稿、feature 想法），輸出強化版 spec——每個需求有 acceptance criteria，每個 AC 對應一個可驗證條目。
-> **觸發**：`/spectra-amplifier [spec 描述 / 文件路徑]`
-> **理論基礎**：Spectra（龍哥 SDD 格式）× Speckit（testability）× Teddy 五層規範法
+> **Purpose**: Takes a thin spec (requirements description, PRD draft, feature idea) and outputs a strengthened spec — every requirement has acceptance criteria, and every AC maps to a verifiable item.
+> **Trigger**: `/spectra-amplifier [spec description / file path]`
+> **Theoretical basis**: Spectra (Long-ge's SDD format) × Speckit (testability) × Teddy's five-layer spec method
 
 ---
 
-## 為什麼需要 Spectra-Amplifier？
+## Why Spectra-Amplifier Is Needed
 
-問題：AI 寫的 spec 通常「薄」——描述功能，但不描述如何驗證功能是否正確。
-這導致：
-- ExecPlan §5 Verification Strategy 寫不出具體的 Negative test cases
-- PR review 無法判斷「這個改動是否真的滿足了需求」
-- ERRORS.md 的 lesson 無法回溯到「是哪個 spec 設計缺陷導致的 bug」
+Problem: specs written by AI are usually "thin" — they describe the feature but not how to verify the feature is correct.
+This leads to:
+- ExecPlan §5 Verification Strategy can't produce concrete negative test cases
+- PR review can't determine "does this change actually satisfy the requirement"
+- Lessons in ERRORS.md can't be traced back to "which spec design flaw caused this bug"
 
-強 spec 的三個特性：
-1. **Traceable**（可追溯）：每個需求能追到設計，設計能追到實作，實作能追到測試
-2. **Testable**（可測試）：每個需求都有具體的 pass/fail criteria
-3. **Bounded**（有邊界）：明確說明不做什麼，避免 scope creep
-
----
-
-## 五層放大框架（Teddy × Speckit × Spectra）
-
-```
-Layer 5: Verification      ← 如何知道做對了？（測試 / hook / INV-*）
-    ↑
-Layer 4: Implementation    ← 怎麼做？（技術選型、API、data model）
-    ↑
-Layer 3: Design            ← 什麼架構？（模組邊界、介面、流程圖）
-    ↑
-Layer 2: Requirements      ← 需要什麼？（功能需求 + 非功能需求）
-    ↑
-Layer 1: Context           ← 為什麼要做？（問題陳述、stakeholder、成功指標）
-```
-
-每一層都要能**向下問「如何？」、向上問「為什麼？」**——若無法回答，說明 spec 在此層有缺口。
+Three properties of a strong spec:
+1. **Traceable**: every requirement traces to a design, every design traces to an implementation, every implementation traces to a test
+2. **Testable**: every requirement has concrete pass/fail criteria
+3. **Bounded**: explicitly states what is out of scope, avoiding scope creep
 
 ---
 
-## 執行步驟
+## Five-Layer Amplification Framework (Teddy × Speckit × Spectra)
 
-### Step 1：解析輸入 spec
-
-讀入使用者提供的 spec（文字描述或文件）。
-識別目前覆蓋了哪幾層（L1–L5），哪幾層缺失或薄弱。
-
-### Step 2：Layer-by-Layer 放大
-
-#### L1 — Context 放大
-
-補全：
 ```
-問題陳述：[用戶面對什麼問題？]
-目標用戶：[誰？]
-成功指標：[做完後如何量測成功？數字化]
-Out of Scope：[明確說明不做什麼]
+Layer 5: Verification      ← How do we know it's done right? (tests / hooks / INV-*)
+    ↑
+Layer 4: Implementation    ← How to build it? (tech choices, API, data model)
+    ↑
+Layer 3: Design            ← What architecture? (module boundaries, interfaces, flow diagrams)
+    ↑
+Layer 2: Requirements      ← What's needed? (functional + non-functional requirements)
+    ↑
+Layer 1: Context           ← Why do it? (problem statement, stakeholders, success metrics)
 ```
 
-#### L2 — Requirements 放大
+Every layer must be able to answer "how?" downward and "why?" upward — if it can't, that layer of the spec has a gap.
 
-對每個功能需求，補全：
-```
-REQ-NNN：[需求描述]
-  優先度：P0 / P1 / P2
-  功能需求（FR）：...
-  非功能需求（NFR）：[效能/可靠性/安全性要求]
-  Acceptance Criteria：
-    - AC-1：[Given ... When ... Then ...]
-    - AC-2：[Given ... When ... Then ...]
-  Edge Cases：
-    - EC-1：[邊界情況描述]
-```
+---
 
-#### L3 — Design 放大
+## Execution Steps
 
-補全：
+### Step 1: Parse the Input Spec
+
+Read the spec provided by the user (text description or document).
+Identify which layers (L1–L5) are currently covered, and which are missing or thin.
+
+### Step 2: Layer-by-Layer Amplification
+
+#### L1 — Context Amplification
+
+Fill in:
 ```
-架構決策：[選擇了哪個方案，為何不選其他]
-模組邊界：[涉及哪些 domains.md 中的模組]
-API 介面草稿：[endpoint / function signature]
-資料模型變更：[若有 schema 變更，列出欄位]
-流程圖（Mermaid）：
-  sequenceDiagram 或 flowchart LR
-  [描述主流程]
+Problem statement: [what problem does the user face?]
+Target users: [who?]
+Success metrics: [how do we measure success after completion? quantify it]
+Out of Scope: [explicitly state what won't be done]
 ```
 
-#### L4 — Implementation 放大
+#### L2 — Requirements Amplification
 
-補全：
+For each functional requirement, fill in:
 ```
-技術選型：[框架/庫/工具]
-關鍵實作注意：
-  - [注意 1]
-  - [注意 2]
-ExecPlan 引用：
-  docs/plans/active/F-NNN-slug.md §3 Constraints 需引用：
-    - INV-[NS]-[NNN]（安全相關）
-    - domains.md [變更類型行]
-```
-
-#### L5 — Verification 放大（最重要）
-
-對每個 AC，產生對應驗證：
-```
-AC-1 → 測試類型：[unit / integration / e2e / manual]
-       測試指令：[具體命令]
-       Golden Path：[正常流程驗證步驟]
-       Negative Test：[故意觸發失敗的步驟]
-       對應 INV-*：[若有]
-       對應 ExecPlan §5 驗證項：[複製到 ExecPlan]
+REQ-NNN: [requirement description]
+  Priority: P0 / P1 / P2
+  Functional Requirements (FR): ...
+  Non-Functional Requirements (NFR): [performance/reliability/security requirements]
+  Acceptance Criteria:
+    - AC-1: [Given ... When ... Then ...]
+    - AC-2: [Given ... When ... Then ...]
+  Edge Cases:
+    - EC-1: [edge case description]
 ```
 
-### Step 3：輸出放大後的 spec
+#### L3 — Design Amplification
 
-產出格式：
+Fill in:
+```
+Architecture decision: [which option was chosen, why not the others]
+Module boundaries: [which modules in domains.md are involved]
+API interface draft: [endpoint / function signature]
+Data model changes: [if there's a schema change, list the fields]
+Flow diagram (Mermaid):
+  sequenceDiagram or flowchart LR
+  [describe the main flow]
+```
+
+#### L4 — Implementation Amplification
+
+Fill in:
+```
+Tech choices: [framework/library/tool]
+Key implementation notes:
+  - [note 1]
+  - [note 2]
+ExecPlan references:
+  docs/plans/active/F-NNN-slug.md §3 Constraints must reference:
+    - INV-[NS]-[NNN] (security-related)
+    - domains.md [change-type row]
+```
+
+#### L5 — Verification Amplification (most important)
+
+For each AC, produce a corresponding verification:
+```
+AC-1 → Test type: [unit / integration / e2e / manual]
+       Test command: [concrete command]
+       Golden Path: [normal-flow verification steps]
+       Negative Test: [steps that deliberately trigger failure]
+       Corresponding INV-*: [if any]
+       Corresponding ExecPlan §5 verification item: [copy into ExecPlan]
+```
+
+### Step 3: Output the Amplified Spec
+
+Output format:
 
 ```markdown
-# Spec: [功能名稱]
+# Spec: [feature name]
 
 ## L1 Context
-[放大後的問題陳述、成功指標、Out of Scope]
+[amplified problem statement, success metrics, Out of Scope]
 
 ## L2 Requirements
-[REQ-NNN 列表，含 AC + EC]
+[REQ-NNN list, with AC + EC]
 
 ## L3 Design
-[架構決策、介面草稿、Mermaid 流程圖]
+[architecture decisions, interface draft, Mermaid flow diagram]
 
 ## L4 Implementation Notes
-[技術選型、實作注意、INV-* 引用]
+[tech choices, implementation notes, INV-* references]
 
 ## L5 Verification Matrix
-| AC | 測試類型 | 指令 | Golden Path | Negative |
+| AC | Test Type | Command | Golden Path | Negative |
 |----|---------|------|------------|---------|
 | AC-1 | ... | ... | ... | ... |
 
-## ExecPlan §5 草稿（可直接貼入）
-[自動生成 §5 Verification Strategy]
+## ExecPlan §5 Draft (paste directly)
+[auto-generated §5 Verification Strategy]
 ```
 
-### Step 4：缺口提示
+### Step 4: Gap Flagging
 
-若輸入 spec 在某層嚴重缺失，輸出：
+If the input spec is seriously lacking in some layer, output:
 ```
-[SPEC_GAP: L3-Design] 缺少模組邊界定義。
-在實作前，建議先執行 /feature-pipeline 來補齊架構設計。
-```
-
----
-
-## 與 ExecPlan 的接口
-
-放大後的 spec 可直接用於：
-- ExecPlan §1 Goal（從 L1 Context 萃取一句話）
-- ExecPlan §3 Constraints（從 L4 的 INV-* 引用）
-- ExecPlan §5 Verification Strategy（從 L5 驗證矩陣）
-
-建議工作流：
-```
-/spectra-amplifier [功能描述]
-    ↓
-確認 L5 驗證矩陣
-    ↓
-開 ExecPlan，複製 §5 內容
-    ↓
-進入 feature-pipeline 或直接開發
+[SPEC_GAP: L3-Design] Missing module boundary definitions.
+Before implementation, recommend running /feature-pipeline to complete the architecture design first.
 ```
 
 ---
 
-## Speckit 品質評分（輸出附帶）
+## Interface with ExecPlan
 
-每次放大後，輸出 Speckit 品質分數：
+The amplified spec can be used directly for:
+- ExecPlan §1 Goal (extract one sentence from L1 Context)
+- ExecPlan §3 Constraints (from L4's INV-* references)
+- ExecPlan §5 Verification Strategy (from the L5 verification matrix)
 
-| 維度 | 滿分 | 說明 |
+Recommended workflow:
+```
+/spectra-amplifier [feature description]
+    ↓
+Confirm the L5 verification matrix
+    ↓
+Open an ExecPlan, copy in §5 content
+    ↓
+Proceed to feature-pipeline or start development directly
+```
+
+---
+
+## Speckit Quality Score (included in output)
+
+After each amplification, output a Speckit quality score:
+
+| Dimension | Max Score | Description |
 |------|------|------|
-| Traceability（L1-L5 可追溯） | 20 | 每層都能向上/向下回答 |
-| Testability（AC 可測試） | 30 | AC 有具體 Given/When/Then |
-| Boundedness（Out of Scope 明確） | 20 | 有明確不做的清單 |
-| Completeness（無遺漏的 Edge Cases） | 30 | EC 覆蓋主要邊界 |
+| Traceability (L1-L5 traceable) | 20 | Every layer can answer up/down |
+| Testability (AC testable) | 30 | AC has concrete Given/When/Then |
+| Boundedness (Out of Scope explicit) | 20 | Has an explicit not-doing list |
+| Completeness (no missing edge cases) | 30 | EC covers the main boundaries |
 
-分數 < 70 → 建議在開始實作前補強。
+Score < 70 → recommend strengthening before starting implementation.
