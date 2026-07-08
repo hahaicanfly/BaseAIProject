@@ -1,6 +1,6 @@
 # BaseAIProject — AI Harness Engineering 基礎模板
 
-> 一套可直接 fork 的 **AI 開發治理骨架**：讓 Sonnet / Haiku 等級的模型在缺乏人類逐步指揮的情況下，也能穩定、可驗證、不失控地自主產出。從 MaiNeu 實戰專案抽取，並經 2026-07 Fable 5 架構 session 三輪深度制度化。
+> 一套可直接 fork 的 **AI 開發治理骨架**：讓 Sonnet / Haiku 等級的模型在缺乏人類逐步指揮的情況下，也能穩定、可驗證、不失控地自主產出。從 MaiNeu 實戰專案抽取，經 2026-07 Fable 5 架構 session 三輪深度制度化，再吸收外部 harness 生態研究（superpowers、learn-harness-engineering、revfactory/harness 等 7 個來源，星數與內容實地查證）的第四輪強化。
 
 ## 這個專案解決什麼問題
 
@@ -27,7 +27,7 @@ AI 主導開發的三大失敗模式，各有對應的物理防線：
 | Virtual Team | 14 agents（4 opus + 10 sonnet） | 職責互斥的專業分工，模型分派以 frontmatter 為正典 |
 | Skills | 17 個 | 觸發式工作流，description 互斥設計 + 機械驗證器 |
 | Hooks | 4 個 + 共用庫 | 1 個 enforce（exit 2 實測攔截）+ 3 個 sentinel |
-| 常駐 Rules | 7 條（`always: true`） | 調度、判準、安全、成本、模組化、worktree、plan-first |
+| 常駐 Rules | 6 條（`always: true`） | 調度、判準、安全、成本、worktree、plan-first（模組化已降非常駐 → `agent_docs/`） |
 | Protocols | 5 份 | ExecPlan 生命週期、交接 marker、review SOP、harness 維護、（1 份未接線草案） |
 | 知識系統 | 5 層 | 教訓／硬規則／ADR／session 快照／原生 memory，各有寫讀權與流動規則 |
 
@@ -35,10 +35,10 @@ AI 主導開發的三大失敗模式，各有對應的物理防線：
 
 ### 1. 指揮與調度層
 
-- **`CLAUDE.md`（83 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
-- **`.claude/rules/model-dispatch.md`**：本機實際可用模型檔位、派工三件套（目標動機／驗收條件／回報格式，缺一不派）、升降級路徑（同模型連敗 2 次 → 升級一次 → 再敗 → 熔斷問人）、回報合約（≤40 行、長產物落檔傳路徑）。
-- **`.claude/rules/judgment-rubrics.md`**：五類判斷的可觀察判準各附正反例——何時升級、何時算真完成、何時熔斷提問、什麼訊號該換路而非重試、品質底線怎麼驗。
-- **`.claude/templates/delegation-templates.md`**：搜尋／實作／重構／研究／審查／fresh-context 驗收六份派工模板，含破壞性指令黑名單（禁對非指派檔案 rm / checkout / restore / clean）。
+- **`CLAUDE.md`（84 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
+- **`.claude/rules/model-dispatch.md`**：本機實際可用模型檔位、派工三件套（目標動機／驗收條件／回報格式，缺一不派）、升降級路徑（同模型連敗 2 次 → 升級一次 → 再敗 → 熔斷問人）、回報合約（≤40 行、長產物落檔傳路徑）、驗收邊界（FAIL 只准基於可機械檢查條件，風格意見進非阻斷建議欄）。
+- **`.claude/rules/judgment-rubrics.md`**：七節可觀察判準各附正反例——何時升級、何時算真完成（含 gate-softening 禁令）、何時熔斷提問（含無改善偵測：連續 2 輪 FAIL 集合相同即熔斷）、什麼訊號該換路、品質底線、能力極限、Red Flags 合理化話術對照表（「違反字面即違反精神」）。
+- **`.claude/templates/delegation-templates.md`**：搜尋／實作／重構／研究／審查／fresh-context 驗收六份派工模板，含範圍宣告（允許讀／允許寫／禁止觸碰／終止條件）與破壞性指令黑名單（禁對非指派檔案 rm / checkout / restore / clean）。
 
 ### 2. Virtual Team（14 agents）
 
@@ -53,8 +53,10 @@ sonnet ×10 執行 checklist 與模板化工作：`code-reviewer`（PR gating，
 - **審查三件套**（觸發互斥）：`code-review`（單一 PR 標準審查）、`multi-agent-review`（高風險三專家並行）、`pr-review-cycle-mob`（成本分級 cascade）
 - **安全與品質**：`security-audit`（OWASP）、`techdebt-scanner`、`harness-eval`（harness 成熟度 0-100 評分）
 - **知識與交接**：`pr-retro`（merge 後萃取教訓）、`context-aggregator`（多來源交接摘要）、`gen-app-map`（技術棧無關的專案地圖產生器）
-- **Skill 工程**：`skill-creator-plus`（官方 Anthropic 方法論 × 本地制度：意圖捕捉、互斥檢查、pushy description、機械驗證器 `validate_skill.py`、fresh-context 觸發測試、eval 迭代）
-- **UI 與圖表**：`beautiful-mermaid`、`ui-ux-pro-max`（stub）、`frontend-design`（stub）
+- **Skill 工程**：`skill-creator-plus`（官方 Anthropic 方法論 × 本地制度：意圖捕捉、互斥檢查、pushy description、機械驗證器 `validate_skill.py`、fresh-context 雙向觸發測試各 8-10 條、eval 迭代）
+- **UI 與圖表**：`beautiful-mermaid`（Mermaid → 終端 ASCII／SVG）、`ui-ux-pro-max`（設計系統產生器，附 3 支檢索腳本＋24 份跨 13 技術棧的設計資料庫）、`frontend-design`（設計哲學指引，Compose 範例＋等價寫法標註）
+
+> 2026-07-07 全部 skills 已從母專案補回完整內容並去專案化（抽取時 10 個曾被靜默大綱化——這個事故本身也進了教訓管線）。
 
 ### 4. 物理防線（Hooks）
 
@@ -87,7 +89,7 @@ Wireframe → Critique → Implementation 強制閘門（`.claude/uiux/WORKFLOW.
 
 ## 快速開始（fork 後五步）
 
-1. **替換佔位符**：全域搜尋 `{{PROJECT_NAME}}`、`{{PROJECT_TAGLINE}}`；填 CLAUDE.md 的 Quick Commands 與 Tech Stack。含 `{{}}` 的檔案視為未啟用，模型會自動跳過。
+1. **替換佔位符**：全域搜尋 `{{PROJECT_NAME}}`、`{{PROJECT_TAGLINE}}`；填 CLAUDE.md 的 Quick Commands 與 Tech Stack（可執行驗證指令是成功率最大槓桿——Feedback 子系統）；環境初始化照 `.claude/templates/init.sh.template` 填實。含 `{{}}` 的檔案視為未啟用，模型會自動跳過。
 2. **最小可用填寫**：`agent_docs/TECHNICAL-REFERENCE.md` 檔頭列了 5 個欄位（核心使命、技術棧四格、頂層模組、API base URL、認證方式）——填完即解鎖「任務前必讀」地位，其餘 28 個佔位符可後補。
 3. **Hooks 煙霧測試**：`chmod +x .claude/hooks/*.py` 後照 `harness-maintenance.md` §4 實測 block/pass 兩情境。
 4. **跑 canary 驗收**：照 `docs/harness/NEW-PROJECT-VALIDATION.md` 用一個 30 分鐘的小任務走完整流程（分支→計劃→派工→review→教訓管線），每步有可觀察判準。
@@ -102,7 +104,7 @@ BaseAIProject/
 ├── agent_docs/                # 詳版教學層（常駐 rules 的延伸內容）
 │   ├── AI-TEAM-REGISTRY.md    # agents/skills 正典名單（frontmatter 生成）
 │   ├── TECHNICAL-REFERENCE.md # 技術百科（含最小填寫清單）
-│   └── multi-agent-guide / security-policy / cost-optimization / code-conventions
+│   └── multi-agent-guide / modularity / security-policy / cost-optimization / code-conventions
 ├── docs/
 │   ├── INDEX.md               # 文件索引 + 五層知識地圖
 │   ├── harness/               # 制度文件：診斷書、交接信、新專案驗收流程
@@ -113,11 +115,11 @@ BaseAIProject/
 ├── state/                     # runtime（gitignored）：快照、hook 事件、墓碑帳本
 └── .claude/
     ├── settings.json          # hooks 接線（5 事件）
-    ├── rules/                 # 7 條常駐規則（always: true）
+    ├── rules/                 # 6 條常駐規則（always: true）
     ├── agents/                # 14 個 virtual agents
     ├── skills/                # 17 個 skills
     ├── protocols/             # lifecycle / handoff / review / maintenance
-    ├── templates/             # 派工模板
+    ├── templates/             # 派工模板、init.sh 環境範本
     ├── hooks/                 # 4 hooks + _lib
     ├── commands/              # /last-word、/techdebt
     └── uiux/                  # UI 三階段（可選）
@@ -135,6 +137,10 @@ BaseAIProject/
 | Handoff Marker | agent 結尾必為 `[HANDOFF:]`/`[VERIFY_FAILED:]`/`[HUMAN_ATTENTION_REQUIRED:]` | `.claude/protocols/handoff-protocol.md` |
 | 紅黃綠分級 | harness 檔案的修改權限與備份驗證要求 | `.claude/protocols/harness-maintenance.md` |
 | 煙霧測試 | hook 改動後 block/pass 雙情境黑箱實測 | `harness-maintenance.md` §4 |
+| 範圍宣告 | 派工必附：允許讀／寫／禁觸／終止條件 | `delegation-templates.md` 通用規範 |
+| 品質關卡 | 新增/改 agent 或 skill：重複審查＋雙向觸發測試＋baseline 對照 | `harness-maintenance.md` §6 |
+| 五維度體檢 | Instructions/Tools/Environment/State/Feedback 缺一不完整 | `harness-maintenance.md` §7 |
+| Red Flags | 合理化話術對照表；違反字面即違反精神 | `judgment-rubrics.md` §7 |
 
 ## 能力極限（誠實條款）
 
@@ -144,5 +150,9 @@ BaseAIProject/
 
 - [Anthropic — Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
 - [Anthropic — 官方 skills repo（skill-creator 方法論來源）](https://github.com/anthropics/skills)
+- [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering)（五子系統模型來源）
+- [obra/superpowers](https://github.com/obra/superpowers)（Red Flags 反合理化與 skill TDD 模式來源）
+- [revfactory/harness](https://github.com/revfactory/harness)（雙向觸發測試量化來源）
+- Addy Osmani — Loop Engineering（maker/verifier 分離、gate-softening 禁令的理論源頭）
 - Mitchell Hashimoto — Harness Engineering
 - Andy Matuschak — Evergreen Notes（知識管線設計參考）
