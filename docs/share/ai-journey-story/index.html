@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>從 AI 焦慮到 AI 團隊 — 一個假期開始的 side project 故事</title>
+<style>
+  :root{
+    --paper:#FBFAF8; --ink:#23282E; --muted:#77716A;
+    --accent:#33567C; --accent-ink:#33567C;
+    --mark-bg:#F6E3A1; --line:#E5E1D8; --card:#F4F2EC;
+    --chip-bg:#EBEEF2; --chip-ink:#33567C;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#15181D; --ink:#E7E4DE; --muted:#9A948B;
+      --accent:#8FB0D4; --accent-ink:#A9C4E2;
+      --mark-bg:#4A3F1E; --line:#2C3038; --card:#1C2026;
+      --chip-bg:#232A33; --chip-ink:#A9C4E2;
+    }
+  }
+  html{background:var(--paper);}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    line-height:1.85; margin:0; font-size:17px;
+  }
+  .wrap{max-width:44rem; margin:0 auto; padding:4.5rem 1.4rem 5rem;}
+  .serif{font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;}
+  header.hero{margin-bottom:4rem;}
+  .eyebrow{
+    color:var(--muted); font-size:.8rem; letter-spacing:.18em;
+    text-transform:uppercase; margin-bottom:1.2rem;
+  }
+  h1{
+    font-family:"Noto Serif TC","Songti TC",serif; font-weight:700;
+    font-size:clamp(1.9rem,5.5vw,2.7rem); line-height:1.35;
+    margin:0 0 1.2rem; text-wrap:balance;
+  }
+  .lede{font-size:1.08rem; color:var(--muted); max-width:36rem;}
+  mark{background:var(--mark-bg); color:inherit; padding:0 .15em; border-radius:2px;}
+  .timeline{border-left:2px solid var(--line); margin:0; padding:0;}
+  .stage{position:relative; padding:0 0 3.2rem 1.9rem;}
+  .stage:last-child{padding-bottom:1rem;}
+  .stage::before{
+    content:""; position:absolute; left:-7px; top:.5em;
+    width:12px; height:12px; border-radius:50%;
+    background:var(--paper); border:2.5px solid var(--accent);
+  }
+  .chip{
+    display:inline-block; font-size:.74rem; letter-spacing:.08em;
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:.15rem .6rem; border-radius:999px; margin-bottom:.5rem;
+    font-weight:600;
+  }
+  h2{
+    font-family:"Noto Serif TC","Songti TC",serif; font-weight:700;
+    font-size:1.35rem; margin:.1rem 0 .8rem; line-height:1.5; text-wrap:balance;
+  }
+  p{margin:.9rem 0;}
+  .aside{
+    background:var(--card); border-radius:8px; padding:1rem 1.2rem;
+    font-size:.92rem; color:var(--muted); margin:1.3rem 0;
+  }
+  .aside b{color:var(--ink);}
+  section.what{margin-top:4.5rem; border-top:2px solid var(--line); padding-top:2.8rem;}
+  table{border-collapse:collapse; width:100%; font-size:.95rem; margin:1.4rem 0;}
+  .table-scroll{overflow-x:auto;}
+  th,td{text-align:left; padding:.65rem .8rem; vertical-align:top;}
+  th{
+    font-size:.78rem; letter-spacing:.1em; color:var(--muted);
+    border-bottom:2px solid var(--line); white-space:nowrap; font-weight:600;
+  }
+  td{border-bottom:1px solid var(--line);}
+  td:first-child{white-space:nowrap; font-weight:600; color:var(--accent-ink);}
+  .num{font-variant-numeric:tabular-nums;}
+  .takeaways{margin-top:4rem;}
+  .takeaways ol{padding-left:1.3rem; margin:1rem 0;}
+  .takeaways li{margin:.9rem 0; padding-left:.3rem;}
+  footer{
+    margin-top:4.5rem; padding-top:1.5rem; border-top:1px solid var(--line);
+    font-size:.85rem; color:var(--muted);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .stage{animation:rise .5s ease both;}
+    @keyframes rise{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Side Project 進化史 · 分享版</div>
+    <h1>從 AI 焦慮，<br>到帶一支 AI 團隊做事</h1>
+    <p class="lede">這不是一個技術簡報，而是一段「怕跟不上，所以乾脆跳下去」的過程記錄——從過年假期刷下一筆 100 美金開始，一路走到一套可以重複使用的 AI 開發制度。</p>
+  </header>
+
+  <div class="timeline">
+
+    <div class="stage">
+      <span class="chip">起點</span>
+      <h2>那種「再不學就來不及了」的感覺</h2>
+      <p>一開始沒有什麼宏大的計畫，只有焦慮。AI 的進展快到每隔幾週就換一批新名詞，看著它從「會聊天」變成「會寫程式」，心裡的聲音越來越大：<mark>再站在岸上看，就真的跟不上了。</mark></p>
+    </div>
+
+    <div class="stage">
+      <span class="chip">決定</span>
+      <h2>用一個過年假期，換一次認真的下水</h2>
+      <p>剛好過年有一段比較完整的假期，就做了一個小決定：刷 100 美金訂閱 Claude Code（一個讓 AI 直接動手寫程式的工具），<mark>邊做一個 side project，邊把 AI 學起來</mark>。學費不貴，貴的是願意把假期投進去。</p>
+    </div>
+
+    <div class="stage">
+      <span class="chip">階段一 · Prompt Engineering</span>
+      <h2>像帶實習生：一句一句教</h2>
+      <p>起步時的作法很土：每次只做一個小功能，跟 AI 講清楚「幫我寫這一段」，它寫完我檢查，不對就換個講法再來一次。重點都在<mark>怎麼把一句指令說得夠清楚</mark>——業界叫這個 prompt engineering，白話就是「下指令的話術」。</p>
+      <p>能動，但很累：AI 沒有記憶、不懂專案的來龍去脈，每件事都要從頭交代。</p>
+    </div>
+
+    <div class="stage">
+      <span class="chip">階段二 · Context Engineering</span>
+      <h2>與其每次口頭交代，不如寫一本員工手冊</h2>
+      <p>後來模型升級了，一次可以「讀進」超大量的資料（當時的 Sonnet 開始支援 100 萬 token 的上下文，粗略想像就是<span class="num">好幾本書</span>的量）。玩法跟著改變：<mark>與其一句一句教，不如把規格書、技術文件、規則先寫好，讓 AI 帶著完整背景工作</mark>。</p>
+      <p>就像新同事報到：與其站在旁邊念，不如給他一本寫清楚的員工手冊。我開始花更多時間寫文件、立規矩，AI 的輸出品質明顯穩定下來。</p>
+    </div>
+
+    <div class="stage">
+      <span class="chip">階段三 · Agents &amp; Skills</span>
+      <h2>從一個萬能助理，變成一支分工團隊</h2>
+      <p>接著整個社群進入 agents / skills 的百家爭鳴。翻成白話：<mark>agent 是「有專屬職掌的 AI 同事」，skill 是「喊對暗號就自動翻開的 SOP 手冊」</mark>。</p>
+      <p>我開始在專案裡大量加入這兩種東西——有負責架構的、負責審查的、負責測試的、負責安全檢查的。開發不再是我對一個 AI，而是我對一個小部門。</p>
+    </div>
+
+    <div class="stage">
+      <span class="chip">階段四 · Harness / Loop Engineering</span>
+      <h2>團隊大了，就得立制度</h2>
+      <p>人多（就算是 AI）就會出現管理問題：有人越權、有人謊報完成、有人把錯誤重複踩三次。最近這半年業界談的 Harness / Loop engineering，本質上就是在回答：<mark>怎麼幫 AI 團隊立規矩</mark>。</p>
+      <p>我陸續導入了流程、關卡與檢核點：派工要附驗收條件；<b>做的人不能自己驗收</b>（一定派另一個不知情的 AI 覆核）；危險動作有「門禁」直接擋下（例如把密碼上傳、動到不該動的分支）；連續失敗兩次就強制停下來問人；每次踩坑都要寫進教訓資料庫，重複發生的就升級成硬規則。</p>
+      <div class="aside"><b>一句話總結這一階段的體悟：</b>管 AI 跟管團隊出奇地像——最後決定品質的不是誰比較聰明，而是<b>制度</b>。</div>
+    </div>
+
+    <div class="stage">
+      <span class="chip">現在</span>
+      <h2>把骨幹抽出來：BaseAIProject</h2>
+      <p>Side project 這樣迭代了幾輪之後，我發現最有價值的產出其實不是程式碼，而是那套讓 AI 穩定工作的「管理制度」。所以最後一步，是<mark>把整個 AI 開發骨幹從專案裡抽出來，變成一套可以重複使用的模板</mark>——任何新專案 fork 過去、填上自己的資料，就能直接帶著一支有制度的 AI 團隊開工。</p>
+    </div>
+
+  </div>
+
+  <section class="what">
+    <div class="eyebrow">它長什麼樣子</div>
+    <h2 class="serif">BaseAIProject 裡面有什麼？</h2>
+    <p>用公司來比喻的話，這套模板大概是這樣的一間小公司：</p>
+    <div class="table-scroll">
+    <table>
+      <tr><th>裡面的東西</th><th>用公司的話說</th></tr>
+      <tr><td>總路由手冊<span class="num">（100 行內）</span></td><td>新人第一天必讀的一頁紙：遇到什麼事、翻哪本手冊、找誰</td></tr>
+      <tr><td><span class="num">6</span> 條常駐規則</td><td>隨時生效的公司規章：怎麼派工、怎麼判斷該升級或喊停、安全與成本紅線</td></tr>
+      <tr><td><span class="num">14</span> 位 AI 專家</td><td>虛擬部門：架構師、產品經理、代碼審查員、測試工程師、安全稽核員⋯各有職掌、互不搶戲</td></tr>
+      <tr><td><span class="num">17</span> 套 Skills</td><td>SOP 手冊：說出對應的關鍵字，對的流程就自動展開（審查、安全掃描、技術債盤點⋯）</td></tr>
+      <tr><td><span class="num">4</span> 道硬防線</td><td>門禁系統：不是「請大家小心」，而是危險動作物理上做不了</td></tr>
+      <tr><td>教訓管線</td><td>錯誤筆記本：踩坑 → 記錄 → 每週人工複審 → 重複犯的直接寫進門禁</td></tr>
+      <tr><td>驗收制度</td><td>做的人不能自己說做完了——一定由不知情的第三方覆核，拿證據說話</td></tr>
+    </table>
+    </div>
+    <p>另外有一條大家可能會關心的原則：<mark>誠實條款</mark>。制度裡明文承認 AI 的極限——美感判斷、商業取捨這類沒有標準答案的事，AI 只准列選項給人選，不准自己拍板。</p>
+  </section>
+
+  <section class="takeaways">
+    <div class="eyebrow">如果只帶走三件事</div>
+    <ol>
+      <li><b>焦慮的解藥是動手。</b>看再多文章都不會安心，做一個小專案、實際用一次，焦慮就變成具體的待辦清單。</li>
+      <li><b>跟 AI 協作的重心一直在往上移。</b>從「怎麼下指令」到「怎麼給背景」到「怎麼組團隊」到「怎麼立制度」——越後面越像管理，越前面越像打字。</li>
+      <li><b>最值錢的是制度，不是程式碼。</b>程式碼專案結束就過時了，但那套讓 AI 穩定產出的規矩可以帶著走——這就是為什麼最後把它抽成模板。</li>
+    </ol>
+  </section>
+
+  <footer>
+    想看細節的同事：專案 repo 的 README 有完整介紹（中英雙語），從 30 秒版摘要到每個子系統的說明都有。
+  </footer>
+</div>
+</body>
+</html>
