@@ -38,6 +38,7 @@ An ExecPlan must contain the following 9 sections, in this order:
 
 ## 1. Goal
 <One sentence: what problem does this task solve? What measurable outcome should exist when done?>
+<Non-Goals / Out of Scope: what this task deliberately will NOT cover — state at least one explicit boundary; write "none identified" only if genuinely none>
 
 ## 2. Context
 <Reference the relevant section anchor in agent_docs/TECHNICAL-REFERENCE.md; list affected modules / related existing ADRs / similar past PRs>
@@ -168,6 +169,8 @@ Copy the following to `docs/plans/active/F-<NNN>-<slug>.md`:
 
 ## 1. Goal
 
+
+Non-Goals / Out of Scope: 
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>
