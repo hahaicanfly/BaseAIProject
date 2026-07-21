@@ -50,6 +50,16 @@ RETRO_HASHES_ROTATE_DAYS = 90
 MARKER_RE = re.compile(
     r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
 )
+
+# Broader marker covering all 3 handoff-protocol.md kinds. Used ONLY by
+# detect_missing_marker() to check for ABSENCE as the last line of a
+# session's final assistant text block. Deliberately kept separate from
+# MARKER_RE (which stays presence-harvest-only for VERIFY_FAILED /
+# HUMAN_ATTENTION_REQUIRED) so existing harvest behavior is unchanged.
+FULL_MARKER_RE = re.compile(
+    r"^\[(HANDOFF|VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*[^\]]+\]\s*$"
+)
+
 PENDING_SECTION_HEADER = "## Pending Review"
 PENDING_SECTION_FALLBACK = "_(空)_"
 
@@ -190,6 +200,78 @@ def harvest_markers(transcript_path: str) -> list[dict]:
     if is_jsonl:
         return _harvest_jsonl_transcript(lines)
     return _harvest_plain_text(lines)
+
+
+def detect_missing_marker(transcript_path: str) -> dict | None:
+    """Detect a session that did real work (>=1 assistant tool_use block)
+    but ended without a [HANDOFF:*] / [VERIFY_FAILED:*] /
+    [HUMAN_ATTENTION_REQUIRED:*] marker as the last non-empty line of the
+    last assistant text block.
+
+    Returns a finding dict with keys {kind, reason, context} (no "hash" —
+    the caller in main() attaches that using session_id, mirroring
+    _append_retro_suggestion's session-keyed hash pattern) or None if:
+    - the transcript doesn't parse, or
+    - no assistant tool_use block exists anywhere (trivial Q&A session,
+      nothing handoff-worthy happened — this is the heuristic gate that
+      avoids flagging sessions that never touched a real task), or
+    - the last assistant text block's last line already matches the
+      marker syntax.
+    """
+    p = Path(transcript_path)
+    if not p.is_file():
+        return None
+    try:
+        text = p.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return None
+
+    lines = text.splitlines()
+    if not lines:
+        return None
+
+    has_tool_use = False
+    last_assistant_text: str | None = None
+
+    for line in lines:
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        msg = obj.get("message") or {}
+        if msg.get("role") != "assistant":
+            continue
+        content = msg.get("content") or []
+        if not isinstance(content, list):
+            continue
+        for blk in content:
+            if not isinstance(blk, dict):
+                continue
+            if blk.get("type") == "tool_use":
+                has_tool_use = True
+            elif blk.get("type") == "text":
+                t = blk.get("text", "")
+                if t.strip():
+                    last_assistant_text = t  # keep overwriting -> last wins
+
+    if not has_tool_use:
+        return None  # trivial Q&A session, nothing handoff-worthy happened
+
+    if last_assistant_text is None:
+        reason = "session did tool work but produced no final assistant text/marker"
+        excerpt = ""
+    else:
+        final_lines = [ln for ln in last_assistant_text.splitlines() if ln.strip()]
+        last_line = final_lines[-1].strip() if final_lines else ""
+        if FULL_MARKER_RE.match(last_line):
+            return None  # marker present and well-formed, no violation
+        reason = "session ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker"
+        excerpt = last_assistant_text[-300:]
+
+    return {"kind": "PROTOCOL_VIOLATION", "reason": reason, "context": excerpt}
 
 
 def _ledger_hashes() -> set[str]:
@@ -436,6 +518,22 @@ def main() -> int:
         return 0
 
     findings = harvest_markers(transcript_path)
+
+    missing_marker = detect_missing_marker(transcript_path)
+    if missing_marker:
+        missing_marker["hash"] = hashlib.sha1(
+            f"missing-marker|{session_id}".encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()[:10]
+        findings.append(missing_marker)
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="missing-marker-detected",
+            session=session_id,
+            detail=missing_marker["reason"],
+        )
+
     appended = append_to_pending(findings)
 
     # PR_RETRO_HOOK: detect git commits this session → suggest /pr-retro
