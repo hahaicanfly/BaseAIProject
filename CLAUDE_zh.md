@@ -27,6 +27,7 @@ git branch --show-current   # 動手前確認不在 master/main
 
 ## 動手前決策樹（唯一入口）
 
+0. 範疇/需求不清（下列 4 項缺 2 項以上：目標用戶、成功指標、明確邊界/非目標、觸發條件）→ 先在主對話釐清，才進 ExecPlan 或 Plan Mode（詳見 `.claude/rules/clarify-first.md`）
 1. 跨模組 / API 變更 / 大規模重構 → 建 ExecPlan（`docs/plans/active/`，規格見 `docs/plans/PLANS.md`），**等人類核可**
 2. 其餘非瑣碎任務（新功能、多檔修改、刪檔）→ Plan Mode 提計劃，同意後執行
 3. 單檔 < 20 行、已定位的 bug 修復、格式調整 → 直接做
@@ -35,7 +36,7 @@ git branch --show-current   # 動手前確認不在 master/main
 
 ## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）
 
-security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ plan-first ／ parallel-worktree ／ cost-optimization（modularity 已降非常駐 → `agent_docs/modularity.md`）
+security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ clarify-first（進 ExecPlan/Plan Mode 前的主動範圍確認）／ plan-first ／ parallel-worktree ／ cost-optimization（modularity 已降非常駐 → `agent_docs/modularity.md`）
 
 - 派工 prompt 模板：`.claude/templates/delegation-templates.md`
 - Harness 檔案怎麼安全地改：`.claude/protocols/harness-maintenance.md`
