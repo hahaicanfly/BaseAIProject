@@ -512,6 +512,7 @@ def main() -> int:
     payload = read_stdin_json()
     transcript_path = payload.get("transcript_path", "")
     session_id = payload.get("session_id") or payload.get("sessionId") or ""
+    hook_event_name = payload.get("hook_event_name", "")
 
     if not transcript_path:
         log_event(HOOK_NAME, "sentinel", reason="no-transcript-path", session=session_id)
@@ -519,7 +520,19 @@ def main() -> int:
 
     findings = harvest_markers(transcript_path)
 
-    missing_marker = detect_missing_marker(transcript_path)
+    # handoff-protocol.md's own Audience line scopes the marker requirement
+    # to sub-agents ("All sub-agents must use this protocol's markers at the
+    # end of their output") — the main conversation is not expected to end
+    # every ordinary turn with one. The Stop event fires after every
+    # interactive turn (not just true session end), so checking it here
+    # would flag nearly all normal conversation as a violation. Only
+    # SubagentStop — which fires once, when a delegated subagent's own
+    # agentic loop truly finishes — is in scope for this check.
+    missing_marker = (
+        detect_missing_marker(transcript_path)
+        if hook_event_name == "SubagentStop"
+        else None
+    )
     if missing_marker:
         missing_marker["hash"] = hashlib.sha1(
             f"missing-marker|{session_id}".encode("utf-8"),
