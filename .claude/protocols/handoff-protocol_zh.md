@@ -8,7 +8,7 @@
 
 ## 標記語法
 
-每個 agent 的 final response **必須**以下列三個標記之一為結尾（單行，方括號）：
+每個 sub-agent 的 final response **必須**以下列三個標記之一為結尾（單行，方括號）；主對話僅在 ExecPlan lifecycle 出口必須帶標記，task workflow 內其餘回合為建議（見下方「標記出現位置」與「哨兵覆蓋範圍」）：
 
 ```
 [HANDOFF: <next-agent-or-state>]
@@ -16,14 +16,14 @@
 [HUMAN_ATTENTION_REQUIRED: <reason>]
 ```
 
-有實際作業（至少一次 tool call）的 sub-agent 以任何其他形式結尾，視為 protocol violation，由 `stop-retro-logger.py` 標記送 `docs/learnings/ERRORS.md` Pending Review。此檢查僅適用於 `SubagentStop` 事件——主對話的一般回合（`Stop` 事件）不要求以標記結尾。
+有實際作業（至少一次 tool call）的 sub-agent 以任何其他形式結尾，視為 protocol violation，由 `stop-retro-logger.py` 標記送 `docs/learnings/ERRORS.md` Pending Review。哨兵同時驗證標記*語意*：照抄文件的佔位符 reason（`<target>`）、§1 表格以外的 `[HANDOFF:]` target、超過 80 字元的 `[VERIFY_FAILED:]`/`[HUMAN_ATTENTION_REQUIRED:]` reason，都視為 violation。標記行外的 markdown 包裹（如 `**[HANDOFF: main]**`）可容忍。此檢查僅適用於 `SubagentStop` 事件——主對話的一般回合（`Stop` 事件）不要求以標記結尾。
 
 ---
 
 ## 1. `[HANDOFF: <target>]`
 
 **用途**：正常完成自己負責的階段，移交下一個角色。
-**Target 必須是下列之一**：
+**Target 必須是下列之一**（此表是 `stop-retro-logger.py` 中 `VALID_HANDOFF_TARGETS` 的同步來源——改表必須同時改該常數）：
 
 | Target | 意義 |
 |--------|------|
@@ -108,7 +108,20 @@
 | Sub-agent 的 final response | **必須**有單行 marker 結尾 |
 | ExecPlan §9 Handoff Manifest | 寫入 `Current state marker:` 欄位 |
 | ExecPlan §6 Progress Log | 每行末段可加 marker |
-| 主對話的 turn 結尾 | 非 task workflow 不要求；task 中建議加 |
+| 主對話的 turn 結尾 | 非 task workflow 不要求；task 中建議加；ExecPlan lifecycle 出口（如 Phase 5 → `[HANDOFF: code-reviewer]`）**必須**加，由 review 把關而非 hook |
+
+---
+
+## 哨兵覆蓋範圍
+
+`stop-retro-logger.py` 機械檢查的範圍 vs. 仍靠自律的範圍——避免把「文件上的義務」誤認為「被強制的義務」：
+
+| 路徑 | 覆蓋 |
+|------|------|
+| Sub-agent final response（`SubagentStop` 且有 `agent_transcript_path`） | **有檢查**：最後非空行的標記存在性、`[HANDOFF:]` target 合法（§1 表）、reason 非佔位符、`[VERIFY_FAILED:]`/`[HUMAN_ATTENTION_REQUIRED:]` reason ≤80 字元 |
+| 以 tool call 結尾的 sub-agent（Workflow structured-output 代理、被中斷的代理） | 豁免——沒有結尾文字報告可供檢查 |
+| 主對話回合（`Stop`） | hook 不檢查；ExecPlan lifecycle 出口標記由 plan/code review 把關 |
+| agy / Antigravity 代理 | 不檢查——該環境不執行 Python hooks（CLAUDE.md Antigravity 橋接段）；靠手動遵守 |
 
 ---
 

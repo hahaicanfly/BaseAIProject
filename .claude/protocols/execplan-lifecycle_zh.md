@@ -48,7 +48,7 @@
 **Trigger**：人類或 PM agent 提出需求。
 **Owner**：`pm` agent（觸發詞：需求、規劃、PRD、用戶故事、功能）。
 **Action**：建立 `docs/plans/active/F-NNN-<slug>.md`，填 §1 Goal + §2 Context（部分）。
-**Exit**：填完 Goal，輸出 `[HANDOFF: architect]`。
+**Exit**：填完 Goal **與** §1 的 Non-Goals / Out of Scope 行（至少一條明確邊界，或附理由的「none identified」——見 PLANS.md §2），輸出 `[HANDOFF: architect]`。
 
 ### Phase 2 — PLANNED
 

@@ -48,7 +48,7 @@
 **Trigger**: Human or PM agent raises a requirement.
 **Owner**: `pm` agent (trigger words: requirement, planning, PRD, user story, feature).
 **Action**: Create `docs/plans/active/F-NNN-<slug>.md`, fill in §1 Goal + §2 Context (partial).
-**Exit**: Goal filled in, output `[HANDOFF: architect]`.
+**Exit**: Goal **and** §1's Non-Goals / Out of Scope line filled in (at least one explicit boundary, or a justified "none identified" — see PLANS.md §2), output `[HANDOFF: architect]`.
 
 ### Phase 2 — PLANNED
 
