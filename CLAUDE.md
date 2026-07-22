@@ -27,6 +27,7 @@ On conflict: trust per the table above, log the conflict in `docs/learnings/ERRO
 
 ## Decision Tree Before Acting (single entry point)
 
+0. Scope/requirements unclear (2+ of: target user, success metric, non-goals/boundaries, trigger condition are missing) → clarify first in the main conversation before drafting an ExecPlan or Plan Mode plan (`.claude/rules/clarify-first.md`)
 1. Cross-module / API changes / large-scale refactors → create an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`), **wait for human approval**
 2. Other non-trivial tasks (new features, multi-file changes, file deletion) → propose a plan in Plan Mode, execute after approval
 3. Single file < 20 lines, already-located bug fix, formatting change → do it directly
@@ -35,7 +36,7 @@ On conflict: trust per the table above, log the conflict in `docs/learnings/ERRO
 
 ## Standing Rules (auto-loaded from `.claude/rules/`, no need to re-read)
 
-security / model-dispatch (model dispatch & delegation) / judgment-rubrics (escalation·completion·circuit-breaker·path-switch criteria) / plan-first / parallel-worktree / cost-optimization (modularity demoted from standing → `agent_docs/modularity.md`)
+security / model-dispatch (model dispatch & delegation) / judgment-rubrics (escalation·completion·circuit-breaker·path-switch criteria) / clarify-first (proactive scope check before ExecPlan/Plan Mode) / plan-first / parallel-worktree / cost-optimization (modularity demoted from standing → `agent_docs/modularity.md`)
 
 - Delegation prompt templates: `.claude/templates/delegation-templates.md`
 - How to safely edit harness files: `.claude/protocols/harness-maintenance.md`

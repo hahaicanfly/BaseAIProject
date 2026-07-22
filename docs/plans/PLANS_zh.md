@@ -38,6 +38,7 @@ ExecPlan 必須含以下 9 段，依此順序：
 
 ## 1. Goal
 <一句話：這個 task 要解決什麼問題？做完應達成什麼可量測結果？>
+<Non-Goals / Out of Scope：這個 task 刻意不做什麼——至少列出一項明確邊界；真的沒有才寫「無」>
 
 ## 2. Context
 <引用 agent_docs/TECHNICAL-REFERENCE.md 的章節錨；列出影響的 module / 既有相關 ADR / 過去類似 PR>
@@ -168,6 +169,8 @@ ExecPlan 必須含以下 9 段，依此順序：
 
 ## 1. Goal
 
+
+Non-Goals / Out of Scope：
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>

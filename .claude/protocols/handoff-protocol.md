@@ -16,7 +16,7 @@ Every agent's final response **must** end with one of the following three marker
 [HUMAN_ATTENTION_REQUIRED: <reason>]
 ```
 
-Any other ending is treated as a protocol violation, flagged by `stop-retro-logger.py` and sent to `docs/learnings/ERRORS.md` Pending Review.
+Any other ending from a sub-agent that did real work (at least one tool call) is treated as a protocol violation, flagged by `stop-retro-logger.py` and sent to `docs/learnings/ERRORS.md` Pending Review. This check only applies to `SubagentStop` events — the main conversation's ordinary turns (`Stop` events) are not required to end with a marker.
 
 ---
 

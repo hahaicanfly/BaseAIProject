@@ -16,7 +16,7 @@
 [HUMAN_ATTENTION_REQUIRED: <reason>]
 ```
 
-任何其他結尾被視為 protocol violation，由 `stop-retro-logger.py` 標記送 `docs/learnings/ERRORS.md` Pending Review。
+有實際作業（至少一次 tool call）的 sub-agent 以任何其他形式結尾，視為 protocol violation，由 `stop-retro-logger.py` 標記送 `docs/learnings/ERRORS.md` Pending Review。此檢查僅適用於 `SubagentStop` 事件——主對話的一般回合（`Stop` 事件）不要求以標記結尾。
 
 ---
 

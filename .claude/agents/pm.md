@@ -41,6 +41,9 @@ so that [value/purpose]
 - [ ] Criterion 1
 - [ ] Criterion 2
 
+### Out of Scope
+- [explicitly excluded from this feature — what it will deliberately NOT do]
+
 ### Priority Assessment
 - User value: High/Medium/Low
 - Implementation complexity: High/Medium/Low

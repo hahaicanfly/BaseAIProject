@@ -4,12 +4,17 @@
 Phase D mode: SENTINEL — always pass, never block.
 
 When the session (or a subagent) ends:
-1. If transcript_path is in payload, read it and grep for
-   [VERIFY_FAILED:*], [HUMAN_ATTENTION_REQUIRED:*], and surrounding
-   context (5 lines).
-2. Append harvested entries to docs/learnings/ERRORS.md
+1. Pick the transcript for the event: on Stop that is `transcript_path`
+   (the main conversation); on SubagentStop it is `agent_transcript_path`
+   (the subagent's own transcript — `transcript_path` still points to the
+   PARENT session on SubagentStop, so reading it would judge the main
+   conversation's text instead of the subagent's).
+2. Grep it for [VERIFY_FAILED:*], [HUMAN_ATTENTION_REQUIRED:*], and
+   surrounding context; on SubagentStop additionally check that the
+   subagent's final text ends with a handoff marker.
+3. Append harvested entries to docs/learnings/ERRORS.md
    `## Pending Review` section, dedup by content hash.
-3. Always log to state/hook-events.jsonl.
+4. Always log to state/hook-events.jsonl.
 
 Why dedup?
 - A single failure may surface multiple times across SubagentStop and
@@ -50,6 +55,16 @@ RETRO_HASHES_ROTATE_DAYS = 90
 MARKER_RE = re.compile(
     r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
 )
+
+# Broader marker covering all 3 handoff-protocol.md kinds. Used ONLY by
+# detect_missing_marker() to check for ABSENCE as the last line of a
+# session's final assistant text block. Deliberately kept separate from
+# MARKER_RE (which stays presence-harvest-only for VERIFY_FAILED /
+# HUMAN_ATTENTION_REQUIRED) so existing harvest behavior is unchanged.
+FULL_MARKER_RE = re.compile(
+    r"^\[(HANDOFF|VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*[^\]]+\]\s*$"
+)
+
 PENDING_SECTION_HEADER = "## Pending Review"
 PENDING_SECTION_FALLBACK = "_(空)_"
 
@@ -190,6 +205,84 @@ def harvest_markers(transcript_path: str) -> list[dict]:
     if is_jsonl:
         return _harvest_jsonl_transcript(lines)
     return _harvest_plain_text(lines)
+
+
+def detect_missing_marker(transcript_path: str) -> dict | None:
+    """Detect a subagent transcript that shows real work (>=1 assistant
+    tool_use block) but whose final assistant text does not end with a
+    [HANDOFF:*] / [VERIFY_FAILED:*] / [HUMAN_ATTENTION_REQUIRED:*] marker
+    on its last non-empty line.
+
+    Returns a finding dict with keys {kind, reason, context} (no "hash" —
+    the caller in main() attaches that using session_id + agent_id) or
+    None if:
+    - the transcript doesn't parse, or
+    - no assistant tool_use block exists anywhere (trivial Q&A subagent,
+      nothing handoff-worthy happened — this is the heuristic gate that
+      avoids flagging agents that never touched a real task), or
+    - the transcript's LAST assistant content block is not a text block
+      (e.g. the agent's loop ended on a tool call — Workflow subagents
+      forced into StructuredOutput, or an interrupted agent — there is no
+      final textual report to hold to the marker rule; prefer a false
+      negative over flooding ERRORS.md with false positives), or
+    - the final text block's last line already matches the marker syntax.
+    """
+    p = Path(transcript_path)
+    if not p.is_file():
+        return None
+    try:
+        text = p.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return None
+
+    lines = text.splitlines()
+    if not lines:
+        return None
+
+    has_tool_use = False
+    final_block: dict | None = None  # last assistant content block overall
+
+    for line in lines:
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        msg = obj.get("message") or {}
+        if msg.get("role") != "assistant":
+            continue
+        content = msg.get("content") or []
+        if not isinstance(content, list):
+            continue
+        for blk in content:
+            if not isinstance(blk, dict):
+                continue
+            if blk.get("type") == "tool_use":
+                has_tool_use = True
+                final_block = blk
+            elif blk.get("type") == "text":
+                if blk.get("text", "").strip():
+                    final_block = blk  # keep overwriting -> last wins
+
+    if not has_tool_use:
+        return None  # trivial Q&A subagent, nothing handoff-worthy happened
+
+    if final_block is None or final_block.get("type") != "text":
+        # Loop ended on a tool call (structured output / interruption):
+        # no final textual report exists, so the marker rule doesn't apply.
+        return None
+
+    last_assistant_text = final_block.get("text", "")
+    final_lines = [ln for ln in last_assistant_text.splitlines() if ln.strip()]
+    last_line = final_lines[-1].strip() if final_lines else ""
+    if FULL_MARKER_RE.match(last_line):
+        return None  # marker present and well-formed, no violation
+    reason = "subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker"
+    excerpt = last_assistant_text[-300:]
+
+    return {"kind": "PROTOCOL_VIOLATION", "reason": reason, "context": excerpt}
 
 
 def _ledger_hashes() -> set[str]:
@@ -430,16 +523,81 @@ def main() -> int:
     payload = read_stdin_json()
     transcript_path = payload.get("transcript_path", "")
     session_id = payload.get("session_id") or payload.get("sessionId") or ""
+    hook_event_name = payload.get("hook_event_name", "")
+    agent_id = payload.get("agent_id", "")
 
-    if not transcript_path:
+    # On SubagentStop, `transcript_path` points to the PARENT session's
+    # transcript; the subagent's own output lives in the separate
+    # `agent_transcript_path` file. (Field verified against a live
+    # SubagentStop payload dump on 2026-07-22 — the official hooks doc does
+    # not describe it, so do not "simplify" this back to transcript_path.)
+    # If the field is ever absent (older CLI), skip the whole event rather
+    # than fall back: reading the wrong transcript produces false
+    # PROTOCOL_VIOLATION entries, which is worse than missing one event.
+    if hook_event_name == "SubagentStop":
+        target_transcript = payload.get("agent_transcript_path", "")
+        if not target_transcript or not Path(target_transcript).is_file():
+            # Two distinct reasons so production logs can tell "payload has
+            # no such field" (CLI too old / synthetic test input) apart from
+            # "field present but file gone" (flush race?) — if either shows
+            # up for real agents, the check is silently skipping and needs
+            # attention.
+            log_event(
+                HOOK_NAME,
+                "sentinel",
+                reason=(
+                    "no-agent-transcript-field"
+                    if not target_transcript
+                    else "no-agent-transcript-file"
+                ),
+                session=session_id,
+                agent=agent_id,
+            )
+            return 0
+    else:
+        target_transcript = transcript_path
+
+    if not target_transcript:
         log_event(HOOK_NAME, "sentinel", reason="no-transcript-path", session=session_id)
         return 0
 
-    findings = harvest_markers(transcript_path)
+    findings = harvest_markers(target_transcript)
+
+    # handoff-protocol.md's own Audience line scopes the marker requirement
+    # to sub-agents ("All sub-agents must use this protocol's markers at the
+    # end of their output") — the main conversation is not expected to end
+    # every ordinary turn with one. The Stop event fires after every
+    # interactive turn (not just true session end), so checking it here
+    # would flag nearly all normal conversation as a violation. Only
+    # SubagentStop — which fires once per subagent, when that subagent's
+    # own agentic loop finishes — is in scope, and the check runs against
+    # the subagent's own transcript (target_transcript above).
+    missing_marker = (
+        detect_missing_marker(target_transcript)
+        if hook_event_name == "SubagentStop"
+        else None
+    )
+    if missing_marker:
+        # Hash includes agent_id: SubagentStop fires once PER SUBAGENT, so
+        # each violating subagent is its own finding — keying on session
+        # alone would tombstone every violation after the first one.
+        missing_marker["hash"] = hashlib.sha1(
+            f"missing-marker|{session_id}|{agent_id}".encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()[:10]
+        findings.append(missing_marker)
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="missing-marker-detected",
+            session=session_id,
+            detail=missing_marker["reason"],
+        )
+
     appended = append_to_pending(findings)
 
     # PR_RETRO_HOOK: detect git commits this session → suggest /pr-retro
-    commits = _detect_git_commits(transcript_path)
+    commits = _detect_git_commits(target_transcript)
     if commits:
         _append_retro_suggestion(session_id, len(commits))
         log_event(

@@ -41,6 +41,10 @@
 - 教訓：抽取/移植文件集時產出「來源 vs 目標行數對照表」附在 commit，行數低於來源 70% 的每一檔必須標註原因（刻意精簡/待補/stub）；無標記的縮水視為遺漏
 - 建議去向：留在 ERRORS；若 fork 流程文件化，把「對照表」寫進 NEW-PROJECT-VALIDATION.md 檢查項
 
+<!-- harvest:5fbf09ba9a -->
+- [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 645b493e-20af-4689-9546-e5ddba056a8f
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
