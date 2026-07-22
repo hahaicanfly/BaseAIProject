@@ -19,6 +19,8 @@ always: true
 - ✅ Good: User says "add an export feature." Missing: target user, success metric, non-goals, trigger condition (4/4 missing) → stop, ask before opening Plan Mode or an ExecPlan.
 - ❌ Bad: Same request → immediately start Plan Mode, silently deciding "export to CSV, triggered by a button, for all users" without confirming any of it.
 
+When this gate runs, emit the telemetry marker inline — `[RULE_FIRED: clarify-first|missing=N, asked]` when it triggers clarification, `[RULE_SKIPPED: clarify-first|<§4 exception>]` when skipped — so the rule's hit-rate is measurable (syntax: handoff-protocol.md "Inline Auxiliary Markers"; harvested to state/rule-events.jsonl).
+
 ## 2. Where Clarification Happens (context_firewall constraint)
 
 All agents in `.claude/agents/` run with `context_firewall: true` — non-interactive subagents that cannot pause mid-task to ask the user something live. Clarification must therefore happen in the **main conversation**, never inside a delegated subagent:
@@ -31,7 +33,7 @@ All agents in `.claude/agents/` run with `context_firewall: true` — non-intera
 
 ## 3. Relationship to judgment-rubrics.md §3
 
-§3 is the **reactive** exit: it fires *during* execution, once "two reasonable interpretations exist and picking the wrong one would waste 30+ minutes." This rule is the **proactive** gate: it fires *before* drafting starts, using the objective 4-field checklist in §1 above. Passing this gate does not exempt you from §3 later — if ambiguity surfaces mid-task anyway, handle it there; don't re-run this checklist mid-task.
+§3 is the **reactive** exit: it fires *during* execution, once "two reasonable interpretations exist and picking the wrong one would waste 30+ minutes." This rule is the **proactive** gate: it fires *before* drafting starts, using the objective 4-field checklist in §1 above. Passing this gate does not exempt you from §3 later — if ambiguity surfaces mid-task anyway, handle it there; don't re-run this checklist mid-task. One exception: a **user-initiated requirement change** mid-task is not covered by this don't-re-run clause — it goes through execplan-lifecycle.md's "Scope Change" procedure (delta-only 4-field check + Scope Baseline version line).
 
 ## 4. When to Skip
 

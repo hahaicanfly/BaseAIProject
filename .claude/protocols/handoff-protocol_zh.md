@@ -101,6 +101,27 @@
 
 ---
 
+## 行內輔助標記
+
+`[UNCONFIRMED: <claim, ≤80 字元>]` —— judgment-rubrics.md §6 誠實條款（「超出環境的事實 → 寫未確認，不要編造」）的標準語法：
+
+- 在文字中**主張出現的當下**內嵌標記（行內，不是放在結尾）；每個無出處主張標一個標籤。
+- 下游文件若引用了帶有未確認標籤的主張，必須保留該標籤；唯一移除方式是補上出處（URL 或 file:line）。
+- `stop-retro-logger.py` 會把每次實際出現的標記收割進 `docs/learnings/ERRORS.md` Pending Review（kind `UNCONFIRMED`），讓無出處主張進入週檢而不是靜默擴散。
+- 這**不是**結尾標記 —— 報告仍須以上述三種標記之一結尾。
+
+**Telemetry markers（遙測標記）** —— 在規則實際觸發的當下行內發出，由 `stop-retro-logger.py` 收割進 `state/rule-events.jsonl`（同一 session 內去重），讓規則命中率可被量測而非只靠軼事：
+
+```
+[RULE_FIRED: <rule-name>|<detail>]      例：[RULE_FIRED: clarify-first|missing=3, asked]
+[RULE_SKIPPED: <rule-name>|<why>]       例：[RULE_SKIPPED: clarify-first|plan-first exception: <20-line fix]
+[ESCALATION: <from>-><to>|<task>]       例：[ESCALATION: sonnet->opus|race-condition fix]
+```
+
+與 `[UNCONFIRMED:]` 一樣，這些是行內標記，不是結尾標記。驗收結果不需要 telemetry marker —— `VERDICT:` 那一行已經會落入 `state/verifications.jsonl`；circuit-break 則透過 `[HUMAN_ATTENTION_REQUIRED:]` 收割呈現。
+
+---
+
 ## 標記出現位置
 
 | 位置 | 行為 |

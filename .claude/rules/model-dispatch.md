@@ -60,6 +60,7 @@ Copy the template directly from `.claude/templates/delegation-templates.md`; don
 | After escalation (Opus) **fails once more** | Stop retrying → circuit-break, ask the user with the failure trace (see judgment-rubrics.md §3) |
 
 Full sequence (the only valid reading): same model fails twice in a row → escalate once → fails once more after escalation → circuit-break and ask. The escalation attempt does not reset the failure counter or open a new budget.
+When escalating, emit `[ESCALATION: <from>-><to>|<task>]` inline (handoff-protocol.md "Inline Auxiliary Markers") so escalation frequency is measurable from state/rule-events.jsonl.
 "Same subtask" is determined by matching goal and acceptance criteria — rephrasing and re-delegating still counts toward the failure count.
 
 ## 5. Verification Is Never Self-Certified

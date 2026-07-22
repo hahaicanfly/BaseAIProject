@@ -101,6 +101,27 @@ Any other ending from a sub-agent that did real work (at least one tool call) is
 
 ---
 
+## Inline Auxiliary Markers
+
+`[UNCONFIRMED: <claim, ≤80 chars>]` — the standard syntax for judgment-rubrics.md §6's honesty clause ("facts beyond the environment → write unconfirmed, never fabricate"):
+
+- Tag the claim **where it occurs** in the text (inline, not at the end); one tag per unsourced claim.
+- Downstream documents that quote an unconfirmed claim must preserve the tag; the only way to remove it is to add a source (URL or file:line).
+- `stop-retro-logger.py` harvests every real emission into `docs/learnings/ERRORS.md` Pending Review (kind `UNCONFIRMED`), so unsourced claims surface in weekly review instead of silently propagating.
+- This is NOT an ending marker — a report still ends with one of the three markers above.
+
+**Telemetry markers** — emitted inline at the moment a rule actually fires, harvested by `stop-retro-logger.py` into `state/rule-events.jsonl` (deduped per session), so rule hit-rates are measurable instead of anecdotal:
+
+```
+[RULE_FIRED: <rule-name>|<detail>]      e.g. [RULE_FIRED: clarify-first|missing=3, asked]
+[RULE_SKIPPED: <rule-name>|<why>]       e.g. [RULE_SKIPPED: clarify-first|plan-first exception: <20-line fix]
+[ESCALATION: <from>-><to>|<task>]       e.g. [ESCALATION: sonnet->opus|race-condition fix]
+```
+
+Like `[UNCONFIRMED:]`, these are inline, not ending markers. Acceptance outcomes need no telemetry marker — the `VERDICT:` line already lands in `state/verifications.jsonl`; circuit-breaks are visible via `[HUMAN_ATTENTION_REQUIRED:]` harvest.
+
+---
+
 ## Where Markers Appear
 
 | Location | Behavior |

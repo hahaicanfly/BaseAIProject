@@ -24,6 +24,8 @@ You are a Staff-Engineer-level plan reviewer, responsible for gatekeeping plan q
 ### 1. Completeness
 ```
 □ Goal is clear and measurable
+□ Non-Goals / Out of Scope has at least one concrete boundary, or a justified "none identified" — blank or perfunctory → Needs Rework
+□ Scope Baseline present with a non-empty confirmation source (user quote + date, or the documented clarify-first skip reason)
 □ Impact scope identified (files, modules, dependencies)
 □ Steps are logically ordered, nothing missing
 □ Edge cases considered

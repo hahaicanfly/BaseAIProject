@@ -48,7 +48,7 @@
 **Trigger**：人類或 PM agent 提出需求。
 **Owner**：`pm` agent（觸發詞：需求、規劃、PRD、用戶故事、功能）。
 **Action**：建立 `docs/plans/active/F-NNN-<slug>.md`，填 §1 Goal + §2 Context（部分）。
-**Exit**：填完 Goal **與** §1 的 Non-Goals / Out of Scope 行（至少一條明確邊界，或附理由的「none identified」——見 PLANS.md §2），輸出 `[HANDOFF: architect]`。
+**Exit**：填完 Goal、§1 的 Non-Goals / Out of Scope 行（至少一條明確邊界，或附理由的「none identified」）**與** §1 的 Scope Baseline（target user / success metric / trigger condition，各項均須有非空的確認來源——見 PLANS.md §2），輸出 `[HANDOFF: architect]`。
 
 ### Phase 2 — PLANNED
 
@@ -91,7 +91,7 @@
 
 **Owner**：`code-reviewer` agent（model: Sonnet）。
 **Action**：
-1. 讀 ExecPlan §3 Constraints 與 §5 Verification Strategy
+1. 讀 ExecPlan §1 Goal + Non-Goals（依 review-protocol checklist 反向核對 diff 是否觸及排除項目）、§3 Constraints 與 §5 Verification Strategy
 2. 跑 `git diff master...HEAD` 對照 §4
 3. 逐條對照 INV-id 確認無違反
 4. 跑 §5 的所有 verification 指令
@@ -128,6 +128,15 @@
 2. `state/feature-list.json` `status: blocked`
 3. 輸出 `[HUMAN_ATTENTION_REQUIRED: <reason>]`
 **Exit**：blocker 解除 → 回原階段繼續。
+
+### Scope Change（使用者發起；可從 Phase 4–7 進入）
+
+**Trigger**：人類核可後，使用者提出任何需求的新增／移除／變更。（clarify-first §3「不在 task 中途重跑 checklist」的條款刻意不涵蓋此情況——若無此流程，模型會靜默照做新的口頭要求，導致計劃與現實脫節。）
+**Action**：
+1. 只針對**變更的差異部分**跑 clarify-first 4 欄檢查（該變更的 target user / success metric / non-goals / trigger condition）。
+2. 在 §1 Scope Baseline 補一行版本紀錄——`v2 (YYYY-MM-DD): <變更摘要 + 使用者原話>`——絕不刪除先前版本。
+3. 在 §6 Progress Log 補一行，帶上可機械 grep 的標籤 `[SCOPE-CHANGE: v1→v2]`。
+4. 若變更觸及 §5 驗收條件或 §1 Non-Goals → 先回到人類核可 gate（同 Phase 3 之後）再繼續；否則記錄後繼續執行。
 
 ### Phase 10 — REJECTED
 

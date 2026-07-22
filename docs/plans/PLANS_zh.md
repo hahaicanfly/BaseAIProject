@@ -40,6 +40,7 @@ ExecPlan 必須含以下 9 段，依此順序：
 <一句話：這個 task 要解決什麼問題？做完應達成什麼可量測結果？>
 <Non-Goals / Out of Scope：這個 task 刻意不做什麼——至少列出一項明確邊界；真的沒有才寫「無」>
 <Clarify-first：記錄範圍檢查結果——「缺 N/4 欄 → 已提問並於 YYYY-MM-DD 確認」｜「skipped: <plan-first 例外>」｜「原始需求 4 欄齊全」（clarify-first.md §1）>
+<Scope Baseline：目標用戶=…／成功指標=…／觸發條件=…／確認來源=<用戶原句+日期，或 clarify-first 跳過理由>。經 last-word 交接跨 /clear 存活；任務中途的用戶需求變更走 lifecycle 的 Scope Change 程序以 `vN (日期): …` 追加版本行——不得改寫舊版本>
 
 ## 2. Context
 <引用 agent_docs/TECHNICAL-REFERENCE.md 的章節錨；列出影響的 module / 既有相關 ADR / 過去類似 PR>
@@ -177,6 +178,7 @@ negative: [必須失敗的指令] expect-fail
 
 Non-Goals / Out of Scope：
 Clarify-first：
+Scope Baseline：
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>

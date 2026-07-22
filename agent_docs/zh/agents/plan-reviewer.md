@@ -24,6 +24,8 @@ context_firewall: true
 ### 1. 完整性 (Completeness)
 ```
 □ 目標明確且可衡量
+□ Non-Goals / Out of Scope 至少有一條具體邊界，或附理由的「none identified」——空白或敷衍 → Needs Rework
+□ Scope Baseline 存在且確認來源非空（使用者原話 + 日期，或已記錄的 clarify-first 跳過理由）
 □ 影響範圍已識別（檔案、模組、依賴）
 □ 步驟順序合理，無遺漏
 □ 邊界條件已考慮

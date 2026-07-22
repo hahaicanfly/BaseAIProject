@@ -40,6 +40,7 @@ An ExecPlan must contain the following 9 sections, in this order:
 <One sentence: what problem does this task solve? What measurable outcome should exist when done?>
 <Non-Goals / Out of Scope: what this task deliberately will NOT cover — state at least one explicit boundary; write "none identified" only if genuinely none>
 <Clarify-first: record the scope-check outcome — "N/4 fields missing → asked & confirmed YYYY-MM-DD" | "skipped: <plan-first exception>" | "all 4 fields present in original request" (clarify-first.md §1)>
+<Scope Baseline: target user=… / success metric=… / trigger condition=… / confirmation source=<user quote + date, or the clarify-first skip reason>. Survives /clear via the last-word handoff; mid-task user changes append `vN (date): …` lines through the lifecycle's Scope Change procedure — never rewrite earlier versions>
 
 ## 2. Context
 <Reference the relevant section anchor in agent_docs/TECHNICAL-REFERENCE.md; list affected modules / related existing ADRs / similar past PRs>
@@ -177,6 +178,7 @@ Copy the following to `docs/plans/active/F-<NNN>-<slug>.md`:
 
 Non-Goals / Out of Scope: 
 Clarify-first: 
+Scope Baseline: 
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>
