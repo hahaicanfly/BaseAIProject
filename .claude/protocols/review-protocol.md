@@ -53,7 +53,7 @@ Every finding must be tagged with a severity:
 ```
 □ Read ExecPlan §1 Goal and confirm the PR diff's scope matches it
 □ Read ExecPlan §3 Constraints; verify each INV-id against the diff
-□ Run every command in ExecPlan §5 Verification Strategy
+□ Run `python3 scripts/acceptance-run.py <execplan-path>` — it executes §5's ```acceptance block and logs evidence to state/acceptance/; paste its summary line in the report. §5 Manual items are run by hand. (Legacy plans without an acceptance block: run §5's prose commands manually.)
 □ git branch --show-current to confirm you're not on master
 □ Is the commit message atomic and in type(scope) format?
 □ Does each commit build independently?

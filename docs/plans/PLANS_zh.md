@@ -24,7 +24,7 @@
 
 ExecPlan 必須含以下 9 段，依此順序：
 
-```markdown
+````markdown
 # ExecPlan: F-NNN — <Title>
 
 | 欄位 | 值 |
@@ -39,6 +39,7 @@ ExecPlan 必須含以下 9 段，依此順序：
 ## 1. Goal
 <一句話：這個 task 要解決什麼問題？做完應達成什麼可量測結果？>
 <Non-Goals / Out of Scope：這個 task 刻意不做什麼——至少列出一項明確邊界；真的沒有才寫「無」>
+<Clarify-first：記錄範圍檢查結果——「缺 N/4 欄 → 已提問並於 YYYY-MM-DD 確認」｜「skipped: <plan-first 例外>」｜「原始需求 4 欄齊全」（clarify-first.md §1）>
 
 ## 2. Context
 <引用 agent_docs/TECHNICAL-REFERENCE.md 的章節錨；列出影響的 module / 既有相關 ADR / 過去類似 PR>
@@ -55,11 +56,13 @@ ExecPlan 必須含以下 9 段，依此順序：
 4. [ ] 更新相關文件
 
 ## 5. Verification Strategy
-- Build: `[your build command]`
-- Lint: `[your lint command]`
-- Test: `[your test command]`
-- Manual: <手動驗證的 golden path>
-- Negative: <要故意觸發失敗的 case>
+```acceptance
+build: [your build command]
+lint: [your lint command]
+test: [your test command]
+negative: [必須失敗的指令] expect-fail
+```
+- Manual: <人工驗證的 golden path>
 
 ## 6. Progress Log
 <Append-only，每次 commit / 進度更新 append 一行>
@@ -78,7 +81,9 @@ ExecPlan 必須含以下 9 段，依此順序：
 - Next agent: <name>
 - Required reading before resuming: <file paths>
 - Current state marker: [HANDOFF: <next>] 或 [VERIFY_FAILED: <reason>]
-```
+````
+
+> **§5 acceptance 區塊是機器執行的**：`python3 scripts/acceptance-run.py <plan.md>` 逐行執行 `label: command`（行尾 ` expect-fail` 表示該指令必須失敗才算過），每條證據寫入 `state/acceptance/<plan>.jsonl`，任一 FAIL 即非零退出——reviewer 執行它而非目測 prose（見 review-protocol.md 檢查表）。仍含 `{{` 或 `[your ` 佔位符的行會被 SKIP（模板未活化）。計畫本身的結構由 `python3 scripts/execplan-lint.py` 檢查（9 段、Non-Goals 非空、INV 引用、§9 標記、無殘留佔位符）。
 
 ---
 
@@ -155,7 +160,7 @@ ExecPlan 必須含以下 9 段，依此順序：
 
 複製下方到 `docs/plans/active/F-<NNN>-<slug>.md`：
 
-```markdown
+````markdown
 # ExecPlan: F-NNN — <Title>
 
 | 欄位 | 值 |
@@ -171,6 +176,7 @@ ExecPlan 必須含以下 9 段，依此順序：
 
 
 Non-Goals / Out of Scope：
+Clarify-first：
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>
@@ -188,11 +194,13 @@ Non-Goals / Out of Scope：
 - [ ] 3. ...
 
 ## 5. Verification Strategy
-- Build: `[build command]`
-- Lint: `[lint command]`
-- Test: `[test command]`
+```acceptance
+build: [build command]
+lint: [lint command]
+test: [test command]
+negative: [必須失敗的指令] expect-fail
+```
 - Manual: <golden path>
-- Negative: <intentional failure case>
 
 ## 6. Progress Log
 - [YYYY-MM-DD HH:mm] <agent> created plan
@@ -207,7 +215,7 @@ _(空，待 §4 執行中或 review 時補)_
 - Next agent: <pending>
 - Required reading: agent_docs/TECHNICAL-REFERENCE.md §<...>
 - Current state marker: [HANDOFF: pending]
-```
+````
 
 ---
 

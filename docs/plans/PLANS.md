@@ -24,7 +24,7 @@
 
 An ExecPlan must contain the following 9 sections, in this order:
 
-```markdown
+````markdown
 # ExecPlan: F-NNN — <Title>
 
 | Field | Value |
@@ -39,6 +39,7 @@ An ExecPlan must contain the following 9 sections, in this order:
 ## 1. Goal
 <One sentence: what problem does this task solve? What measurable outcome should exist when done?>
 <Non-Goals / Out of Scope: what this task deliberately will NOT cover — state at least one explicit boundary; write "none identified" only if genuinely none>
+<Clarify-first: record the scope-check outcome — "N/4 fields missing → asked & confirmed YYYY-MM-DD" | "skipped: <plan-first exception>" | "all 4 fields present in original request" (clarify-first.md §1)>
 
 ## 2. Context
 <Reference the relevant section anchor in agent_docs/TECHNICAL-REFERENCE.md; list affected modules / related existing ADRs / similar past PRs>
@@ -55,11 +56,13 @@ An ExecPlan must contain the following 9 sections, in this order:
 4. [ ] Update related documentation
 
 ## 5. Verification Strategy
-- Build: `[your build command]`
-- Lint: `[your lint command]`
-- Test: `[your test command]`
+```acceptance
+build: [your build command]
+lint: [your lint command]
+test: [your test command]
+negative: [command that must fail] expect-fail
+```
 - Manual: <golden path for manual verification>
-- Negative: <case designed to intentionally trigger failure>
 
 ## 6. Progress Log
 <Append-only; append one line per commit / progress update>
@@ -78,7 +81,9 @@ An ExecPlan must contain the following 9 sections, in this order:
 - Next agent: <name>
 - Required reading before resuming: <file paths>
 - Current state marker: [HANDOFF: <next>] or [VERIFY_FAILED: <reason>]
-```
+````
+
+> **§5 acceptance block is machine-run**: `python3 scripts/acceptance-run.py <plan.md>` executes each `label: command` line (a trailing ` expect-fail` inverts the expectation), logs per-command evidence to `state/acceptance/<plan>.jsonl`, and exits non-zero on any FAIL — reviewers run this instead of eyeballing prose (see review-protocol.md checklist). Lines still containing `{{` or `[your ` placeholders are SKIPped (unactivated template). Structure of the plan itself is checked by `python3 scripts/execplan-lint.py` (9 sections, non-empty Non-Goals, INV reference, §9 marker, no leftover placeholders).
 
 ---
 
@@ -155,7 +160,7 @@ Examples:
 
 Copy the following to `docs/plans/active/F-<NNN>-<slug>.md`:
 
-```markdown
+````markdown
 # ExecPlan: F-NNN — <Title>
 
 | Field | Value |
@@ -171,6 +176,7 @@ Copy the following to `docs/plans/active/F-<NNN>-<slug>.md`:
 
 
 Non-Goals / Out of Scope: 
+Clarify-first: 
 
 ## 2. Context
 - TECHNICAL-REFERENCE: §<...>
@@ -188,11 +194,13 @@ Non-Goals / Out of Scope:
 - [ ] 3. ...
 
 ## 5. Verification Strategy
-- Build: `[build command]`
-- Lint: `[lint command]`
-- Test: `[test command]`
+```acceptance
+build: [build command]
+lint: [lint command]
+test: [test command]
+negative: [command that must fail] expect-fail
+```
 - Manual: <golden path>
-- Negative: <intentional failure case>
 
 ## 6. Progress Log
 - [YYYY-MM-DD HH:mm] <agent> created plan
@@ -207,7 +215,7 @@ _(empty, fill in during §4 execution or review)_
 - Next agent: <pending>
 - Required reading: agent_docs/TECHNICAL-REFERENCE.md §<...>
 - Current state marker: [HANDOFF: pending]
-```
+````
 
 ---
 
