@@ -45,6 +45,10 @@
 - [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 645b493e-20af-4689-9546-e5ddba056a8f
 
+<!-- harvest:b992aa36d0 -->
+- [2026-07-22T15:10:19+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
