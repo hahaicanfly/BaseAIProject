@@ -52,9 +52,20 @@ HOOK_NAME = "stop-retro-logger"
 # in the transcript on the next Stop event).
 RETRO_HASHES_LEDGER = STATE_DIR / "retro-hashes.jsonl"
 VERIFICATIONS_LEDGER = STATE_DIR / "verifications.jsonl"
+RULE_EVENTS_LEDGER = STATE_DIR / "rule-events.jsonl"
+METRICS_MONTHLY = STATE_DIR / "metrics-monthly.jsonl"
 LAST_ROTATE_FILE = STATE_DIR / ".last-rotate"
 HOOK_EVENTS_ROTATE_DAYS = 30
 RETRO_HASHES_ROTATE_DAYS = 90
+RULE_EVENTS_ROTATE_DAYS = 90
+
+# Telemetry markers (handoff-protocol.md "Inline Auxiliary Markers"):
+# emitted by rules at the moment they fire, harvested here so "did
+# clarify-first ever fire / how often do we escalate" becomes answerable
+# from state/rule-events.jsonl instead of anecdote.
+TELEMETRY_RE = re.compile(
+    r"\[(RULE_FIRED|RULE_SKIPPED|ESCALATION):\s*([^\]]+)\]"
+)
 
 # Fresh-context acceptance agents must end their report with a line
 # `VERDICT: PASS|FAIL <evidence-path>` (delegation-templates.md §6). The
@@ -62,8 +73,12 @@ RETRO_HASHES_ROTATE_DAYS = 90
 # outcomes survive the subagent's ephemeral context.
 VERDICT_RE = re.compile(r"^\s*VERDICT:\s*(PASS|FAIL)\b\s*(\S+)?", re.MULTILINE)
 
+# UNCONFIRMED is the inline auxiliary marker from handoff-protocol.md
+# ("Inline Auxiliary Markers"): unsourced claims are tagged where they
+# occur and harvested here so they surface in weekly review instead of
+# silently propagating downstream.
 MARKER_RE = re.compile(
-    r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
+    r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED|UNCONFIRMED):\s*([^\]]+)\]"
 )
 
 # Broader marker covering all 3 handoff-protocol.md kinds. Used ONLY by
@@ -471,6 +486,52 @@ def _append_to_pending_locked(findings: list[dict]) -> int:
     return len(new_findings)
 
 
+def harvest_telemetry(parsed: dict | None, session_id: str) -> int:
+    """Append telemetry-marker events to state/rule-events.jsonl.
+
+    The same transcript is rescanned on every Stop event, so dedup by a
+    content hash (kind|detail) recorded inside each line; existing hashes
+    are loaded from the ledger before appending. Best-effort.
+    """
+    if parsed is None or not parsed["jsonl"]:
+        return 0
+    found: list[tuple[str, str]] = []
+    for text in parsed["text_blocks"]:
+        for m in TELEMETRY_RE.finditer(text):
+            kind, detail = m.group(1), m.group(2).strip()
+            if _is_placeholder(detail):
+                continue
+            found.append((kind, detail))
+    if not found:
+        return 0
+    seen: set = set()
+    try:
+        if RULE_EVENTS_LEDGER.is_file():
+            for line in RULE_EVENTS_LEDGER.read_text(encoding="utf-8").splitlines():
+                try:
+                    seen.add(json.loads(line).get("hash"))
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    appended = 0
+    for kind, detail in found:
+        h = hashlib.sha1(
+            f"{kind}|{detail}|{session_id}".encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()[:10]
+        if h in seen:
+            continue
+        seen.add(h)
+        append_jsonl(
+            RULE_EVENTS_LEDGER,
+            {"ts": now_iso(), "session": session_id, "kind": kind,
+             "detail": detail[:160], "hash": h},
+        )
+        appended += 1
+    return appended
+
+
 def _detect_verdict(parsed: dict | None) -> dict | None:
     """Return the LAST `VERDICT: PASS|FAIL <path>` line emitted in the
     subagent's assistant text blocks, or None. Last one wins so a
@@ -482,6 +543,55 @@ def _detect_verdict(parsed: dict | None) -> dict | None:
         for m in VERDICT_RE.finditer(text):
             verdict = {"verdict": m.group(1), "evidence_path": m.group(2) or ""}
     return verdict
+
+
+_URL_RE = re.compile(r"https?://[^\s\)\]\}>\"'`，。；]+")
+_CITATION_EXEMPT_HOSTS = ("example.com", "example.org", "example.net",
+                          "localhost", "127.0.0.1", "your-domain")
+
+
+def detect_unfetched_citations(parsed: dict | None) -> dict | None:
+    """Flag URLs that a subagent CITES in its final report but that never
+    appear anywhere earlier in its transcript (no WebFetch/WebSearch
+    input, no tool result, no earlier mention) — i.e. links introduced
+    out of thin air. A fetched/observed URL necessarily occurs at least
+    once outside the final text block, so "appears only in the final
+    report" is the fabrication signal. False negatives are accepted
+    (agent mentioned it earlier without fetching); false positives are
+    not (research agents cite what search results showed them).
+    """
+    if parsed is None or not parsed["jsonl"]:
+        return None
+    final_block = parsed["final_block"]
+    if final_block is None or final_block.get("type") != "text":
+        return None
+    final_text = final_block.get("text", "")
+    cited = set()
+    for u in _URL_RE.findall(final_text):
+        u = u.rstrip(".,;:!?)('\"`")
+        if any(h in u for h in _CITATION_EXEMPT_HOSTS):
+            continue
+        cited.add(u)
+    if not cited:
+        return None
+    corpus = "\n".join(parsed["lines"])
+    unverified = []
+    for u in cited:
+        # Count occurrences across the whole transcript; the final report
+        # itself lives in the transcript, so a URL seen nowhere else has
+        # exactly the same count as in the final text.
+        if corpus.count(u) <= final_text.count(u):
+            unverified.append(u)
+    if not unverified:
+        return None
+    listing = "\n".join(sorted(unverified))[:300]
+    return {
+        "kind": "UNVERIFIED_CITATION",
+        "reason": (
+            f"{len(unverified)} cited URL(s) never fetched/observed in-session"
+        ),
+        "context": listing,
+    }
 
 
 _GIT_COMMIT_CMD_RE = re.compile(r"\bgit\s+commit\b")
@@ -573,16 +683,43 @@ def _append_retro_suggestion_locked(session_id: str, commit_count: int) -> None:
     _ledger_record([reminder_hash])
 
 
-def _rotate_jsonl(path: Path, days: int) -> None:
+def _rollup_dropped(dropped: list[dict]) -> None:
+    """Aggregate rotation-dropped hook-event lines into
+    state/metrics-monthly.jsonl before they are destroyed — otherwise
+    every trend question ("did the FAIL rate drop after rule X?") loses
+    its denominator after 30 days. One line per (month, hook, result,
+    reason) group; tiny and kept forever."""
+    if not dropped:
+        return
+    try:
+        groups: dict = {}
+        for obj in dropped:
+            ts = obj.get("ts") or ""
+            key = (ts[:7], obj.get("hook", ""), obj.get("result", ""),
+                   obj.get("reason", ""))
+            groups[key] = groups.get(key, 0) + 1
+        for (month, hook, result, reason), count in sorted(groups.items()):
+            append_jsonl(
+                METRICS_MONTHLY,
+                {"month": month, "hook": hook, "result": result,
+                 "reason": reason, "count": count, "rolled_at": now_iso()},
+            )
+    except Exception:
+        pass
+
+
+def _rotate_jsonl(path: Path, days: int, rollup: bool = False) -> None:
     """Drop lines whose `ts` is older than `days`. Best-effort; silent on
     any failure (malformed lines are kept rather than dropped, to avoid
-    accidental data loss from a parsing edge case).
+    accidental data loss from a parsing edge case). With rollup=True the
+    dropped lines are aggregated into metrics-monthly.jsonl first.
     """
     if not path.is_file():
         return
     try:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         kept: list[str] = []
+        dropped: list[dict] = []
         with path.open("r", encoding="utf-8") as f:
             for line in f:
                 stripped = line.strip()
@@ -593,10 +730,13 @@ def _rotate_jsonl(path: Path, days: int) -> None:
                     ts = obj.get("ts")
                     dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z")
                     if dt < cutoff:
+                        dropped.append(obj)
                         continue
                 except Exception:
                     pass  # keep unparseable lines rather than risk data loss
                 kept.append(stripped)
+        if rollup:
+            _rollup_dropped(dropped)
         path.write_text(("\n".join(kept) + "\n") if kept else "", encoding="utf-8")
     except Exception:
         pass
@@ -615,8 +755,9 @@ def rotate_state_if_due() -> None:
             last = datetime.fromtimestamp(LAST_ROTATE_FILE.stat().st_mtime, tz=timezone.utc)
             if (now - last).total_seconds() < 86400:
                 return
-        _rotate_jsonl(HOOK_EVENTS, HOOK_EVENTS_ROTATE_DAYS)
+        _rotate_jsonl(HOOK_EVENTS, HOOK_EVENTS_ROTATE_DAYS, rollup=True)
         _rotate_jsonl(RETRO_HASHES_LEDGER, RETRO_HASHES_ROTATE_DAYS)
+        _rotate_jsonl(RULE_EVENTS_LEDGER, RULE_EVENTS_ROTATE_DAYS)
         ensure_state_dirs()
         LAST_ROTATE_FILE.write_text(now_iso(), encoding="utf-8")
     except Exception:
@@ -710,6 +851,35 @@ def main() -> int:
             session=session_id,
             detail=missing_marker["reason"],
         )
+
+    telemetry_count = harvest_telemetry(parsed, session_id)
+    if telemetry_count:
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="telemetry-harvested",
+            session=session_id,
+            count=telemetry_count,
+        )
+
+    # Citation check (SubagentStop only): URLs cited in the final report
+    # that never appear earlier in the transcript were never fetched.
+    if hook_event_name == "SubagentStop":
+        citation = detect_unfetched_citations(parsed)
+        if citation:
+            citation["hash"] = hashlib.sha1(
+                f"unverified-citation|{session_id}|{agent_id}".encode("utf-8"),
+                usedforsecurity=False,
+            ).hexdigest()[:10]
+            findings.append(citation)
+            log_event(
+                HOOK_NAME,
+                "sentinel",
+                reason="unverified-citation",
+                session=session_id,
+                agent=agent_id,
+                detail=citation["reason"],
+            )
 
     # Verdict harvest (SubagentStop only): persist fresh-context
     # acceptance outcomes; a FAIL additionally lands in Pending Review.

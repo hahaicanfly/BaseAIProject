@@ -22,6 +22,7 @@ Why grep instead of full lint here?
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -128,6 +129,69 @@ def main() -> int:
     # Sentinel mode (default): scan and log warnings but never block
     sentinel = is_sentinel_mode(HOOK_NAME)
     findings = quick_invariant_scan(p)
+
+    # Rule-budget sentinel (harness-maintenance §5, literal definitions —
+    # a hand-measured version of this once counted CLAUDE.md into the
+    # rules total and produced a wrong human decision): warn at the edit
+    # that crosses the line, instead of waiting for a manual audit.
+    if rel_budget := (
+        "CLAUDE" if record.get("file") in ("CLAUDE.md", "CLAUDE_zh.md")
+        else "RULES" if record.get("file", "").startswith(".claude/rules/")
+        else ""
+    ):
+        try:
+            if rel_budget == "CLAUDE":
+                n = sum(1 for _ in (REPO_ROOT / "CLAUDE.md").open(encoding="utf-8"))
+                if n > 100:
+                    log_event(HOOK_NAME, "warn", reason="RULE_BUDGET",
+                              file="CLAUDE.md", lines=n, budget=100)
+                    sys.stderr.write(
+                        f"[harness/{HOOK_NAME}] CLAUDE.md {n}/100 行超線 — "
+                        "依 harness-maintenance §5 應把超出部分移到引用檔\n"
+                    )
+            else:
+                total = 0
+                for rp in (REPO_ROOT / ".claude" / "rules").glob("*.md"):
+                    total += sum(1 for _ in rp.open(encoding="utf-8"))
+                if total > 600:
+                    log_event(HOOK_NAME, "warn", reason="RULE_BUDGET",
+                              file=record.get("file", ""), lines=total, budget=600)
+                    sys.stderr.write(
+                        f"[harness/{HOOK_NAME}] .claude/rules/* 總量 {total}/600 行超線 — "
+                        "依 harness-maintenance §5 應提議降級最少用的規則\n"
+                    )
+        except Exception:
+            pass
+
+    # Doc-reference sentinel: harness markdown edits get a dead-ref scan
+    # (scripts/check-doc-refs.py; warn-only, never blocks). Only ERROR-
+    # level findings (nonexistent referenced paths) are surfaced.
+    rel = record.get("file", "")
+    if rel.endswith(".md") and (
+        rel in ("CLAUDE.md", "CLAUDE_zh.md")
+        or rel.startswith((".claude/", "docs/", "agent_docs/"))
+    ):
+        checker = REPO_ROOT / "scripts" / "check-doc-refs.py"
+        if checker.is_file():
+            try:
+                r = subprocess.run(
+                    [sys.executable, str(checker), "--file", str(p)],
+                    capture_output=True, text=True, timeout=10,
+                    cwd=str(REPO_ROOT),
+                )
+                out = (r.stdout or "").strip().splitlines()
+                errors = [ln for ln in out if ln.startswith("ERROR")]
+                if errors:
+                    log_event(
+                        HOOK_NAME, "warn", reason="DOC_REF",
+                        file=rel, count=len(errors), hint=errors[0][:200],
+                    )
+                    sys.stderr.write(
+                        f"[harness/{HOOK_NAME}] dead doc reference(s) in {rel}: "
+                        f"{errors[0][:200]}\n"
+                    )
+            except Exception:
+                pass
 
     if findings:
         for inv_id, hint in findings:

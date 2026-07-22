@@ -12,6 +12,8 @@ telemetry trace. Always exit 0 (sentinel, ADR-0001 D5).
 """
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -60,6 +62,26 @@ def main() -> int:
         log_event(HOOK_NAME, "warn", reason="unactivated-slots", count=len(unfilled))
     else:
         log_event(HOOK_NAME, "pass", reason="activated")
+
+    # Retro overdue reminder (sentinel, silent unless over budget):
+    # SessionStart stdout is the only reliable channel to put the weekly-
+    # review debt in front of the model instead of hoping someone runs
+    # scripts/retro-status.py by hand.
+    try:
+        r = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "retro-status.py"), "--json"],
+            capture_output=True, text=True, timeout=10, cwd=str(REPO_ROOT),
+        )
+        st = json.loads(r.stdout.strip() or "{}")
+        over = st.get("over_budget") or []
+        if over:
+            print(
+                "[harness] retro 超線: " + "; ".join(over)
+                + " — 依 harness-maintenance.md §5 建議提請人類週審。"
+            )
+            log_event(HOOK_NAME, "warn", reason="retro-over-budget", items=len(over))
+    except Exception:
+        pass
     return 0
 
 

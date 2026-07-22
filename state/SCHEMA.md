@@ -109,6 +109,40 @@
 **Content**: output of `now_iso()`, e.g. `2026-07-04T12:46:33+0000`.
 
 ---
+## 3c. `state/rule-events.jsonl` — Rule-telemetry ledger
+
+**Nature**: JSON Lines, append-only; 90-day rotate (same gate as retro-hashes).
+**Writer**: `.claude/hooks/stop-retro-logger.py` — harvests inline telemetry markers `[RULE_FIRED:...]` / `[RULE_SKIPPED:...]` / `[ESCALATION:...]` (syntax: handoff-protocol.md "Inline Auxiliary Markers") from transcripts on Stop/SubagentStop, deduped per session by content hash.
+**Purpose**: answers "does clarify-first ever fire / how often do we escalate" from data instead of anecdote — the prerequisite for pruning rules that never hit.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "kind": "RULE_FIRED|RULE_SKIPPED|ESCALATION", "detail": "<marker payload ≤160>", "hash": "<10 hex>" }
+```
+
+---
+
+## 3d. `state/metrics-monthly.jsonl` — Pre-rotation monthly rollup
+
+**Nature**: JSON Lines, append-only, never rotated (tiny).
+**Writer**: `rotate_state_if_due()` in `stop-retro-logger.py` — aggregates hook-event lines about to be dropped by the 30-day rotation into one line per (month, hook, result, reason).
+**Purpose**: trend questions ("did the FAIL rate drop after rule X landed?") keep their denominator after raw events rotate away. Consumed by `scripts/retro-status.py`.
+
+### Schema
+
+```json
+{ "month": "YYYY-MM", "hook": "...", "result": "...", "reason": "...", "count": 0, "rolled_at": "ISO 8601" }
+```
+
+---
+
+## 3e. `state/retro-log.jsonl` — Weekly-review completion log (reserved)
+
+**Nature**: JSON Lines, append-only. **Not yet auto-written** — appended manually (or by future retro flows) when a weekly review of ERRORS.md Pending Review completes: `{ "ts": "ISO 8601", "type": "weekly|pr", "pending_before": 0, "pending_after": 0 }`. `scripts/retro-status.py` reports the newest entry as "last weekly review"; absent file → "unknown", never guessed.
+
+---
+
 
 ## 4. `state/tool-calls.jsonl` — Tool usage audit log
 
