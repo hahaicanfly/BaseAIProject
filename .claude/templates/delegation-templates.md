@@ -124,6 +124,12 @@ The acceptance report allows only two conclusions:
 FAIL may only be based on the mechanically checkable acceptance criteria listed above; style/writing/opinion-type
 feedback goes into a separate "Suggestions (non-blocking, may be empty)" section and must not be used as a FAIL reason (model-dispatch §5).
 Evidence-free conclusions such as "看起來沒問題" (looks fine) or "應該可以" (should be OK) are forbidden.
+Verdict persistence (mandatory — acceptance outcomes must survive your ephemeral context):
+- Write the FULL report (each criterion → evidence, actual command outputs) to docs/reviews/<YYYY-MM-DD>-<slug>.md
+  with the Write tool. This is the ONLY file you may create; everything else stays read-only.
+- Your final message must contain the line `VERDICT: PASS docs/reviews/<file>.md` (or `VERDICT: FAIL docs/reviews/<file>.md`)
+  — stop-retro-logger harvests that line into state/verifications.jsonl, and a FAIL also lands in ERRORS.md Pending Review.
+- Then end with the handoff marker as usual ([HANDOFF: main] on PASS, [VERIFY_FAILED: <reason>] on FAIL).
 ```
 
 **Filled-in example**: "You are the reviewer. Deliverable under review: docs/harness/DIAGNOSIS.md. Acceptance criteria: 1) exactly 3 items in each of the three major pain-point categories, each with a fix 2) each item has at least one file:line piece of evidence 3) includes a Capability Limits section 4) no leftover `{{placeholders}}`. Verification method: re-read the file and check against each criterion. Output a PASS/FAIL report."

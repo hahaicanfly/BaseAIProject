@@ -49,6 +49,40 @@
 - [2026-07-22T15:10:19+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 077d3a3f-6205-409d-99de-bf82c10d766e
 
+<!-- harvest:cf9ceaf881 -->
+- [2026-07-22T15:35:35+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
+<!-- harvest:adb9e71e8a -->
+- [2026-07-22T15:41:29+0000] [VERIFY_FAILED] **item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)**
+  ```
+  明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
+<!-- harvest:18c2659f20 -->
+- [2026-07-22T15:41:29+0000] [PROTOCOL_VIOLATION] **VERIFY_FAILED reason exceeds 80 chars (83) — protocol requires a short specific reason**
+  ```
+  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
+<!-- harvest:6400140032 -->
+- [2026-07-22T15:41:29+0000] [ACCEPTANCE_FAIL] **fresh-context verification returned FAIL (docs/reviews/2026-07-22-f001-phase-c2.md)**
+  ```
+  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。

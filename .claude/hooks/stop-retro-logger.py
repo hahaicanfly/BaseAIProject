@@ -27,6 +27,7 @@ import hashlib
 import json
 import re
 import sys
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -50,9 +51,16 @@ HOOK_NAME = "stop-retro-logger"
 # does not cause the same finding to be re-harvested (it's still present
 # in the transcript on the next Stop event).
 RETRO_HASHES_LEDGER = STATE_DIR / "retro-hashes.jsonl"
+VERIFICATIONS_LEDGER = STATE_DIR / "verifications.jsonl"
 LAST_ROTATE_FILE = STATE_DIR / ".last-rotate"
 HOOK_EVENTS_ROTATE_DAYS = 30
 RETRO_HASHES_ROTATE_DAYS = 90
+
+# Fresh-context acceptance agents must end their report with a line
+# `VERDICT: PASS|FAIL <evidence-path>` (delegation-templates.md §6). The
+# sentinel harvests it into state/verifications.jsonl so acceptance
+# outcomes survive the subagent's ephemeral context.
+VERDICT_RE = re.compile(r"^\s*VERDICT:\s*(PASS|FAIL)\b\s*(\S+)?", re.MULTILINE)
 
 MARKER_RE = re.compile(
     r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
@@ -463,6 +471,19 @@ def _append_to_pending_locked(findings: list[dict]) -> int:
     return len(new_findings)
 
 
+def _detect_verdict(parsed: dict | None) -> dict | None:
+    """Return the LAST `VERDICT: PASS|FAIL <path>` line emitted in the
+    subagent's assistant text blocks, or None. Last one wins so a
+    corrected re-run inside the same agent supersedes earlier lines."""
+    if parsed is None or not parsed["jsonl"]:
+        return None
+    verdict: dict | None = None
+    for text in parsed["text_blocks"]:
+        for m in VERDICT_RE.finditer(text):
+            verdict = {"verdict": m.group(1), "evidence_path": m.group(2) or ""}
+    return verdict
+
+
 _GIT_COMMIT_CMD_RE = re.compile(r"\bgit\s+commit\b")
 
 
@@ -621,6 +642,16 @@ def main() -> int:
     # PROTOCOL_VIOLATION entries, which is worse than missing one event.
     if hook_event_name == "SubagentStop":
         target_transcript = payload.get("agent_transcript_path", "")
+        # Flush race: heavyweight subagents' transcripts are sometimes not
+        # on disk yet at the moment SubagentStop fires (observed live: an
+        # agent whose file existed seconds later was skipped). Bounded
+        # retry before giving up; phantom intermediate stops (whose path
+        # never materializes) still fall through to the skip below.
+        if target_transcript and not Path(target_transcript).is_file():
+            for _ in range(3):
+                time.sleep(0.4)
+                if Path(target_transcript).is_file():
+                    break
         if not target_transcript or not Path(target_transcript).is_file():
             # Two distinct reasons so production logs can tell "payload has
             # no such field" (CLI too old / synthetic test input) apart from
@@ -679,6 +710,48 @@ def main() -> int:
             session=session_id,
             detail=missing_marker["reason"],
         )
+
+    # Verdict harvest (SubagentStop only): persist fresh-context
+    # acceptance outcomes; a FAIL additionally lands in Pending Review.
+    verdict = _detect_verdict(parsed) if hook_event_name == "SubagentStop" else None
+    if verdict:
+        append_jsonl(
+            VERIFICATIONS_LEDGER,
+            {
+                "ts": now_iso(),
+                "session": session_id,
+                "agent": agent_id,
+                "verdict": verdict["verdict"],
+                "evidence_path": verdict["evidence_path"],
+            },
+        )
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="verdict-recorded",
+            session=session_id,
+            agent=agent_id,
+            verdict=verdict["verdict"],
+        )
+        if verdict["verdict"] == "FAIL":
+            findings.append(
+                {
+                    "kind": "ACCEPTANCE_FAIL",
+                    "reason": (
+                        "fresh-context verification returned FAIL "
+                        f"({verdict['evidence_path'] or 'no evidence path'})"
+                    ),
+                    "context": (
+                        parsed["text_blocks"][-1][-300:]
+                        if parsed and parsed["text_blocks"]
+                        else ""
+                    ),
+                    "hash": hashlib.sha1(
+                        f"acceptance-fail|{session_id}|{agent_id}".encode("utf-8"),
+                        usedforsecurity=False,
+                    ).hexdigest()[:10],
+                }
+            )
 
     appended = append_to_pending(findings)
 

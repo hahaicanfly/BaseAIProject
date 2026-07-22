@@ -10,6 +10,15 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-use-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/delegation-ledger.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [

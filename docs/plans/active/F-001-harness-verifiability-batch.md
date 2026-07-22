@@ -50,14 +50,14 @@ Phase B — sentinel hardening + doc coherence (R4–R10, O1 remainder):
 Phase C1 — traceability base (O2, O3):
 - [x] C1a. post-edit-lint.py records `session` in tool-calls.jsonl; SCHEMA.md §4 updated (O2).
 - [x] C1b. New PostToolUse Bash hook `post-bash-commit-ledger.py` → state/commits.jsonl {ts, session_id, branch, head_hash, msg_first_line}; settings.json wiring; SCHEMA.md section (O2).
-- [x] C1c. New SessionStart hook `session-activation-check.py`: warn on `{{placeholder}}` slots (Quick Commands, init.sh, invariants, TECHNICAL-REFERENCE); settings.json SessionStart wiring; log to hook-events (O3).
+- [x] C1c. New SessionStart hook `session-activation-check.py`: warn on unfilled template placeholder slots (Quick Commands, init.sh, invariants, TECHNICAL-REFERENCE); settings.json SessionStart wiring; log to hook-events (O3).
 
 Phase C2 — verifiability main line (O4–O7):
-- [ ] C2a. PLANS.md §5 (spec + copy template) machine-parseable ```acceptance block; scripts/acceptance-run.py executes it, writes state/acceptance/F-NNN.jsonl; review-protocol checklist wired to run it; SCHEMA.md (O4).
-- [ ] C2b. docs/reviews/ convention + delegation-templates §6 requires Write of full report + machine-greppable `VERDICT: PASS|FAIL <path>` line; stop-retro-logger harvests VERDICT on SubagentStop → state/verifications.jsonl; FAIL also → Pending Review; SCHEMA.md (O5).
-- [ ] C2c. New PreToolUse Task hook `delegation-ledger.py` → state/delegations.jsonl with three-essentials booleans; SCHEMA.md (O6).
-- [ ] C2d. .github/workflows/harness-gates.yml: secret-scan on PR files (reuse guard/lint patterns), execplan-lint on docs/plans changes, placeholder-introduction gate (O7).
-- [ ] C2e. scripts/execplan-lint.py + post-edit-lint branch for docs/plans/*.md; PLANS.md §1 adds `Clarify-first:` provenance line (O-item "ExecPlan lint 與澄清留痕").
+- [x] C2a. PLANS.md §5 (spec + copy template) machine-parseable ```acceptance block; scripts/acceptance-run.py executes it, writes state/acceptance/F-NNN.jsonl; review-protocol checklist wired to run it; SCHEMA.md (O4).
+- [x] C2b. docs/reviews/ convention + delegation-templates §6 requires Write of full report + machine-greppable `VERDICT: PASS|FAIL <path>` line; stop-retro-logger harvests VERDICT on SubagentStop → state/verifications.jsonl; FAIL also → Pending Review; SCHEMA.md (O5).
+- [x] C2c. New PreToolUse Task hook `delegation-ledger.py` → state/delegations.jsonl with three-essentials booleans; SCHEMA.md (O6).
+- [x] C2d. .github/workflows/harness-gates.yml: secret-scan on PR files (reuse guard/lint patterns), execplan-lint on docs/plans changes, placeholder-introduction gate (O7).
+- [x] C2e. scripts/execplan-lint.py + post-edit-lint branch for docs/plans/*.md; PLANS.md §1 adds `Clarify-first:` provenance line (O-item "ExecPlan lint 與澄清留痕").
 Phase C3 — anti-hallucination (O8–O11):
 - [ ] C3a. scripts/check-doc-refs.py (paths, file:line, § refs, zh-mirror pairing) + post-edit-lint wiring + allowlist (O8).
 - [ ] C3b. stop-retro-logger `detect_unfetched_citations` on SubagentStop: report URLs not fetched in-transcript → UNVERIFIED_CITATION finding (O9).
@@ -74,16 +74,20 @@ Phase C4 — scope & strategy & loop (O12–O15; re-vet each against repo before
 
 ## 5. Verification Strategy
 
-- Build: `python3 -m py_compile .claude/hooks/*.py .claude/scripts/*.py scripts/*.py` (whichever exist)
-- Lint: `bash -n` for any shell; JSON validity for settings.json (`python3 -m json.tool`)
-- Test: per-hook sandbox suites under scratchpad (pattern: r1-smoke/run-tests.py), rerun full after each phase; every new/changed hook gets block/pass black-box cases (ERRORS.md 2026-07-04 lesson) and `chmod +x` verified
-- Manual: live E2E probes via real subagents for SubagentStop-path features (missing marker, VERDICT harvest, citation check)
-- Negative: violating probe must be flagged; compliant probe must not; concurrent 5× hook invocations lose no findings; prose "git commit" mention must NOT trigger PR_RETRO
+```acceptance
+build: python3 -m py_compile .claude/hooks/*.py scripts/*.py
+lint-settings: python3 -m json.tool .claude/settings.json > /dev/null
+plan-lint: python3 scripts/execplan-lint.py docs/plans/active/F-001-harness-verifiability-batch.md
+negative-lint: python3 scripts/execplan-lint.py /dev/null expect-fail
+```
+- Manual: per-hook sandbox suites under scratchpad (b-smoke/c1-smoke run-tests.py — rerun full after each phase; every new/changed hook gets block/pass black-box cases per ERRORS.md 2026-07-04 lesson, `chmod +x` verified); live E2E probes via real subagents for SubagentStop-path features (missing marker, VERDICT harvest)
+- Negative (covered in sandbox suites): violating probe flagged / compliant probe not; concurrent 5× hook invocations lose no findings; prose "git commit" mention must NOT trigger PR_RETRO
 
 ## 6. Progress Log
 - [2026-07-22 23:10] dev created plan; Stage A (R1+R2+R3) already merged via PR #2 (commit 5f1894a, merge 1b9dfac)
 - [2026-07-22 23:40] dev Phase B done: single-pass parse, Bash-tool-use-only commit detection, marker semantic validation (whitelist/placeholder/80-char), fence escaping, flock; protocol docs + zh mirrors synced; harness-eval zh mirror added; PR #2 errata comment posted. Sandbox suite 21/21 PASS (52ms/1.5MB perf); fresh-context verification PASS (6/6 items).
 - [2026-07-22 23:25] dev Phase C1 done: session field in tool-calls, commits.jsonl ledger hook (PostToolUse Bash), session-activation-check (SessionStart); settings.json wired; SCHEMA.md §3/§4/§4a updated (incl. fixing the never-true duration_ms/exit_code schema). Sandbox 9/9 PASS; live run verified (unactivated warn fires on this repo).
+- [2026-07-22 23:50] dev Phase C2 done: acceptance-run + execplan-lint scripts (dogfood caught a live pre-compact-snapshot syntax error), VERDICT harvest -> state/verifications.jsonl (live E2E: C2 verifier's FAIL verdict + over-80-char reason violation both harvested), delegation-ledger wired (live: verifier spawn recorded with trio booleans), harness-gates CI. Sandbox 24/24; fresh-context verification 11/12 (single FAIL = ERRORS.md change-set hygiene, resolved by declaring the sentinel-generated entries in this commit).
 
 ## 7. Decision Log
 - DEC-1: One branch + one PR for the whole batch (instead of 5 stacked PRs), because all items form one initiative under this single ExecPlan, the hook files are sequentially dependent, and the user gets a single review/merge decision point.

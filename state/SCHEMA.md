@@ -141,6 +141,48 @@
 
 ---
 
+## 4b. `state/delegations.jsonl` — Delegation ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/delegation-ledger.py` (PreToolUse, matcher `Task|Agent`; sentinel — always exit 0, a non-zero PreToolUse exit would block the delegation).
+**Purpose**: records every subagent delegation with prompt-quality signals — whether the prompt carries model-dispatch.md §2's mandatory trio (goal/acceptance-criteria/report-format) plus scope declaration and marker requirement. Weak delegations become measurable instead of anecdotal.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "subagent_type": "<agent type>", "model": "<override or empty>", "desc": "<description ≤120>", "prompt_sha1_10": "<10 hex>", "prompt_chars": 0, "has_goal": true, "has_ac": true, "has_report_format": true, "has_scope": true, "has_marker_req": true }
+```
+
+---
+
+## 4c. `state/verifications.jsonl` — Fresh-context verdict ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/stop-retro-logger.py` on `SubagentStop` — harvests the `VERDICT: PASS|FAIL <evidence-path>` line that delegation-templates.md §6 requires every fresh-context acceptance agent to emit (full report persisted under `docs/reviews/`).
+**Purpose**: acceptance outcomes survive the verifier's ephemeral context; `verdict=FAIL` additionally lands in `ERRORS.md` Pending Review as an `ACCEPTANCE_FAIL` finding.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "agent": "<subagent id>", "verdict": "PASS|FAIL", "evidence_path": "docs/reviews/<file>.md" }
+```
+
+---
+
+## 4d. `state/acceptance/<plan-stem>.jsonl` — ExecPlan acceptance-run evidence
+
+**Nature**: JSON Lines, append-only (one line per executed command per run).
+**Writer**: `scripts/acceptance-run.py` (executes the ExecPlan §5 ```acceptance block; see docs/plans/PLANS.md).
+**Purpose**: the §5 verification strategy stops being prose — every run leaves per-command evidence (exit code + output tail) reviewers and future sessions can re-check.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "plan": "docs/plans/active/F-NNN-<slug>.md", "label": "build|lint|test|negative|...", "cmd": "<command>", "expect_fail": false, "exit_code": 0, "pass": true, "skipped": false, "output_tail": "<last ≤10 lines>" }
+```
+
+---
+
 ## 5. `state/token-usage.jsonl` — Token consumption tracking
 
 **Nature**: JSON Lines, append-only.
