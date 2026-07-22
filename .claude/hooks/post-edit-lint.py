@@ -102,6 +102,7 @@ def quick_invariant_scan(file_path: Path) -> list[tuple[str, str]]:
 def main() -> int:
     payload = read_stdin_json()
     tool = payload.get("tool_name", "")
+    session_id = payload.get("session_id") or ""
     tool_input = payload.get("tool_input", {}) or {}
     file_path = tool_input.get("file_path") or tool_input.get("path") or ""
 
@@ -113,12 +114,14 @@ def main() -> int:
     if not p.is_absolute():
         p = REPO_ROOT / p
 
-    # Always log the tool call
+    # Always log the tool call. `session` makes this joinable with
+    # hook-events.jsonl / commits.jsonl ("which session edited this file").
     record = {
         "ts": now_iso(),
         "tool": tool,
         "file": str(p.relative_to(REPO_ROOT)) if p.is_relative_to(REPO_ROOT) else str(p),
         "matcher": "Write|Edit|MultiEdit",
+        "session": session_id,
     }
     append_jsonl(TOOL_CALLS, record)
 

@@ -48,9 +48,9 @@ Phase B — sentinel hardening + doc coherence (R4–R10, O1 remainder):
 - [x] B9. Extend sandbox suite for all Phase B behaviors incl. concurrency; fresh-context verification; commit.
 
 Phase C1 — traceability base (O2, O3):
-- [ ] C1a. post-edit-lint.py records `session` in tool-calls.jsonl; SCHEMA.md §4 updated (O2).
-- [ ] C1b. New PostToolUse Bash hook `post-bash-commit-ledger.py` → state/commits.jsonl {ts, session_id, branch, head_hash, msg_first_line}; settings.json wiring; SCHEMA.md section (O2).
-- [ ] C1c. New SessionStart hook `session-activation-check.py`: warn on `{{placeholder}}` slots (Quick Commands, init.sh, invariants, TECHNICAL-REFERENCE); settings.json SessionStart wiring; log to hook-events (O3).
+- [x] C1a. post-edit-lint.py records `session` in tool-calls.jsonl; SCHEMA.md §4 updated (O2).
+- [x] C1b. New PostToolUse Bash hook `post-bash-commit-ledger.py` → state/commits.jsonl {ts, session_id, branch, head_hash, msg_first_line}; settings.json wiring; SCHEMA.md section (O2).
+- [x] C1c. New SessionStart hook `session-activation-check.py`: warn on `{{placeholder}}` slots (Quick Commands, init.sh, invariants, TECHNICAL-REFERENCE); settings.json SessionStart wiring; log to hook-events (O3).
 
 Phase C2 — verifiability main line (O4–O7):
 - [ ] C2a. PLANS.md §5 (spec + copy template) machine-parseable ```acceptance block; scripts/acceptance-run.py executes it, writes state/acceptance/F-NNN.jsonl; review-protocol checklist wired to run it; SCHEMA.md (O4).
@@ -83,6 +83,7 @@ Phase C4 — scope & strategy & loop (O12–O15; re-vet each against repo before
 ## 6. Progress Log
 - [2026-07-22 23:10] dev created plan; Stage A (R1+R2+R3) already merged via PR #2 (commit 5f1894a, merge 1b9dfac)
 - [2026-07-22 23:40] dev Phase B done: single-pass parse, Bash-tool-use-only commit detection, marker semantic validation (whitelist/placeholder/80-char), fence escaping, flock; protocol docs + zh mirrors synced; harness-eval zh mirror added; PR #2 errata comment posted. Sandbox suite 21/21 PASS (52ms/1.5MB perf); fresh-context verification PASS (6/6 items).
+- [2026-07-22 23:25] dev Phase C1 done: session field in tool-calls, commits.jsonl ledger hook (PostToolUse Bash), session-activation-check (SessionStart); settings.json wired; SCHEMA.md §3/§4/§4a updated (incl. fixing the never-true duration_ms/exit_code schema). Sandbox 9/9 PASS; live run verified (unactivated warn fires on this repo).
 
 ## 7. Decision Log
 - DEC-1: One branch + one PR for the whole batch (instead of 5 stacked PRs), because all items form one initiative under this single ExecPlan, the hook files are sequentially dependent, and the user gets a single review/merge decision point.

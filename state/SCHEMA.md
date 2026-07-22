@@ -80,7 +80,7 @@
 ### Schema (per line)
 
 ```json
-{ "ts": "ISO 8601", "hook": "pre-tool-use-guard|post-edit-lint|pre-compact-snapshot|stop-retro-logger", "tool": "<tool name if applicable>", "result": "pass|fail|sentinel|enforced_block", "reason": "<short msg>" }
+{ "ts": "ISO 8601", "hook": "pre-tool-use-guard|post-edit-lint|pre-compact-snapshot|stop-retro-logger|post-bash-commit-ledger|session-activation-check", "tool": "<tool name if applicable>", "result": "pass|fail|warn|sentinel|enforced_block", "reason": "<short msg>" }
 ```
 
 ---
@@ -114,12 +114,29 @@
 
 **Nature**: JSON Lines, append-only.
 **Writer**: `.claude/hooks/post-edit-lint.py` writes it as a side effect; other hooks on PostToolUse may also write.
-**Purpose**: locate tool-routing errors, detect tool bloat.
+**Purpose**: locate tool-routing errors, detect tool bloat; `session` makes rows joinable with `hook-events.jsonl` / `commits.jsonl` ("which session edited this file").
 
 ### Schema
 
 ```json
-{ "ts": "ISO 8601", "tool": "<tool name>", "duration_ms": 1234, "exit_code": 0, "matcher": "<hook matcher>" }
+{ "ts": "ISO 8601", "tool": "Write|Edit|MultiEdit", "file": "<repo-relative path>", "matcher": "<hook matcher>", "session": "<claude session id>" }
+```
+
+> Historical note: an earlier version of this schema documented `duration_ms` / `exit_code` fields that no writer ever produced; the schema above now matches what `post-edit-lint.py` actually writes. Rows written before 2026-07-22 lack the `session` field — treat missing as unknown.
+
+---
+
+## 4a. `state/commits.jsonl` — Session↔commit join ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/post-bash-commit-ledger.py` (PostToolUse, matcher `Bash`).
+**Purpose**: git history is the only durable cross-machine trail; this ledger links each commit hash to the session that produced it, making `head_hash` the join key across commits ↔ sessions ↔ tool-calls ↔ hook-events.
+**Dedup / failure handling**: after a Bash command containing `git commit`, the hook records only if `git rev-parse HEAD` differs from the last recorded `head_hash` — denied/failed commit attempts leave HEAD unchanged and are skipped.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "branch": "<branch name>", "head_hash": "<full sha>", "msg_first_line": "<commit subject, ≤120 chars>" }
 ```
 
 ---
