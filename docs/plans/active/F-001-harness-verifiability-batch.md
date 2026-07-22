@@ -2,11 +2,11 @@
 
 | Field | Value |
 |------|-----|
-| Status | in_progress |
+| Status | review |
 | Owner Agent | dev (main conversation) |
 | Branch | feat/harness-verifiability-batch |
 | Created | 2026-07-22 |
-| Last Updated | 2026-07-22 |
+| Last Updated | 2026-07-23 |
 | Linked PR | — |
 
 ## 1. Goal
@@ -59,18 +59,18 @@ Phase C2 — verifiability main line (O4–O7):
 - [x] C2d. .github/workflows/harness-gates.yml: secret-scan on PR files (reuse guard/lint patterns), execplan-lint on docs/plans changes, placeholder-introduction gate (O7).
 - [x] C2e. scripts/execplan-lint.py + post-edit-lint branch for docs/plans/*.md; PLANS.md §1 adds `Clarify-first:` provenance line (O-item "ExecPlan lint 與澄清留痕").
 Phase C3 — anti-hallucination (O8–O11):
-- [ ] C3a. scripts/check-doc-refs.py (paths, file:line, § refs, zh-mirror pairing) + post-edit-lint wiring + allowlist (O8).
-- [ ] C3b. stop-retro-logger `detect_unfetched_citations` on SubagentStop: report URLs not fetched in-transcript → UNVERIFIED_CITATION finding (O9).
-- [ ] C3c. `[UNCONFIRMED: ...]` inline marker standard in handoff-protocol + harvest pipeline; delegation-templates/judgment-rubrics pointers (O10).
-- [ ] C3d. API evidence-table requirement in delegation-templates §2/§6 + review-protocol checklist item (O10).
-- [ ] C3e. review-protocol adds Document Reviewer Checklist (sources spot-fetch, quantified-claims sourcing, second-opinion objective trigger) (O11); zh mirrors.
+- [x] C3a. scripts/check-doc-refs.py (paths, file:line, § refs, zh-mirror pairing) + post-edit-lint wiring + allowlist (O8).
+- [x] C3b. stop-retro-logger `detect_unfetched_citations` on SubagentStop: report URLs not fetched in-transcript → UNVERIFIED_CITATION finding (O9).
+- [x] C3c. `[UNCONFIRMED: ...]` inline marker standard in handoff-protocol + harvest pipeline; delegation-templates/judgment-rubrics pointers (O10).
+- [x] C3d. API evidence-table requirement in delegation-templates §2/§6 + review-protocol checklist item (O10).
+- [x] C3e. review-protocol adds Document Reviewer Checklist (sources spot-fetch, quantified-claims sourcing, second-opinion objective trigger) (O11); zh mirrors.
 
 Phase C4 — scope & strategy & loop (O12–O15; re-vet each against repo before implementing):
-- [ ] C4a. Non-Goals consumption: review-protocol reverse check + [SCOPE] tag; plan-reviewer completeness item; lifecycle Phase 6 reading list adds §1 (O12).
-- [ ] C4b. Scope Baseline field in PLANS.md §1 + lifecycle Phase 1 Exit; Scope Change procedure section (Phase 4–7); clarify-first §3 amendment; last-word template line (O13).
-- [ ] C4c. docs/research/ + INDEX rules; delegation-templates §7 strategy-research template (file-first, ≤40-line summary back); 4 research agents' frontmatter handoff_artifact + hypothesis-evidence table in output formats; docs/decisions/PDR-template.md (O14).
-- [ ] C4d. Telemetry markers ([RULE_FIRED:...] etc.) in handoff-protocol + harvest → state/rule-events.jsonl; scripts/retro-status.py + SessionStart overdue reminder; monthly rollup in rotate (state/metrics-monthly.jsonl); rule-budget warn in post-edit-lint; harness-maintenance §6 standing-rule gate (O15).
-- [ ] Final: full-suite rerun, doc-ref check over all touched docs, fresh-context batch verification, open PR.
+- [x] C4a. Non-Goals consumption: review-protocol reverse check + [SCOPE] tag; plan-reviewer completeness item; lifecycle Phase 6 reading list adds §1 (O12).
+- [x] C4b. Scope Baseline field in PLANS.md §1 + lifecycle Phase 1 Exit; Scope Change procedure section (Phase 4–7); clarify-first §3 amendment; last-word template line (O13).
+- [x] C4c. docs/research/ + INDEX rules; delegation-templates §7 strategy-research template (file-first, ≤40-line summary back); 4 research agents' frontmatter handoff_artifact + hypothesis-evidence table in output formats; docs/decisions/PDR-template.md (O14).
+- [x] C4d. Telemetry markers ([RULE_FIRED:...] etc.) in handoff-protocol + harvest → state/rule-events.jsonl; scripts/retro-status.py + SessionStart overdue reminder; monthly rollup in rotate (state/metrics-monthly.jsonl); rule-budget warn in post-edit-lint; harness-maintenance §6 standing-rule gate (O15).
+- [x] Final: full-suite rerun, doc-ref check over all touched docs, fresh-context batch verification, open PR.
 
 ## 5. Verification Strategy
 
@@ -88,6 +88,9 @@ negative-lint: python3 scripts/execplan-lint.py /dev/null expect-fail
 - [2026-07-22 23:40] dev Phase B done: single-pass parse, Bash-tool-use-only commit detection, marker semantic validation (whitelist/placeholder/80-char), fence escaping, flock; protocol docs + zh mirrors synced; harness-eval zh mirror added; PR #2 errata comment posted. Sandbox suite 21/21 PASS (52ms/1.5MB perf); fresh-context verification PASS (6/6 items).
 - [2026-07-22 23:25] dev Phase C1 done: session field in tool-calls, commits.jsonl ledger hook (PostToolUse Bash), session-activation-check (SessionStart); settings.json wired; SCHEMA.md §3/§4/§4a updated (incl. fixing the never-true duration_ms/exit_code schema). Sandbox 9/9 PASS; live run verified (unactivated warn fires on this repo).
 - [2026-07-22 23:50] dev Phase C2 done: acceptance-run + execplan-lint scripts (dogfood caught a live pre-compact-snapshot syntax error), VERDICT harvest -> state/verifications.jsonl (live E2E: C2 verifier's FAIL verdict + over-80-char reason violation both harvested), delegation-ledger wired (live: verifier spawn recorded with trio booleans), harness-gates CI. Sandbox 24/24; fresh-context verification 11/12 (single FAIL = ERRORS.md change-set hygiene, resolved by declaring the sentinel-generated entries in this commit).
+- [2026-07-23 00:20] dev Phase C3 done: check-doc-refs.py (unique-suffix shorthand resolution; first --all run found 52 dead refs, real ones fixed incl. verification-log.jsonl naming drift and .claude/hooks/settings.json; now 0 ERROR) + post-edit-lint wiring (live probe verified), unfetched-citation detector, [UNCONFIRMED:] standard + harvest, API evidence table, Document Reviewer Checklist; zh mirror batch synced (R4=0, incl. new parallel-worktree mirror + command-mirror rename).
+- [2026-07-23 00:25] dev Phase C4 done: Non-Goals reverse-check ([SCOPE] Blocker) + plan-reviewer items; Scope Baseline field + lifecycle Scope Change procedure + clarify-first §3 exception + last-word handoff line; docs/research/ + PDR-template + hypothesis-evidence tables in 4 research agents + delegation-templates §7 (Yellow-tier backups kept); telemetry markers ([RULE_FIRED/RULE_SKIPPED/ESCALATION]) harvested to state/rule-events.jsonl, monthly rollup before rotation, scripts/retro-status.py + SessionStart overdue reminder, rule-budget warn in post-edit-lint; harness-maintenance §6 gate filed as ERRORS.md proposal per its Red-tier §8 self-rule. Sandbox suite 30/30.
+- [2026-07-23 00:40] dev Final batch verification by fresh-context agent: 7/7 PASS (VERDICT: PASS docs/reviews/2026-07-23-f001-phase-c3c4.md; independent sandbox re-derivation of citation/telemetry cases; Red-tier compliance confirmed). Non-blocking observation logged: EN research-agent files use Chinese headers for the hypothesis-evidence section — tidy in a follow-up. Opening PR.
 
 ## 7. Decision Log
 - DEC-1: One branch + one PR for the whole batch (instead of 5 stacked PRs), because all items form one initiative under this single ExecPlan, the hook files are sequentially dependent, and the user gets a single review/merge decision point.
@@ -98,6 +101,6 @@ negative-lint: python3 scripts/execplan-lint.py /dev/null expect-fail
 - None
 
 ## 9. Handoff Manifest
-- Next agent: dev (main conversation continues)
-- Required reading: this file; .claude/hooks/stop-retro-logger.py; scratchpad proposal dumps (viable.json / all_lens_proposals.json) if session survives, else §4 above is self-contained
-- Current state marker: [HANDOFF: dev]
+- Next agent: human PR review
+- Required reading: this file §6-§7; docs/reviews/2026-07-22-f001-phase-c2.md; docs/reviews/2026-07-23-f001-phase-c3c4.md; PR description
+- Current state marker: [HANDOFF: human-pr-review]

@@ -83,6 +83,16 @@ VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
 [VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
   ```
 
+<!-- harvest:8056eb8b94 -->
+- [2026-07-22T15:46:35+0000] [PR_RETRO] **本 session 有 11 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
+### [2026-07-23] 提案:harness-maintenance §6 增設「Standing Rule」第三類品質閘門(該檔 §8 為 Red tier 不得自行修改,依規記錄於此送人審)
+- 情境:F-001 批次(O15)發現新增 always-on 規則零成本、零證據要求、零退場機制;§6 現只涵蓋 Agent/Skill 兩類
+- 提案內容:新增/擴編 `.claude/rules/*` 規則須附 (a) ≥2 條 ERRORS.md 條目或 harness-eval gap 編號作為需求證據;(b) 宣告一個遙測標記名(`[RULE_FIRED: <name>|...]`,語法見 handoff-protocol.md 行內輔助標記),否則命中率永遠不可測;(c) 90 天複審日期,屆時 state/rule-events.jsonl 命中為零者列入 §5 降級候選
+- 配套已就緒:rule-events.jsonl 收割管線與 scripts/retro-status.py 已在 F-001 落地,clarify-first / model-dispatch 已帶示範標記
+- 建議去向:人審同意後由人(或授權後的 session)修改 harness-maintenance.md §6
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。
