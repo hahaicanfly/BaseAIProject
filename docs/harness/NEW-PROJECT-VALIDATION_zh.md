@@ -12,7 +12,7 @@ Fork 模板建好新 repo、`{{BUILD_CMD}}` 已可跑通、CLAUDE.md 佔位符�
 
 - [ ] `{{BUILD_CMD}}` 執行成功（專案自己的 build/lint/test 指令，取代此佔位符）
 - [ ] `git branch --show-current` 確認不在 master/main
-- [ ] `.claude/hooks/settings.json`（或 `.claude/settings.json`）已註冊要用的 hooks
+- [ ] `.claude/settings.json`（或 `.claude/settings.json`）已註冊要用的 hooks
 
 ---
 

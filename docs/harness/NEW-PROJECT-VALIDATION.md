@@ -12,7 +12,7 @@ After forking the template into a new repo, once `{{BUILD_CMD}}` runs clean, CLA
 
 - [ ] `{{BUILD_CMD}}` runs successfully (the project's own build/lint/test command, replacing this placeholder)
 - [ ] `git branch --show-current` confirms you are not on master/main
-- [ ] `.claude/hooks/settings.json` (or `.claude/settings.json`) has the hooks you'll use registered
+- [ ] `.claude/settings.json` (or `.claude/settings.json`) has the hooks you'll use registered
 
 ---
 
