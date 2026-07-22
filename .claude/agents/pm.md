@@ -4,7 +4,7 @@ description: Product Manager - requirements analysis, user stories, prioritizati
 tools: Read, Grep, Glob, WebSearch, WebFetch
 model: opus
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan-drafting tasks still write to docs/plans/active/<task-id>.md instead
 context_firewall: true
 ---
 
@@ -44,6 +44,11 @@ so that [value/purpose]
 ### Out of Scope
 - [explicitly excluded from this feature — what it will deliberately NOT do]
 
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
+
 ### Priority Assessment
 - User value: High/Medium/Low
 - Implementation complexity: High/Medium/Low
@@ -55,6 +60,8 @@ so that [value/purpose]
 ### Open Questions
 - [questions needing further confirmation]
 ```
+
+priority=P0 的功能/產品決策，交付必須同時產出一份 `docs/decisions/PDR-NNNN-<slug>.md`（使用 `docs/decisions/PDR-template.md`），並在報告中附上該 PDR 的路徑。
 
 ## Notes
 

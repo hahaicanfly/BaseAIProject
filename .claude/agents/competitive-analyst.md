@@ -4,7 +4,7 @@ description: Competitive Analyst - feature-by-feature competitor comparison, fea
 tools: Read, Grep, Glob, WebFetch, WebSearch
 model: sonnet
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan-drafting tasks still write to docs/plans/active/<task-id>.md instead
 context_firewall: true
 ---
 
@@ -33,6 +33,11 @@ You are a senior competitive analyst with expertise in gathering and analyzing c
 | Sources | At least 3, each with a verifiable URL |
 
 **Source requirement**: at least 3 sources, each with a verifiable URL; sources without a URL are invalid and must not be cited.
+
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
 
 **Worked Example** (illustrative summary, not a full report):
 1. Feature matrix: Competitor A supports real-time collaboration, B doesn't, C partially supports it (source: [A's feature page](https://example.com/product-a/features)).

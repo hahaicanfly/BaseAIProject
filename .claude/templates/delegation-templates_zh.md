@@ -58,7 +58,10 @@
 - [測試指令] 通過，貼出實際輸出的最後 10 行
 - 新增/修改的每個公開函式有 [測試/使用範例]
 - 改動檔案清單與計劃一致，無計劃外改動
-回報格式：改動檔案清單（檔案:行號範圍）＋ 測試輸出尾段 ＋ 未決項（若有）。
+- API evidence table：每個第一次使用的外部 API / 第三方 symbol 都要有一列
+  `symbol → 定義位置（repo 檔案:行號，或官方文件 URL + 存取日期）`；沒有 evidence 列的外部
+  symbol 視同用猜的（CLAUDE.md：NEVER guess API signatures）→ FAIL
+回報格式：改動檔案清單（檔案:行號範圍）＋ 測試輸出尾段 ＋ API evidence table ＋ 未決項（若有）。
 ```
 
 ## 3. 代碼重構
@@ -87,7 +90,7 @@
 驗收條件：
 - 每個結論附來源（URL 或 檔案:行號）與日期
 - 區分「事實（有來源）」與「推論（你的判斷）」兩節
-- 查不到的明確寫「未確認」，禁止編造
+- 查不到的一律在文中內嵌標記 `[UNCONFIRMED: <claim>]`（標準語法，見 handoff-protocol.md「行內輔助標記」；會被自動收割做週檢），禁止編造
 回報格式：結論（≤5 條，每條附來源）＋ 未確認清單 ＋ 建議（≤3 行）。
 ```
 
@@ -118,12 +121,48 @@
 驗證方法：
 - 文件類：重新讀檔，逐條對照驗收條件，引用 檔案:行號 作證據
 - 代碼類：實跑 [測試/指令]，貼實際輸出最後 10 行
+- API evidence table（若待驗產出有附）：抽查 ≥3 列 —— repo symbol 必須能在引用的
+  檔案:行號 Grep 到；URL 列必須 WebFetch 且該頁面須包含該 symbol
 驗收報告只允許兩種結論：
 - PASS：逐條列「條件 → 證據（檔案:行號 或 輸出）」
 - FAIL：列未過項 → 證據 → 一句話修復建議
 FAIL 只准基於上列可機械檢查的驗收條件；風格/寫法/觀點類意見寫入獨立的
 「建議（非阻斷，可空）」欄，不得作為 FAIL 理由（model-dispatch §5）。
 禁止「看起來沒問題」「應該可以」等無證據結論。
+Verdict persistence（強制 —— 驗收結論必須撐過你的 ephemeral context）：
+- 用 Write tool 把完整報告（每條 criterion → 證據、實際指令輸出）寫入
+  docs/reviews/<YYYY-MM-DD>-<slug>.md。這是你唯一能建立的檔案；其餘一律唯讀。
+- 最終訊息必須含 `VERDICT: PASS docs/reviews/<file>.md`（或 `VERDICT: FAIL docs/reviews/<file>.md`）
+  這一行 —— stop-retro-logger 會把這行收割進 state/verifications.jsonl，FAIL 還會落入 ERRORS.md Pending Review。
+- 之後照常以 handoff marker 結尾（PASS 用 [HANDOFF: main]，FAIL 用 [VERIFY_FAILED: <原因>]）。
 ```
 
 **填好範例**：「你是驗收員。待驗產出：docs/harness/DIAGNOSIS.md。驗收條件：1) 三大類痛點各恰好 3 項且各附修法 2) 每項至少一個 檔案:行號 證據 3) 含能力極限一節 4) 無 {{佔位符}} 殘留。驗證方法：重新讀檔逐條對照。輸出 PASS/FAIL 報告。」
+
+## 7. 策略研究（file-first）
+
+- 建議：依主題選 `pm` / `market-researcher` / `competitive-analyst` / `data-analyst`
+  （各 agent 的 frontmatter `description` 有範圍界線——市場規模 vs. 競品比較 vs. 量化 KPI
+  是不同 agent，不要混用）。此模板是「file-first」：完整報告一律落在 `docs/research/`；
+  聊天室回覆只是有上限的摘要，絕不是產出物本身。
+
+```
+研究問題／策略主題：[一句話問題]。
+動機與背景：[這個答案會影響什麼決策、為何是現在]。
+必查來源：[官方文件/市場報告/指定網址]；優先一手來源。
+範圍宣告：（依上方標準區塊；允許寫的範圍恰好是一個新檔案：
+  docs/research/<YYYY-MM-DD>-<slug>.md —— 不得修改/刪除/移動/建立其他任何檔案）
+驗收條件（全部滿足才算完成）：
+- 已用 Write tool 把完整報告寫入 docs/research/<YYYY-MM-DD>-<slug>.md
+  （命名規則見 docs/research/README.md）
+- 報告含 `### 假設-證據表`，每一列的 confidence 欄都已填妥
+  （高/中/低 —— confidence 欄空白視同 FAIL，不是佔位符）
+- 報告含 `### Sources` 一節，至少 3 個可驗證 URL（內部資料則用 檔案:行號）；
+  任何無出處主張需行內標記 `[UNCONFIRMED: <claim>]`
+- 聊天室回覆是 ≤40 行的摘要：關鍵發現 + 未決問題 + 檔案路徑 —— 完整細節留在檔案內，
+  不得貼進回覆
+回報格式：≤40 行聊天室摘要（結論 + 已寫入報告的路徑）；報告檔案本身依該 agent 的
+Output Format 模板（須含假設-證據表 + Sources —— 確切模板見 agent frontmatter）。
+```
+
+把**通用規範**（本檔開頭）附加在每個填好的 prompt 末尾，同 §1-6 模板。
