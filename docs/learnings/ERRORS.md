@@ -56,10 +56,7 @@
   ↳ 2026-07-23 /last-word 已完成本 session（PR #2+#3, 共 20 commits）的 retro：教訓見下方兩條 2026-07-23 條目；同 session 較早的 count=2/4 過時提醒與已解決的 C2 驗收三條目（VERIFY_FAILED/PROTOCOL_VIOLATION/ACCEPTANCE_FAIL，全文存 docs/reviews/2026-07-22-f001-phase-c2.md 與 commit 29b6663 訊息）已清理
 
 ### [2026-07-23] 提案:harness-maintenance §6 增設「Standing Rule」第三類品質閘門(該檔 §8 為 Red tier 不得自行修改,依規記錄於此送人審)
-- 情境:F-001 批次(O15)發現新增 always-on 規則零成本、零證據要求、零退場機制;§6 現只涵蓋 Agent/Skill 兩類
-- 提案內容:新增/擴編 `.claude/rules/*` 規則須附 (a) ≥2 條 ERRORS.md 條目或 harness-eval gap 編號作為需求證據;(b) 宣告一個遙測標記名(`[RULE_FIRED: <name>|...]`,語法見 handoff-protocol.md 行內輔助標記),否則命中率永遠不可測;(c) 90 天複審日期,屆時 state/rule-events.jsonl 命中為零者列入 §5 降級候選
-- 配套已就緒:rule-events.jsonl 收割管線與 scripts/retro-status.py 已在 F-001 落地,clarify-first / model-dispatch 已帶示範標記
-- 建議去向:人審同意後由人(或授權後的 session)修改 harness-maintenance.md §6
+- ↳ 2026-07-23 人審裁決:同意採納,條文已寫入 harness-maintenance.md §6 第三類「Standing Rule」閘門(EN/zh 鏡像與 README 品質關卡列同步);提案全文見 git 歷史。本條已結案,下次週審可逕行刪除
 
 ### [2026-07-23] SubagentStop 的 transcript_path 指向主對話——hook payload 語意必須實證,不可從文件或直覺推定
 - 情境:PR #2 的 missing-marker 哨兵讀 payload 的 transcript_path 判定子代理結尾,造成系統性誤報(主對話文字被判違規)與漏報,已污染生產 ERRORS.md
@@ -70,6 +67,41 @@
 - 情境:harness-gates 首次實跑兩個 job 全掛——secret-scan 的 print-洩漏正則命中工作流自己的 `print("secret-scan: FAIL")`(job 名含 secret);placeholder-gate 的天真 `{{` 匹配命中 Actions 表達式語法、佔位符「偵測器」的字面字串、文件反引號引用;修復時註解裡寫了字面空表達式,又造成 workflow 解析 0 秒失敗(一般 YAML 驗證器驗不出,只有 Actions 表達式層會拒絕)
 - 教訓:(a) 內容掃描類閘門設計時先問「這條規則掃到自己的實作/文件引用時會怎樣」,豁免面(路徑範圍、code-span 剝除、語法前綴)要跟規則一起設計;(b) 修 CI 後除了 YAML lint 還要看 Actions 實跑(或用 actionlint),0 秒失敗=workflow 檔問題;(c) 負向測試不可省——豁免加寬後要證明真違規仍會被抓
 - 建議去向:留在 ERRORS;若未來引入 actionlint 可將 (b) 機械化為 CI job
+
+<!-- harvest:d62918f522 -->
+- [2026-07-23T14:29:56+0000] [PROTOCOL_VIOLATION] **subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker**
+  ```
+  No-op placeholder acknowledged — not executing.
+
+Per directive, taking no action and producing no changes.
+  ```
+  ↳ 2026-07-23 已釐清:主對話誤發 no-op 佔位子代理(操作失誤,非流程產物);哨兵判定正確。週審可逕行刪除
+
+<!-- harvest:3d1156c80d -->
+- [2026-07-23T14:46:51+0000] [VERIFY_FAILED] **criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)**
+  ```
+  nical literal-existence check and one of its five sub-paths fails; everything else passes cleanly.
+
+[VERIFY_FAILED: criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)]
+  ```
+  ↳ 2026-07-23 同日已解:帳本其後由 stop-retro-logger 惰性建立,複驗全項 PASS(HANDOFF 標記 acceptance PASS);過程證據見 commit 987a485 訊息。週審可逕行刪除
+
+<!-- harvest:bc8581467e -->
+- [2026-07-23T14:46:51+0000] [PROTOCOL_VIOLATION] **VERIFY_FAILED reason exceeds 80 chars (151) — protocol requires a short specific reason**
+  ```
+  *: none.
+
+Criterion 5 is a mechanical literal-existence check and one of its five sub-paths fails; everything else passes cleanly.
+
+[VERIFY_FAILED: criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)]
+  ```
+  ↳ 2026-07-23 屬實(151 字元)但輕微;複驗輪結尾已改用合規短標記。週審可逕行刪除
+
+### [2026-07-23] 遙測收割器把「引用性標記」當真實事件:rule-events.jsonl 首筆即污染
+- 情境:驗收代理報告中「引用」clarify-first 的示範標記字串(RULE_FIRED 語法、detail 為字面三點省略號),SubagentStop 收割時被當成真實規則命中寫入 state/rule-events.jsonl——帳本因此首次建立,首筆即假事件(hash 8f8af8ab88)
+- 錯誤:收割器不區分「真實發出的標記」與「報告/文件中引用的標記範例」,與上方 CI 閘門「掃到自己」條目同族:掃描器未豁免引用性內容
+- 教訓:讀 rule-events.jsonl 做 90 天複審或命中率統計前,先剔除 detail 帶模板痕跡(字面省略號、角括號佔位符)的條目,否則假命中會讓該規則躲過降級複審;收割層修法(剝除 code-span/引用內標記、擋模板 detail)是機械化候選
+- 建議去向:提案修 stop-retro-logger 收割豁免(hooks 屬 Red tier,送人審);修復落地前每次讀帳本先人工剔除
 
 ## Active Lessons
 

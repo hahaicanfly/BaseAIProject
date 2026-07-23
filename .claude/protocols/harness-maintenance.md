@@ -73,13 +73,17 @@ When clearing Pending entries, there's no need to keep hash comments (`<!-- harv
 
 **The trimming method** is conceptual abstraction: 5 similar concrete lessons → 1 rule + 1 representative example; "delete the old ones" must never substitute for "merge same-category entries."
 
-## 6. Quality Gates for Adding/Modifying an Agent or Skill
+## 6. Quality Gates for Adding/Modifying an Agent, Skill, or Standing Rule
 
 - **Skill** → go through the full `.claude/skills/skill-creator-plus/SKILL.md` process (overlap check, bidirectional trigger tests, baseline-comparison eval are all in there; not repeated here).
 - **Agent** (`.claude/agents/*.md`) → three gates, with evidence attached to that commit/PR description:
   1. **Pre-check for duplication**: before starting, cross-reference `agent_docs/AI-TEAM-REGISTRY.md` and `.claude/agents/` — if responsibilities overlap, extend the existing file rather than creating a new one (prevents "same role, different name" pile-up, i.e., pre-empting the "canon re-fragmentation" decay pattern)
   2. **Bidirectional trigger test**: list 8-10 "should trigger" and 8-10 "should not trigger" scenarios and check each against the description/trigger words; conflicting trigger words with an existing agent is a FAIL — add a disambiguating qualifier and retest
   3. **Baseline comparison** (when changing behavioral guidance): run a representative task on the pre-change version first and record the failure mode, then rerun the same task post-change and compare item by item for improvement; any observed rationalization phrases go into judgment-rubrics §7 as candidates (via the ERRORS.md pipeline, not a direct edit to a Red-tier file)
+- **Standing Rule** (`.claude/rules/*` — always-on, loaded into every session, so every line carries a permanent context cost) → three gates when adding a new rule or expanding an existing one, evidence attached to that commit/PR description (human-approved 2026-07-23; origin: F-001/O15 found that adding an always-on rule previously required zero evidence and had no exit mechanism):
+  1. **Demand evidence**: cite ≥2 ERRORS.md entries or a harness-eval gap number that the rule addresses — "seems useful" with no recurring-failure evidence is a FAIL
+  2. **Telemetry marker**: declare the rule's inline marker (syntax: handoff-protocol.md "Inline Auxiliary Markers", e.g. `[RULE_FIRED: <rule-name>|<detail>]`) and have the rule emit it wherever it fires, so hit-rate is measurable from `state/rule-events.jsonl` (live examples: clarify-first §1 `[RULE_FIRED:]`, model-dispatch §4 `[ESCALATION:]`)
+  3. **90-day review date**: write the date (creation + 90 days) into the rule's header blockquote; at review, a rule with zero hits in `state/rule-events.jsonl` becomes a §5 demotion candidate (`.claude/rules/*` row: demote to non-always-on or move to `agent_docs/`)
 
 ## 7. The Five-Dimension Harness Checkup (framework for `/harness-eval` and quarterly audits)
 

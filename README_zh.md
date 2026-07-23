@@ -156,7 +156,7 @@ BaseAIProject/
 | 紅黃綠分級 | harness 檔案的修改權限與備份驗證要求 | `.claude/protocols/harness-maintenance.md` |
 | 煙霧測試 | hook 改動後 block/pass 雙情境黑箱實測 | `harness-maintenance.md` §4 |
 | 範圍宣告 | 派工必附：允許讀／寫／禁觸／終止條件 | `delegation-templates.md` 通用規範 |
-| 品質關卡 | 新增/改 agent 或 skill：重複審查＋雙向觸發測試＋baseline 對照 | `harness-maintenance.md` §6 |
+| 品質關卡 | 新增/改 agent 或 skill：重複審查＋雙向觸發測試＋baseline 對照；新增/擴編 standing rule：需求證據＋遙測標記＋90 天複審 | `harness-maintenance.md` §6 |
 | 五維度體檢 | Instructions/Tools/Environment/State/Feedback 缺一不完整 | `harness-maintenance.md` §7 |
 | Red Flags | 合理化話術對照表；違反字面即違反精神 | `judgment-rubrics.md` §7 |
 

@@ -156,7 +156,7 @@ BaseAIProject/
 | Red/yellow/green tiers | Modification permissions and backup-verification requirements for harness files | `.claude/protocols/harness-maintenance.md` |
 | Smoke test | Black-box testing of both block/pass scenarios for real, after any hook change | `harness-maintenance.md` §4 |
 | Scope declaration | Every delegation must include: allowed to read / write / off-limits / termination condition | `delegation-templates.md` general spec |
-| Quality gate | Adding/changing an agent or skill: overlap review + bidirectional trigger tests + baseline comparison | `harness-maintenance.md` §6 |
+| Quality gate | Adding/changing an agent or skill: overlap review + bidirectional trigger tests + baseline comparison; adding/expanding a standing rule: demand evidence + telemetry marker + 90-day review | `harness-maintenance.md` §6 |
 | Five-dimension checkup | Instructions/Tools/Environment/State/Feedback — missing any one is incomplete | `harness-maintenance.md` §7 |
 | Red Flags | Rationalization-phrase lookup table; violating the letter is violating the spirit | `judgment-rubrics.md` §7 |
 

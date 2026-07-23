@@ -73,13 +73,17 @@
 
 **精簡的方法**是概念抽象化：5 條同類具體教訓 → 1 條規則 + 1 個代表範例；禁止用「刪掉舊的」代替「合併同類」。
 
-## 6. 新增／修改 agent 或 skill 的品質關卡
+## 6. 新增／修改 agent、skill 或 standing rule 的品質關卡
 
 - **Skill** → 走 `.claude/skills/skill-creator-plus/SKILL.md` 全流程（重疊檢查、雙向觸發測試、baseline 對照 eval 都在裡面，本節不重複）。
 - **Agent**（`.claude/agents/*.md`）→ 三關，證據附在該次 commit/PR 描述：
   1. **前置重複審查**：動手前核對 `agent_docs/AI-TEAM-REGISTRY.md` 與 `.claude/agents/`——職責重疊者擴充既有檔，不另建新檔（防「同角色不同名字」堆積，= 腐化表「正典再分裂」的事前攔截）
   2. **雙向觸發測試**：列 8-10 個「應觸發」＋ 8-10 個「不應觸發」情境逐一核對 description/觸發詞；與既有 agent 觸發詞衝突視為 FAIL，加互斥限定詞後重測
   3. **Baseline 對照**（改動行為指引時）：先用改動前版本跑一個代表性任務記錄失敗模式，改後重跑同任務逐項對照有改善；觀察到的規避話術補進 judgment-rubrics §7 候選（經 ERRORS.md 管線，不直接改紅級檔）
+- **Standing Rule**（`.claude/rules/*`——常駐、每個 session 都載入，每一行都有永久 context 成本）→ 新增規則或擴編既有規則時三關，證據附在該次 commit/PR 描述（2026-07-23 人審核准；源起：F-001/O15 發現先前新增常駐規則零證據要求、零退場機制）：
+  1. **需求證據**：引用本規則對應的 ≥2 條 ERRORS.md 條目或 harness-eval gap 編號——只有「感覺有用」而無重複失敗證據視為 FAIL
+  2. **遙測標記**：宣告本規則的行內標記（語法見 handoff-protocol.md「行內輔助標記」，如 `[RULE_FIRED: <rule-name>|<detail>]`），並在規則命中處發出，使命中率可由 `state/rule-events.jsonl` 量測（現行示範：clarify-first §1 的 `[RULE_FIRED:]`、model-dispatch §4 的 `[ESCALATION:]`）
+  3. **90 天複審日**：把日期（建立日＋90 天）寫進規則檔開頭引言區；屆時 `state/rule-events.jsonl` 命中為零者列入 §5 降級候選（`.claude/rules/*` 該列：降為非常駐或移至 `agent_docs/`）
 
 ## 7. Harness 體檢五維度（`/harness-eval` 與季度稽核的檢查框架）
 
