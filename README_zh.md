@@ -6,7 +6,7 @@ https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
 
 ## 這是什麼（30 秒版）
 
-BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**：把「怎麼派工、怎麼驗收、怎麼防呆、怎麼累積教訓」寫成制度檔案——6 條常駐規則、14 個專業 agents、17 個觸發式 skills、4 個 hooks 硬防線與一條教訓管線——讓 AI 在最少人工介入下穩定產出、可驗證、不失控。
+BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**：把「怎麼派工、怎麼驗收、怎麼防呆、怎麼累積教訓」寫成制度檔案——7 條常駐規則、14 個專業 agents、17 個觸發式 skills、7 個 guard hooks、4 支機械閘門腳本與對應 CI、一條教訓管線——讓 AI 在最少人工介入下穩定產出、可驗證、不失控。
 
 **三步上手**：
 
@@ -44,16 +44,18 @@ AI 主導開發的三大失敗模式，各有對應的物理防線：
 |--------|------|--------|
 | Virtual Team | 14 agents（4 opus + 10 sonnet） | 職責互斥的專業分工，模型分派以 frontmatter 為正典 |
 | Skills | 17 個 | 觸發式工作流，description 互斥設計 + 機械驗證器 |
-| Hooks | 4 個 + 共用庫 | 1 個 enforce（exit 2 實測攔截）+ 3 個 sentinel |
-| 常駐 Rules | 6 條（`always: true`） | 調度、判準、安全、成本、worktree、plan-first（模組化已降非常駐 → `agent_docs/`） |
+| Hooks | 7 個 + 共用庫 | 1 個 enforce（exit 2 實測攔截）+ 6 個 sentinel |
+| 常駐 Rules | 7 條（`always: true`） | 調度、判準、clarify-first、安全、成本、worktree、plan-first（模組化已降非常駐 → `agent_docs/`） |
 | Protocols | 5 份 | ExecPlan 生命週期、交接 marker、review SOP、harness 維護、（1 份未接線草案） |
+| 機械閘門 | 4 支腳本 + 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status；`harness-gates.yml` 對每個 PR 重跑檢查（py-compile、secret-scan、execplan-lint、placeholder-gate） |
+| State 帳本 | 5 份 JSONL 帳本 | commits / delegations / verifications / rule-events / metrics-monthly——派工、驗收結果、規則命中率跨 session 存續（schema：`state/SCHEMA.md`） |
 | 知識系統 | 5 層 | 教訓／硬規則／ADR／session 快照／原生 memory，各有寫讀權與流動規則 |
 
 ## 六大子系統
 
 ### 1. 指揮與調度層
 
-- **`CLAUDE.md`（84 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
+- **`CLAUDE.md`（87 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
 - **`.claude/rules/model-dispatch.md`**：本機實際可用模型檔位、派工三件套（目標動機／驗收條件／回報格式，缺一不派）、升降級路徑（同模型連敗 2 次 → 升級一次 → 再敗 → 熔斷問人）、回報合約（≤40 行、長產物落檔傳路徑）、驗收邊界（FAIL 只准基於可機械檢查條件，風格意見進非阻斷建議欄）。
 - **`.claude/rules/judgment-rubrics.md`**：七節可觀察判準各附正反例——何時升級、何時算真完成（含 gate-softening 禁令）、何時熔斷提問（含無改善偵測：連續 2 輪 FAIL 集合相同即熔斷）、什麼訊號該換路、品質底線、能力極限、Red Flags 合理化話術對照表（「違反字面即違反精神」）。
 - **`.claude/templates/delegation-templates.md`**：搜尋／實作／重構／研究／審查／fresh-context 驗收六份派工模板，含範圍宣告（允許讀／允許寫／禁止觸碰／終止條件）與破壞性指令黑名單（禁對非指派檔案 rm / checkout / restore / clean）。
@@ -71,7 +73,7 @@ sonnet ×10 執行 checklist 與模板化工作：`code-reviewer`（PR gating，
 - **審查三件套**（觸發互斥）：`code-review`（單一 PR 標準審查）、`multi-agent-review`（高風險三專家並行）、`pr-review-cycle-mob`（成本分級 cascade）
 - **安全與品質**：`security-audit`（OWASP）、`techdebt-scanner`、`harness-eval`（harness 成熟度 0-100 評分）
 - **知識與交接**：`pr-retro`（merge 後萃取教訓）、`context-aggregator`（多來源交接摘要）、`gen-app-map`（技術棧無關的專案地圖產生器）
-- **Skill 工程**：`skill-creator-plus`（官方 Anthropic 方法論 × 本地制度：意圖捕捉、互斥檢查、pushy description、機械驗證器 `validate_skill.py`、fresh-context 雙向觸發測試各 8-10 條、eval 迭代）
+- **Skill 工程**：`skill-creator-plus`（取代基礎版 `skill-creator`；官方 Anthropic 方法論 × 本地制度：意圖捕捉、互斥檢查、pushy description、機械驗證器 `validate_skill.py`、fresh-context 雙向觸發測試各 8-10 條、eval 迭代）
 - **UI 與圖表**：`beautiful-mermaid`（Mermaid → 終端 ASCII／SVG）、`ui-ux-pro-max`（設計系統產生器，附 3 支檢索腳本＋24 份跨 13 技術棧的設計資料庫）、`frontend-design`（設計哲學指引，Compose 範例＋等價寫法標註）
 
 > 2026-07-07 全部 skills 已從母專案補回完整內容並去專案化（抽取時 10 個曾被靜默大綱化——這個事故本身也進了教訓管線）。
@@ -83,9 +85,14 @@ sonnet ×10 執行 checklist 與模板化工作：`code-reviewer`（PR gating，
 | `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce**（exit 2） | 攔截：master/main 直接 commit、force-push、reset --hard origin、讀取**與 git add** 敏感檔（.env/keystore/credential…）、`curl\|sh` 各變體、rm -rf / |
 | `post-edit-lint.py` | PostToolUse(寫入) | sentinel | INV pattern 快掃（fork 後填 QUICK_CHECKS） |
 | `pre-compact-snapshot.py` | PreCompact | sentinel | 自動寫 session 快照到 `state/session-handoffs/` |
-| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | 收割 `[VERIFY_FAILED:*]` 進 ERRORS.md；墓碑帳本防重複；30/90 天 state 輪替 |
+| `delegation-ledger.py` | PreToolUse(Task/Agent) | sentinel | 記錄每次派工（含是否附驗收條件）到 `state/delegations.jsonl` |
+| `post-bash-commit-ledger.py` | PostToolUse(Bash) | sentinel | 把每個真實 git commit 連結回其 session，記入 `state/commits.jsonl` |
+| `session-activation-check.py` | SessionStart | sentinel | 模板活化槽位（build/test 指令、佔位符）未填時開場警示 |
+| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | 收割 `[VERIFY_FAILED:*]` 進 ERRORS.md、遙測標記進 `state/rule-events.jsonl`（code span／fence 內引用豁免）；墓碑帳本防重複；30/90 天 state 輪替 |
 
 鐵律（來自實戰教訓）：**任何 hook 新增或修改後，必須跑黑箱煙霧測試**（block 情境期望 exit 2、pass 期望 0，指令在 `harness-maintenance.md` §4）——本專案的 guard 曾因無執行權限＋錯誤 exit code 雙重失效而「紙上防線」數月無人發現。
+
+runtime hooks 之外，四支**機械閘門腳本**（`scripts/`）讓宣稱隨時可驗：`acceptance-run.py` 實跑 ExecPlan §5 驗收區塊並存證、`execplan-lint.py` 依 PLANS.md 規格檢查 ExecPlan 結構、`check-doc-refs.py` 驗證正典中每個路徑／節引用真實存在（死引用是幻覺誘餌）、`retro-status.py` 依字面定義計算 §5 精簡觸發線數字。同組檢查經 `.github/workflows/harness-gates.yml` 對每個 PR 重跑（4 jobs：py-compile、secret-scan、execplan-lint、placeholder-gate）。
 
 ### 5. 知識管理（五層，地圖見 `docs/INDEX.md`）
 
@@ -130,15 +137,17 @@ BaseAIProject/
 │   ├── decisions/             # ADR-0001 + 範本
 │   ├── learnings/ERRORS.md    # 教訓管線（Pending → Active → invariants）
 │   └── plans/                 # ExecPlan 規格 + active/ + completed/
-├── state/                     # runtime（gitignored）：快照、hook 事件、墓碑帳本
+├── scripts/                   # 機械閘門：acceptance-run / execplan-lint / check-doc-refs / retro-status
+├── .github/workflows/         # harness-gates.yml CI（py-compile、secret-scan、execplan-lint、placeholder-gate）
+├── state/                     # runtime（gitignored）：快照、hook 事件、5 份 JSONL 帳本（schema：SCHEMA.md）
 └── .claude/
-    ├── settings.json          # hooks 接線（5 事件）
-    ├── rules/                 # 6 條常駐規則（always: true）
+    ├── settings.json          # hooks 接線（6 事件）
+    ├── rules/                 # 7 條常駐規則（always: true）
     ├── agents/                # 14 個 virtual agents
     ├── skills/                # 17 個 skills
     ├── protocols/             # lifecycle / handoff / review / maintenance
     ├── templates/             # 派工模板、init.sh 環境範本
-    ├── hooks/                 # 4 hooks + _lib
+    ├── hooks/                 # 7 hooks + _lib
     ├── commands/              # /last-word、/techdebt
     └── uiux/                  # UI 三階段（可選）
 ```
@@ -157,6 +166,7 @@ BaseAIProject/
 | 煙霧測試 | hook 改動後 block/pass 雙情境黑箱實測 | `harness-maintenance.md` §4 |
 | 範圍宣告 | 派工必附：允許讀／寫／禁觸／終止條件 | `delegation-templates.md` 通用規範 |
 | 品質關卡 | 新增/改 agent 或 skill：重複審查＋雙向觸發測試＋baseline 對照；新增/擴編 standing rule：需求證據＋遙測標記＋90 天複審 | `harness-maintenance.md` §6 |
+| 遙測標記 | 規則命中當下發出行內標記（`RULE_FIRED`／`RULE_SKIPPED`／`ESCALATION`），收割進 `state/rule-events.jsonl`——命中率可量測，零命中規則面臨降級 | `handoff-protocol.md`「行內輔助標記」 |
 | 五維度體檢 | Instructions/Tools/Environment/State/Feedback 缺一不完整 | `harness-maintenance.md` §7 |
 | Red Flags | 合理化話術對照表；違反字面即違反精神 | `judgment-rubrics.md` §7 |
 
