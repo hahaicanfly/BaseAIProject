@@ -208,8 +208,8 @@ jobs:
           # Unfilled template slots live in markdown/config docs, so this
           # gate scans ADDED lines of *.md files only — .py/.yml legitimately
           # contain literal "{{" (the placeholder DETECTORS themselves, and
-          # GitHub Actions' own ${{ }} expressions; the gate's first live run
-          # flagged its own implementation). Within a line: inline `code
+          # GitHub Actions' own dollar-brace expression syntax; the first
+          # live run flagged its own implementation). Within a line: inline
           # spans` are stripped first (docs QUOTING a placeholder are fine),
           # and only a non-$-prefixed {{ counts (real slot, not an Actions
           # expression). Template-path files may introduce placeholders.
