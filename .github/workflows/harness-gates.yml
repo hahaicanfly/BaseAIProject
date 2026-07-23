@@ -108,6 +108,14 @@ jobs:
                       failed = True
 
           # 2) added diff lines vs post-edit-lint.py QUICK_CHECKS regexes.
+          # Scope: real code only. Markdown (pedagogical leak examples in
+          # security docs) and this workflow itself (its own print lines
+          # contain the word "secret" in job names — first live run flagged
+          # `print("secret-scan: FAIL")`) stay covered by the local
+          # post-edit-lint sentinel as warn-only, but must not hard-fail CI.
+          def quickcheck_exempt(path):
+              return path is None or path.endswith(".md") or path.startswith(".github/workflows/")
+
           diff_output = subprocess.run(
               ["git", "diff", "--unified=0", DIFF_RANGE],
               capture_output=True, text=True, check=True,
@@ -122,6 +130,8 @@ jobs:
               if line.startswith("+++") or line.startswith("---"):
                   continue
               if line.startswith("+"):
+                  if quickcheck_exempt(current_file):
+                      continue
                   added_line = line[1:]
                   for inv_id, pat, hint in quick_checks:
                       if pat.search(added_line):
@@ -195,11 +205,19 @@ jobs:
           BASE_REF = os.environ["BASE_REF"]
           DIFF_RANGE = f"origin/{BASE_REF}...HEAD"
 
-          # Templates directory (any depth) or any path containing "template"
-          # (case-insensitive) are allowed to introduce {{ }} placeholders.
+          # Unfilled template slots live in markdown/config docs, so this
+          # gate scans ADDED lines of *.md files only — .py/.yml legitimately
+          # contain literal "{{" (the placeholder DETECTORS themselves, and
+          # GitHub Actions' own ${{ }} expressions; the gate's first live run
+          # flagged its own implementation). Within a line: inline `code
+          # spans` are stripped first (docs QUOTING a placeholder are fine),
+          # and only a non-$-prefixed {{ counts (real slot, not an Actions
+          # expression). Template-path files may introduce placeholders.
           TEMPLATE_DIR_RE = re.compile(r"(^|/)\.claude/templates/", re.IGNORECASE)
           TEMPLATE_PATH_RE = re.compile(r"template", re.IGNORECASE)
           HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+          CODE_SPAN_RE = re.compile(r"`[^`]*`")
+          PLACEHOLDER_RE = re.compile(r"(?<!\$)\{\{")
 
           diff_output = subprocess.run(
               ["git", "diff", "--unified=0", DIFF_RANGE],
@@ -229,9 +247,12 @@ jobs:
                       new_lineno += 1
                   else:
                       this_lineno = -1
-                  if "{{" in added_line:
-                      if current_file and (TEMPLATE_DIR_RE.search(current_file) or TEMPLATE_PATH_RE.search(current_file)):
-                          continue
+                  if current_file is None or not current_file.endswith(".md"):
+                      continue
+                  if TEMPLATE_DIR_RE.search(current_file) or TEMPLATE_PATH_RE.search(current_file):
+                      continue
+                  scannable = CODE_SPAN_RE.sub("", added_line)
+                  if PLACEHOLDER_RE.search(scannable):
                       print(f"::error::PLACEHOLDER HIT: {current_file}:{this_lineno}: {added_line.strip()}")
                       failed = True
 
