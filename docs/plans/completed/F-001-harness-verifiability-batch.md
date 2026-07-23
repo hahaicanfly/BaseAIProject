@@ -2,7 +2,7 @@
 
 | Field | Value |
 |------|-----|
-| Status | review |
+| Status | done |
 | Owner Agent | dev (main conversation) |
 | Branch | feat/harness-verifiability-batch |
 | Created | 2026-07-22 |
@@ -91,6 +91,8 @@ negative-lint: python3 scripts/execplan-lint.py /dev/null expect-fail
 - [2026-07-23 00:20] dev Phase C3 done: check-doc-refs.py (unique-suffix shorthand resolution; first --all run found 52 dead refs, real ones fixed incl. verification-log.jsonl naming drift and .claude/hooks/settings.json; now 0 ERROR) + post-edit-lint wiring (live probe verified), unfetched-citation detector, [UNCONFIRMED:] standard + harvest, API evidence table, Document Reviewer Checklist; zh mirror batch synced (R4=0, incl. new parallel-worktree mirror + command-mirror rename).
 - [2026-07-23 00:25] dev Phase C4 done: Non-Goals reverse-check ([SCOPE] Blocker) + plan-reviewer items; Scope Baseline field + lifecycle Scope Change procedure + clarify-first §3 exception + last-word handoff line; docs/research/ + PDR-template + hypothesis-evidence tables in 4 research agents + delegation-templates §7 (Yellow-tier backups kept); telemetry markers ([RULE_FIRED/RULE_SKIPPED/ESCALATION]) harvested to state/rule-events.jsonl, monthly rollup before rotation, scripts/retro-status.py + SessionStart overdue reminder, rule-budget warn in post-edit-lint; harness-maintenance §6 gate filed as ERRORS.md proposal per its Red-tier §8 self-rule. Sandbox suite 30/30.
 - [2026-07-23 00:40] dev Final batch verification by fresh-context agent: 7/7 PASS (VERDICT: PASS docs/reviews/2026-07-23-f001-phase-c3c4.md; independent sandbox re-derivation of citation/telemetry cases; Red-tier compliance confirmed). Non-blocking observation logged: EN research-agent files use Chinese headers for the hypothesis-evidence section — tidy in a follow-up. Opening PR.
+- [2026-07-23 13:26] dev CI first live run: both new gates flagged their own implementation (secret-scan matched its own print lines; placeholder-gate hit Actions expressions / detector literals / doc quotes) — fixed by scoping (md-only + code-span stripping + non-$ {{), negative-tested so real violations still trip; follow-up fix removed a literal empty Actions expression from a comment (workflow-file parse error invisible to plain YAML validators). All 4 jobs green (run 30011397328).
+- [2026-07-23 13:41] user merged PR #3 (ea1644e); plan archived to completed/ per lifecycle Phase 8.
 
 ## 7. Decision Log
 - DEC-1: One branch + one PR for the whole batch (instead of 5 stacked PRs), because all items form one initiative under this single ExecPlan, the hook files are sequentially dependent, and the user gets a single review/merge decision point.
@@ -101,6 +103,6 @@ negative-lint: python3 scripts/execplan-lint.py /dev/null expect-fail
 - None
 
 ## 9. Handoff Manifest
-- Next agent: human PR review
-- Required reading: this file §6-§7; docs/reviews/2026-07-22-f001-phase-c2.md; docs/reviews/2026-07-23-f001-phase-c3c4.md; PR description
-- Current state marker: [HANDOFF: human-pr-review]
+- Next agent: none — merged (PR #3, ea1644e)
+- Required reading: docs/reviews/ reports for the verification trail; ERRORS.md Pending Review for the open §6 proposal
+- Current state marker: [HANDOFF: done]

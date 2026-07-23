@@ -45,53 +45,31 @@
 - [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 645b493e-20af-4689-9546-e5ddba056a8f
 
-<!-- harvest:b992aa36d0 -->
-- [2026-07-22T15:10:19+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
 
-<!-- harvest:cf9ceaf881 -->
-- [2026-07-22T15:35:35+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
 
-<!-- harvest:adb9e71e8a -->
-- [2026-07-22T15:41:29+0000] [VERIFY_FAILED] **item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)**
-  ```
-  明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
 
-VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
 
-[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
-  ```
-
-<!-- harvest:18c2659f20 -->
-- [2026-07-22T15:41:29+0000] [PROTOCOL_VIOLATION] **VERIFY_FAILED reason exceeds 80 chars (83) — protocol requires a short specific reason**
-  ```
-  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
-
-VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
-
-[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
-  ```
-
-<!-- harvest:6400140032 -->
-- [2026-07-22T15:41:29+0000] [ACCEPTANCE_FAIL] **fresh-context verification returned FAIL (docs/reviews/2026-07-22-f001-phase-c2.md)**
-  ```
-  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
-
-VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
-
-[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
-  ```
 
 <!-- harvest:8056eb8b94 -->
 - [2026-07-22T15:46:35+0000] [PR_RETRO] **本 session 有 11 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+  ↳ 2026-07-23 /last-word 已完成本 session（PR #2+#3, 共 20 commits）的 retro：教訓見下方兩條 2026-07-23 條目；同 session 較早的 count=2/4 過時提醒與已解決的 C2 驗收三條目（VERIFY_FAILED/PROTOCOL_VIOLATION/ACCEPTANCE_FAIL，全文存 docs/reviews/2026-07-22-f001-phase-c2.md 與 commit 29b6663 訊息）已清理
 
 ### [2026-07-23] 提案:harness-maintenance §6 增設「Standing Rule」第三類品質閘門(該檔 §8 為 Red tier 不得自行修改,依規記錄於此送人審)
 - 情境:F-001 批次(O15)發現新增 always-on 規則零成本、零證據要求、零退場機制;§6 現只涵蓋 Agent/Skill 兩類
 - 提案內容:新增/擴編 `.claude/rules/*` 規則須附 (a) ≥2 條 ERRORS.md 條目或 harness-eval gap 編號作為需求證據;(b) 宣告一個遙測標記名(`[RULE_FIRED: <name>|...]`,語法見 handoff-protocol.md 行內輔助標記),否則命中率永遠不可測;(c) 90 天複審日期,屆時 state/rule-events.jsonl 命中為零者列入 §5 降級候選
 - 配套已就緒:rule-events.jsonl 收割管線與 scripts/retro-status.py 已在 F-001 落地,clarify-first / model-dispatch 已帶示範標記
 - 建議去向:人審同意後由人(或授權後的 session)修改 harness-maintenance.md §6
+
+### [2026-07-23] SubagentStop 的 transcript_path 指向主對話——hook payload 語意必須實證,不可從文件或直覺推定
+- 情境:PR #2 的 missing-marker 哨兵讀 payload 的 transcript_path 判定子代理結尾,造成系統性誤報(主對話文字被判違規)與漏報,已污染生產 ERRORS.md
+- 教訓:SubagentStop 的子代理輸出在 `agent_transcript_path` 欄位(官方 hooks 文件未記載;claude-code-guide 查文件還猜錯方向);修法前先在 hook 內 dump 一次真實 payload 再寫邏輯。同場加映:有 transcript 檔不存在的「幻影中間 stop」要跳過、最終 stop 偶有寫入競態要有界重試、每個子代理各觸發一次所以去重 hash 必含 agent_id、structured-output 型代理無結尾文字要豁免
+- 建議去向:留在 ERRORS;機械防護已落地(stop-retro-logger 缺欄位即跳過並記 no-agent-transcript-*)
+
+### [2026-07-23] CI 閘門首跑掃到自己:掃描器必須豁免自身與引用性內容;Actions 連註解裡的 ${{ }} 都會求值
+- 情境:harness-gates 首次實跑兩個 job 全掛——secret-scan 的 print-洩漏正則命中工作流自己的 `print("secret-scan: FAIL")`(job 名含 secret);placeholder-gate 的天真 `{{` 匹配命中 Actions 表達式語法、佔位符「偵測器」的字面字串、文件反引號引用;修復時註解裡寫了字面空表達式,又造成 workflow 解析 0 秒失敗(一般 YAML 驗證器驗不出,只有 Actions 表達式層會拒絕)
+- 教訓:(a) 內容掃描類閘門設計時先問「這條規則掃到自己的實作/文件引用時會怎樣」,豁免面(路徑範圍、code-span 剝除、語法前綴)要跟規則一起設計;(b) 修 CI 後除了 YAML lint 還要看 Actions 實跑(或用 actionlint),0 秒失敗=workflow 檔問題;(c) 負向測試不可省——豁免加寬後要證明真違規仍會被抓
+- 建議去向:留在 ERRORS;若未來引入 actionlint 可將 (b) 機械化為 CI job
 
 ## Active Lessons
 
