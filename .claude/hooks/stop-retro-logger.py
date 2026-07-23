@@ -133,6 +133,35 @@ def _is_placeholder(reason: str) -> bool:
     return len(alnum) < 3
 
 
+
+# Quotation exemption (lesson: rule-events.jsonl's first-ever entry was a
+# FALSE RULE_FIRED — an acceptance agent QUOTING clarify-first's example
+# marker in a code span got harvested as a real hit, same family as the
+# CI gates scanning their own doc references). Canon convention writes
+# marker examples inside backticks, so code spans/fences are quotations,
+# never emits. Unmatched fences are left as-is (conservative: may
+# over-harvest, never under-harvest).
+_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+_CODE_SPAN_RE = re.compile(r"`+[^`\n]+`+")
+
+
+def _strip_quoted_code(text: str) -> str:
+    """Remove fenced blocks and inline code spans before marker scans."""
+    return _CODE_SPAN_RE.sub(" ", _FENCE_RE.sub(" ", text))
+
+
+def _is_template_detail(detail: str) -> bool:
+    """Second exemption layer for telemetry details of the `name|detail`
+    shape: doc examples keep a template tail (`clarify-first|...`), while
+    real emits carry a concrete tail (`clarify-first|missing=3, asked`)
+    with ≥3 alphanumerics after the last pipe. Pipe-less details pass
+    through (lenient — quotation context is the primary filter)."""
+    if "|" not in detail:
+        return False
+    tail = detail.rsplit("|", 1)[1]
+    return len(_ALNUM_RE.findall(tail)) < 3
+
+
 def _scan_text_for_markers(text: str) -> list[tuple[str, str]]:
     """Return list of (kind, reason) from a single text blob.
 
@@ -497,9 +526,9 @@ def harvest_telemetry(parsed: dict | None, session_id: str) -> int:
         return 0
     found: list[tuple[str, str]] = []
     for text in parsed["text_blocks"]:
-        for m in TELEMETRY_RE.finditer(text):
+        for m in TELEMETRY_RE.finditer(_strip_quoted_code(text)):
             kind, detail = m.group(1), m.group(2).strip()
-            if _is_placeholder(detail):
+            if _is_placeholder(detail) or _is_template_detail(detail):
                 continue
             found.append((kind, detail))
     if not found:

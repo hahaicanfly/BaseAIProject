@@ -6,7 +6,7 @@ https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
 
 ## What This Is (30-Second Version)
 
-BaseAIProject is a directly-forkable **Claude Code AI development governance template**: it turns "how to delegate, how to verify, how to guard against failure, how to accumulate lessons" into institutional files — 6 always-on rules, 14 specialized agents, 17 trigger-based skills, 4 hard-guard hooks, and one lessons pipeline — so AI can produce stable, verifiable, non-runaway output with minimal human intervention.
+BaseAIProject is a directly-forkable **Claude Code AI development governance template**: it turns "how to delegate, how to verify, how to guard against failure, how to accumulate lessons" into institutional files — 7 always-on rules, 14 specialized agents, 17 trigger-based skills, 7 guard hooks, 4 mechanical gate scripts with a matching CI workflow, and one lessons pipeline — so AI can produce stable, verifiable, non-runaway output with minimal human intervention.
 
 **Three steps to get started**:
 
@@ -44,16 +44,18 @@ AI-led development has three major failure modes, each with a corresponding phys
 |--------|------|--------|
 | Virtual Team | 14 agents (4 opus + 10 sonnet) | Mutually exclusive responsibilities, professional division of labor; model dispatch is canonically defined by frontmatter |
 | Skills | 17 | Trigger-based workflows, mutually exclusive description design + mechanical validators |
-| Hooks | 4 + shared library | 1 enforce (exit 2, tested for real interception) + 3 sentinels |
-| Always-on Rules | 6 (`always: true`) | Dispatch, judgment criteria, security, cost, worktree, plan-first (modularity has been demoted to non-always-on → `agent_docs/`) |
+| Hooks | 7 + shared library | 1 enforce (exit 2, tested for real interception) + 6 sentinels |
+| Always-on Rules | 7 (`always: true`) | Dispatch, judgment criteria, clarify-first, security, cost, worktree, plan-first (modularity has been demoted to non-always-on → `agent_docs/`) |
 | Protocols | 5 | ExecPlan lifecycle, handoff markers, review SOP, harness maintenance, (1 unwired draft) |
+| Mechanical Gates | 4 scripts + 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status; `harness-gates.yml` re-checks every PR (py-compile, secret-scan, execplan-lint, placeholder-gate) |
+| State Ledgers | 5 JSONL ledgers | commits / delegations / verifications / rule-events / metrics-monthly — delegations, acceptance outcomes, and rule hit-rates survive session context (schema: `state/SCHEMA.md`) |
 | Knowledge System | 5 layers | Lessons / hard rules / ADRs / session snapshots / native memory, each with its own write/read permissions and flow rules |
 
 ## The Six Subsystems
 
 ### 1. Command and Dispatch Layer
 
-- **`CLAUDE.md` (84-line routing hub)**: Canonical hierarchy (order of trust when documents conflict), pre-action decision tree (ExecPlan vs. Plan Mode vs. do it directly vs. acceptance criteria can't be mechanized → hand to human choice), hard-guardrail summary, document map. Exceeding 100 lines triggers mandatory trimming.
+- **`CLAUDE.md` (87-line routing hub)**: Canonical hierarchy (order of trust when documents conflict), pre-action decision tree (ExecPlan vs. Plan Mode vs. do it directly vs. acceptance criteria can't be mechanized → hand to human choice), hard-guardrail summary, document map. Exceeding 100 lines triggers mandatory trimming.
 - **`.claude/rules/model-dispatch.md`**: The actually-available model tiers on this machine, the delegation trio (goal & motivation / acceptance criteria / report format — missing any one means don't delegate), escalation/de-escalation path (same model fails twice in a row → escalate once → fails again → circuit-break and ask a human), report contract (≤40 lines, large artifacts get written to file with the path returned), acceptance boundary (FAIL may only be based on mechanically checkable criteria; style opinions go into a non-blocking suggestions column).
 - **`.claude/rules/judgment-rubrics.md`**: Seven sections of observable criteria, each with positive/negative examples — when to escalate, when something actually counts as done (including a gate-softening ban), when to circuit-break and ask (including no-improvement detection: two consecutive rounds with an identical FAIL set triggers a circuit-break), what signals mean you should change course, quality floor, capability limits, a Red Flags rationalization-phrase lookup table ("violating the letter is violating the spirit").
 - **`.claude/templates/delegation-templates.md`**: Six delegation templates — search / implementation / refactor / research / review / fresh-context acceptance — each including a scope declaration (allowed to read / allowed to write / off-limits / termination condition) and a blacklist of destructive commands (no rm / checkout / restore / clean on files outside the assignment).
@@ -71,7 +73,7 @@ The four review-category agents share a unified output format via the `review-pr
 - **Review trio** (mutually exclusive triggers): `code-review` (standard single-PR review), `multi-agent-review` (three experts in parallel for high-risk changes), `pr-review-cycle-mob` (cost-tiered cascade)
 - **Security and quality**: `security-audit` (OWASP), `techdebt-scanner`, `harness-eval` (harness maturity, scored 0-100)
 - **Knowledge and handoff**: `pr-retro` (extracts lessons after merge), `context-aggregator` (multi-source handoff summary), `gen-app-map` (tech-stack-agnostic project map generator)
-- **Skill engineering**: `skill-creator-plus` (official Anthropic methodology × local institution: intent capture, overlap checks, pushy descriptions, the mechanical validator `validate_skill.py`, 8-10 fresh-context bidirectional trigger tests each way, eval iteration)
+- **Skill engineering**: `skill-creator-plus` (supersedes the base `skill-creator`; official Anthropic methodology × local institution: intent capture, overlap checks, pushy descriptions, the mechanical validator `validate_skill.py`, 8-10 fresh-context bidirectional trigger tests each way, eval iteration)
 - **UI and diagrams**: `beautiful-mermaid` (Mermaid → terminal ASCII/SVG), `ui-ux-pro-max` (design-system generator, with 3 retrieval scripts + 24 design databases across 13 tech stacks), `frontend-design` (design-philosophy guidance, with Compose examples annotated with equivalents)
 
 > As of 2026-07-07, all skills have had their full content restored from the parent project and been de-project-specific-ized (10 of them had been silently outlined-down during extraction — this incident itself was also fed into the lessons pipeline).
@@ -83,9 +85,14 @@ The four review-category agents share a unified output format via the `review-pr
 | `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce** (exit 2) | Blocks: direct commits to master/main, force-push, reset --hard origin, reading **and git-adding** sensitive files (.env/keystore/credential…), all variants of `curl\|sh`, rm -rf / |
 | `post-edit-lint.py` | PostToolUse(write) | sentinel | Quick INV-pattern scan (fill in QUICK_CHECKS after forking) |
 | `pre-compact-snapshot.py` | PreCompact | sentinel | Automatically writes a session snapshot to `state/session-handoffs/` |
-| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | Harvests `[VERIFY_FAILED:*]` into ERRORS.md; a tombstone ledger prevents duplicates; 30/90-day state rotation |
+| `delegation-ledger.py` | PreToolUse(Task/Agent) | sentinel | Records every subagent delegation (and whether acceptance criteria were attached) to `state/delegations.jsonl` |
+| `post-bash-commit-ledger.py` | PostToolUse(Bash) | sentinel | Links every real git commit back to its session in `state/commits.jsonl` |
+| `session-activation-check.py` | SessionStart | sentinel | Warns while template activation slots (build/test commands, placeholders) remain unfilled |
+| `stop-retro-logger.py` | Stop/SubagentStop | sentinel | Harvests `[VERIFY_FAILED:*]` into ERRORS.md and telemetry markers into `state/rule-events.jsonl` (markers quoted in code spans/fences are exempt); tombstone ledger prevents duplicates; 30/90-day state rotation |
 
 Iron rule (from a real production lesson): **any hook addition or modification must be black-box smoke tested** (block scenario expects exit 2, pass scenario expects 0; commands in `harness-maintenance.md` §4) — this project's guard once went unnoticed for months as a "paper guardrail," doubly disabled by missing execute permission and a wrong exit code.
+
+Beyond runtime hooks, four **mechanical gate scripts** (`scripts/`) make claims checkable on demand: `acceptance-run.py` executes an ExecPlan's §5 acceptance block and stores the evidence, `execplan-lint.py` checks ExecPlan structure against the PLANS.md spec, `check-doc-refs.py` verifies every path/section reference in the canon actually exists (dead references are hallucination bait), and `retro-status.py` computes the §5 trim-trigger numbers by their literal definitions. The same checks run on every PR via `.github/workflows/harness-gates.yml` (4 jobs: py-compile, secret-scan, execplan-lint, placeholder-gate).
 
 ### 5. Knowledge Management (Five Layers; map at `docs/INDEX.md`)
 
@@ -130,15 +137,17 @@ BaseAIProject/
 │   ├── decisions/             # ADR-0001 + template
 │   ├── learnings/ERRORS.md    # Lessons pipeline (Pending → Active → invariants)
 │   └── plans/                 # ExecPlan spec + active/ + completed/
-├── state/                     # runtime (gitignored): snapshots, hook events, tombstone ledger
+├── scripts/                   # Mechanical gates: acceptance-run / execplan-lint / check-doc-refs / retro-status
+├── .github/workflows/         # harness-gates.yml CI (py-compile, secret-scan, execplan-lint, placeholder-gate)
+├── state/                     # runtime (gitignored): snapshots, hook events, 5 JSONL ledgers (schema: SCHEMA.md)
 └── .claude/
-    ├── settings.json          # Hook wiring (5 events)
-    ├── rules/                 # 6 always-on rules (always: true)
+    ├── settings.json          # Hook wiring (6 events)
+    ├── rules/                 # 7 always-on rules (always: true)
     ├── agents/                # 14 virtual agents
     ├── skills/                # 17 skills
     ├── protocols/             # lifecycle / handoff / review / maintenance
     ├── templates/             # delegation templates, init.sh environment template
-    ├── hooks/                 # 4 hooks + _lib
+    ├── hooks/                 # 7 hooks + _lib
     ├── commands/               # /last-word, /techdebt
     └── uiux/                   # UI three-phase flow (optional)
 ```
@@ -157,6 +166,7 @@ BaseAIProject/
 | Smoke test | Black-box testing of both block/pass scenarios for real, after any hook change | `harness-maintenance.md` §4 |
 | Scope declaration | Every delegation must include: allowed to read / write / off-limits / termination condition | `delegation-templates.md` general spec |
 | Quality gate | Adding/changing an agent or skill: overlap review + bidirectional trigger tests + baseline comparison; adding/expanding a standing rule: demand evidence + telemetry marker + 90-day review | `harness-maintenance.md` §6 |
+| Telemetry markers | Rules emit inline markers (`RULE_FIRED` / `RULE_SKIPPED` / `ESCALATION`) at the moment they fire, harvested to `state/rule-events.jsonl` — hit-rate becomes measurable, zero-hit rules face demotion | `handoff-protocol.md` "Inline Auxiliary Markers" |
 | Five-dimension checkup | Instructions/Tools/Environment/State/Feedback — missing any one is incomplete | `harness-maintenance.md` §7 |
 | Red Flags | Rationalization-phrase lookup table; violating the letter is violating the spirit | `judgment-rubrics.md` §7 |
 

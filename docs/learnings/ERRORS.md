@@ -102,6 +102,7 @@ Criterion 5 is a mechanical literal-existence check and one of its five sub-path
 - 錯誤:收割器不區分「真實發出的標記」與「報告/文件中引用的標記範例」,與上方 CI 閘門「掃到自己」條目同族:掃描器未豁免引用性內容
 - 教訓:讀 rule-events.jsonl 做 90 天複審或命中率統計前,先剔除 detail 帶模板痕跡(字面省略號、角括號佔位符)的條目,否則假命中會讓該規則躲過降級複審;收割層修法(剝除 code-span/引用內標記、擋模板 detail)是機械化候選
 - 建議去向:提案修 stop-retro-logger 收割豁免(hooks 屬 Red tier,送人審);修復落地前每次讀帳本先人工剔除
+- ↳ 2026-07-23 使用者於對話中授權修復,已落地:harvest_telemetry 掃描前剝除 code span/fenced block,另過濾「|」後模板尾段(<3 字母數字視為範例)。沙盒煙霧測試:新版真實事件 2/2 保留、引用/模板事件 3/3 全擋;HEAD 基準版重現 5 筆(含 3 污染)。本地帳本污染首筆已清除
 
 ## Active Lessons
 
