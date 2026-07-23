@@ -70,3 +70,6 @@ state/token-usage.jsonl
 
 # Runtime state artifacts: created on first hook write; absent in a fresh clone by design (state/* is gitignored, see state/SCHEMA.md)
 state/*
+
+# Negative-test probe paths quoted as evidence inside verification reports (docs/reviews/*)
+docs/testbadref.md
