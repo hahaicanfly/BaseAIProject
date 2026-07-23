@@ -4,7 +4,7 @@ description: 數據分析師 - 量化數據分析、KPI 與指標設計、統計
 tools: Read, WebSearch, WebFetch, Grep
 model: sonnet
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan 起草類任務仍寫入 docs/plans/active/<task-id>.md
 context_firewall: true
 ---
 
@@ -43,6 +43,11 @@ context_firewall: true
 ### 機會與威脅
 
 ### 建議
+
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
 
 ### 資料來源
 ```

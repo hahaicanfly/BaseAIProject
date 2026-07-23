@@ -22,10 +22,13 @@ Why dedup?
 """
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import re
 import sys
+import time
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -48,22 +51,57 @@ HOOK_NAME = "stop-retro-logger"
 # does not cause the same finding to be re-harvested (it's still present
 # in the transcript on the next Stop event).
 RETRO_HASHES_LEDGER = STATE_DIR / "retro-hashes.jsonl"
+VERIFICATIONS_LEDGER = STATE_DIR / "verifications.jsonl"
+RULE_EVENTS_LEDGER = STATE_DIR / "rule-events.jsonl"
+METRICS_MONTHLY = STATE_DIR / "metrics-monthly.jsonl"
 LAST_ROTATE_FILE = STATE_DIR / ".last-rotate"
 HOOK_EVENTS_ROTATE_DAYS = 30
 RETRO_HASHES_ROTATE_DAYS = 90
+RULE_EVENTS_ROTATE_DAYS = 90
 
+# Telemetry markers (handoff-protocol.md "Inline Auxiliary Markers"):
+# emitted by rules at the moment they fire, harvested here so "did
+# clarify-first ever fire / how often do we escalate" becomes answerable
+# from state/rule-events.jsonl instead of anecdote.
+TELEMETRY_RE = re.compile(
+    r"\[(RULE_FIRED|RULE_SKIPPED|ESCALATION):\s*([^\]]+)\]"
+)
+
+# Fresh-context acceptance agents must end their report with a line
+# `VERDICT: PASS|FAIL <evidence-path>` (delegation-templates.md §6). The
+# sentinel harvests it into state/verifications.jsonl so acceptance
+# outcomes survive the subagent's ephemeral context.
+VERDICT_RE = re.compile(r"^\s*VERDICT:\s*(PASS|FAIL)\b\s*(\S+)?", re.MULTILINE)
+
+# UNCONFIRMED is the inline auxiliary marker from handoff-protocol.md
+# ("Inline Auxiliary Markers"): unsourced claims are tagged where they
+# occur and harvested here so they surface in weekly review instead of
+# silently propagating downstream.
 MARKER_RE = re.compile(
-    r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]"
+    r"\[(VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED|UNCONFIRMED):\s*([^\]]+)\]"
 )
 
 # Broader marker covering all 3 handoff-protocol.md kinds. Used ONLY by
-# detect_missing_marker() to check for ABSENCE as the last line of a
-# session's final assistant text block. Deliberately kept separate from
-# MARKER_RE (which stays presence-harvest-only for VERIFY_FAILED /
-# HUMAN_ATTENTION_REQUIRED) so existing harvest behavior is unchanged.
+# detect_missing_marker() to check the last line of a subagent's final
+# assistant text block. Deliberately kept separate from MARKER_RE (which
+# stays presence-harvest-only for VERIFY_FAILED / HUMAN_ATTENTION_REQUIRED)
+# so existing harvest behavior is unchanged. Captures (kind, reason) so
+# the semantic layer can validate them.
 FULL_MARKER_RE = re.compile(
-    r"^\[(HANDOFF|VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*[^\]]+\]\s*$"
+    r"^\[(HANDOFF|VERIFY_FAILED|HUMAN_ATTENTION_REQUIRED):\s*([^\]]+)\]\s*$"
 )
+
+# Sync source: handoff-protocol.md §1 "Target must be one of" table —
+# change that table and this set together (noted on both sides).
+VALID_HANDOFF_TARGETS = frozenset({
+    "architect", "plan-reviewer", "tech-lead", "dev", "code-reviewer",
+    "qa-engineer", "security-reviewer", "uiux-agent", "human-approval",
+    "human-pr-review", "done", "main", "pending",
+})
+
+# Markdown wrapping agents sometimes add around the marker line
+# (e.g. **[HANDOFF: main]**). Semantically compliant — strip before match.
+_MD_WRAP_CHARS = "*_`~ \t"
 
 PENDING_SECTION_HEADER = "## Pending Review"
 PENDING_SECTION_FALLBACK = "_(空)_"
@@ -110,12 +148,55 @@ def _scan_text_for_markers(text: str) -> list[tuple[str, str]]:
     return out
 
 
-def _harvest_jsonl_transcript(lines: list[str]) -> list[dict]:
-    """Parse Claude Code JSONL transcript and harvest markers from the
-    actual assistant text content (not the JSON envelope or its escaped
-    representation in user prompts that *describe* the syntax).
+def _parse_transcript(transcript_path: str) -> dict | None:
+    """Read and parse a transcript ONCE; every downstream consumer
+    (marker harvest, missing-marker check, git-commit detection) works
+    off this shared result instead of re-reading/re-parsing the file
+    (_lib.py's <100ms contract; the old code parsed the file 3 times).
+
+    Returns None if the file is missing/unreadable/empty, else a dict:
+    - jsonl: bool — whether the file looks like a Claude Code JSONL log
+    - lines: raw lines (plain-text fallback harvesting)
+    - text_blocks: assistant text-block strings, in transcript order
+    - has_tool_use: any assistant tool_use block exists
+    - final_block: last assistant content block (non-empty text or
+      tool_use) — used to decide whether a final text report exists
+    - bash_commands: `command` inputs of assistant Bash tool_use blocks
     """
-    findings: list[dict] = []
+    p = Path(transcript_path)
+    if not p.is_file():
+        return None
+    try:
+        text = p.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return None
+    lines = text.splitlines()
+    if not lines:
+        return None
+
+    # Detect JSONL: at least 3 of the first 5 non-empty lines parse as JSON.
+    sample = [ln.strip() for ln in lines[:5] if ln.strip()]
+    json_count = 0
+    for ln in sample:
+        if ln.startswith("{"):
+            try:
+                json.loads(ln)
+                json_count += 1
+            except Exception:
+                pass
+    is_jsonl = json_count >= max(2, len(sample) - 1)
+
+    parsed: dict = {
+        "jsonl": is_jsonl,
+        "lines": lines,
+        "text_blocks": [],
+        "has_tool_use": False,
+        "final_block": None,
+        "bash_commands": [],
+    }
+    if not is_jsonl:
+        return parsed
+
     for line in lines:
         line = line.strip()
         if not line.startswith("{"):
@@ -126,34 +207,51 @@ def _harvest_jsonl_transcript(lines: list[str]) -> list[dict]:
             continue
         msg = obj.get("message") or {}
         if msg.get("role") != "assistant":
-            continue  # only count assistant emits, not user prompts that show the syntax
+            continue  # only assistant emits, not user prompts that show syntax
         content = msg.get("content") or []
         if not isinstance(content, list):
             continue
         for blk in content:
             if not isinstance(blk, dict):
                 continue
-            if blk.get("type") != "text":
-                continue
-            text = blk.get("text", "")
-            for kind, reason in _scan_text_for_markers(text):
-                # Use the surrounding 200 chars as context excerpt
-                idx = text.find(f"[{kind}:")
-                start = max(0, idx - 100)
-                end = min(len(text), idx + 200)
-                excerpt = text[start:end]
-                h = hashlib.sha1(
-                    f"{kind}|{reason}|{excerpt}".encode("utf-8"),
-                    usedforsecurity=False,
-                ).hexdigest()[:10]
-                findings.append(
-                    {
-                        "kind": kind,
-                        "reason": reason,
-                        "context": excerpt,
-                        "hash": h,
-                    }
-                )
+            btype = blk.get("type")
+            if btype == "tool_use":
+                parsed["has_tool_use"] = True
+                parsed["final_block"] = blk
+                if blk.get("name") == "Bash":
+                    cmd = (blk.get("input") or {}).get("command")
+                    if isinstance(cmd, str):
+                        parsed["bash_commands"].append(cmd)
+            elif btype == "text":
+                t = blk.get("text", "")
+                if t.strip():
+                    parsed["text_blocks"].append(t)
+                    parsed["final_block"] = blk
+    return parsed
+
+
+def _harvest_text_blocks(text_blocks: list[str]) -> list[dict]:
+    """Harvest markers from assistant text blocks (JSONL transcripts)."""
+    findings: list[dict] = []
+    for text in text_blocks:
+        for kind, reason in _scan_text_for_markers(text):
+            # Use the surrounding 200 chars as context excerpt
+            idx = text.find(f"[{kind}:")
+            start = max(0, idx - 100)
+            end = min(len(text), idx + 200)
+            excerpt = text[start:end]
+            h = hashlib.sha1(
+                f"{kind}|{reason}|{excerpt}".encode("utf-8"),
+                usedforsecurity=False,
+            ).hexdigest()[:10]
+            findings.append(
+                {
+                    "kind": kind,
+                    "reason": reason,
+                    "context": excerpt,
+                    "hash": h,
+                }
+            )
     return findings
 
 
@@ -176,99 +274,46 @@ def _harvest_plain_text(lines: list[str]) -> list[dict]:
     return findings
 
 
-def harvest_markers(transcript_path: str) -> list[dict]:
-    """Return list of {kind, reason, context_excerpt, hash} from transcript."""
-    p = Path(transcript_path)
-    if not p.is_file():
+def harvest_markers(parsed: dict | None) -> list[dict]:
+    """Return list of {kind, reason, context_excerpt, hash} from a
+    _parse_transcript() result."""
+    if parsed is None:
         return []
-    try:
-        text = p.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return []
-
-    lines = text.splitlines()
-    if not lines:
-        return []
-
-    # Detect JSONL: at least 3 of the first 5 non-empty lines parse as JSON.
-    sample = [ln.strip() for ln in lines[:5] if ln.strip()]
-    json_count = 0
-    for ln in sample:
-        if ln.startswith("{"):
-            try:
-                json.loads(ln)
-                json_count += 1
-            except Exception:
-                pass
-    is_jsonl = json_count >= max(2, len(sample) - 1)
-
-    if is_jsonl:
-        return _harvest_jsonl_transcript(lines)
-    return _harvest_plain_text(lines)
+    if parsed["jsonl"]:
+        return _harvest_text_blocks(parsed["text_blocks"])
+    return _harvest_plain_text(parsed["lines"])
 
 
-def detect_missing_marker(transcript_path: str) -> dict | None:
+def detect_missing_marker(parsed: dict | None) -> dict | None:
     """Detect a subagent transcript that shows real work (>=1 assistant
     tool_use block) but whose final assistant text does not end with a
-    [HANDOFF:*] / [VERIFY_FAILED:*] / [HUMAN_ATTENTION_REQUIRED:*] marker
-    on its last non-empty line.
+    semantically valid [HANDOFF:*] / [VERIFY_FAILED:*] /
+    [HUMAN_ATTENTION_REQUIRED:*] marker on its last non-empty line.
 
-    Returns a finding dict with keys {kind, reason, context} (no "hash" —
-    the caller in main() attaches that using session_id + agent_id) or
-    None if:
+    Semantic layer (handoff-protocol.md rules, previously honor-system):
+    - markdown wrapping around the line (**[HANDOFF: main]**) is fine;
+    - a placeholder reason (`<target>`, copied from docs) is a violation;
+    - HANDOFF target must be in VALID_HANDOFF_TARGETS (protocol §1 table,
+      e.g. the §Anti-Patterns `code-review` typo is caught here);
+    - VERIFY_FAILED / HUMAN_ATTENTION_REQUIRED reason must be ≤80 chars.
+
+    Returns a finding dict {kind, reason, context} (no "hash" — main()
+    attaches it from session_id + agent_id) or None if:
     - the transcript doesn't parse, or
     - no assistant tool_use block exists anywhere (trivial Q&A subagent,
-      nothing handoff-worthy happened — this is the heuristic gate that
-      avoids flagging agents that never touched a real task), or
-    - the transcript's LAST assistant content block is not a text block
-      (e.g. the agent's loop ended on a tool call — Workflow subagents
-      forced into StructuredOutput, or an interrupted agent — there is no
-      final textual report to hold to the marker rule; prefer a false
-      negative over flooding ERRORS.md with false positives), or
-    - the final text block's last line already matches the marker syntax.
+      nothing handoff-worthy happened), or
+    - the LAST assistant content block is not a text block (agent loop
+      ended on a tool call — Workflow StructuredOutput agents, interrupted
+      agents — no final textual report exists to hold to the marker rule;
+      prefer a false negative over flooding ERRORS.md), or
+    - the final text's last line is a semantically valid marker.
     """
-    p = Path(transcript_path)
-    if not p.is_file():
+    if parsed is None or not parsed["jsonl"]:
         return None
-    try:
-        text = p.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return None
-
-    lines = text.splitlines()
-    if not lines:
-        return None
-
-    has_tool_use = False
-    final_block: dict | None = None  # last assistant content block overall
-
-    for line in lines:
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        try:
-            obj = json.loads(line)
-        except Exception:
-            continue
-        msg = obj.get("message") or {}
-        if msg.get("role") != "assistant":
-            continue
-        content = msg.get("content") or []
-        if not isinstance(content, list):
-            continue
-        for blk in content:
-            if not isinstance(blk, dict):
-                continue
-            if blk.get("type") == "tool_use":
-                has_tool_use = True
-                final_block = blk
-            elif blk.get("type") == "text":
-                if blk.get("text", "").strip():
-                    final_block = blk  # keep overwriting -> last wins
-
-    if not has_tool_use:
+    if not parsed["has_tool_use"]:
         return None  # trivial Q&A subagent, nothing handoff-worthy happened
 
+    final_block = parsed["final_block"]
     if final_block is None or final_block.get("type") != "text":
         # Loop ended on a tool call (structured output / interruption):
         # no final textual report exists, so the marker rule doesn't apply.
@@ -277,12 +322,33 @@ def detect_missing_marker(transcript_path: str) -> dict | None:
     last_assistant_text = final_block.get("text", "")
     final_lines = [ln for ln in last_assistant_text.splitlines() if ln.strip()]
     last_line = final_lines[-1].strip() if final_lines else ""
-    if FULL_MARKER_RE.match(last_line):
-        return None  # marker present and well-formed, no violation
-    reason = "subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker"
     excerpt = last_assistant_text[-300:]
 
-    return {"kind": "PROTOCOL_VIOLATION", "reason": reason, "context": excerpt}
+    def _violation(why: str) -> dict:
+        return {"kind": "PROTOCOL_VIOLATION", "reason": why, "context": excerpt}
+
+    m = FULL_MARKER_RE.match(last_line.strip(_MD_WRAP_CHARS))
+    if not m:
+        return _violation(
+            "subagent ended without a HANDOFF/VERIFY_FAILED/"
+            "HUMAN_ATTENTION_REQUIRED marker"
+        )
+
+    kind, reason = m.group(1), m.group(2).strip()
+    if _is_placeholder(reason):
+        return _violation(
+            f"marker reason is a doc placeholder, not a real value: "
+            f"[{kind}: {reason}]"
+        )
+    if kind == "HANDOFF":
+        if reason not in VALID_HANDOFF_TARGETS:
+            return _violation(f"invalid handoff target '{reason}'")
+    elif len(reason) > 80:
+        return _violation(
+            f"{kind} reason exceeds 80 chars ({len(reason)}) — "
+            "protocol requires a short specific reason"
+        )
+    return None  # marker present and semantically valid
 
 
 def _ledger_hashes() -> set[str]:
@@ -332,11 +398,47 @@ def existing_pending_hashes() -> set[str]:
     return errors_hashes | _ledger_hashes()
 
 
+def _fence_safe(text: str) -> str:
+    """Neutralize ``` sequences before embedding text inside an ERRORS.md
+    code fence — a subagent report ending with a code block would
+    otherwise close our fence early and break the markdown structure
+    (and is a cheap injection vector into a file agents re-read)."""
+    return text.replace("```", "'''")
+
+
+@contextmanager
+def _errors_md_lock():
+    """Serialize ERRORS.md read-modify-write across concurrently stopping
+    sessions/subagents (the write path is whole-file replace, so two
+    unlocked writers lose one writer's findings). Best-effort: on any
+    locking failure, proceed unlocked — sentinel never blocks."""
+    lf = None
+    try:
+        ensure_state_dirs()
+        lf = (STATE_DIR / ".errors-md.lock").open("a")
+        fcntl.flock(lf.fileno(), fcntl.LOCK_EX)
+    except Exception:
+        lf = None
+    try:
+        yield
+    finally:
+        if lf is not None:
+            try:
+                fcntl.flock(lf.fileno(), fcntl.LOCK_UN)
+                lf.close()
+            except Exception:
+                pass
+
+
 def append_to_pending(findings: list[dict]) -> int:
     """Append findings to ## Pending Review section. Return count appended."""
     if not findings or not ERRORS_MD.is_file():
         return 0
+    with _errors_md_lock():
+        return _append_to_pending_locked(findings)
 
+
+def _append_to_pending_locked(findings: list[dict]) -> int:
     existing = existing_pending_hashes()
     new_findings = [f for f in findings if f["hash"] not in existing]
     if not new_findings:
@@ -358,8 +460,8 @@ def append_to_pending(findings: list[dict]) -> int:
     for f in new_findings:
         parts.append(
             f"<!-- harvest:{f['hash']} -->\n"
-            f"- [{iso}] [{f['kind']}] **{f['reason']}**\n"
-            f"  ```\n  {f['context']}\n  ```\n"
+            f"- [{iso}] [{f['kind']}] **{_fence_safe(f['reason'])}**\n"
+            f"  ```\n  {_fence_safe(f['context'])}\n  ```\n"
         )
     block = "\n".join(parts)
 
@@ -384,25 +486,134 @@ def append_to_pending(findings: list[dict]) -> int:
     return len(new_findings)
 
 
-def _detect_git_commits(transcript_path: str) -> list[str]:
-    """Scan transcript for Bash tool calls that ran 'git commit'.
+def harvest_telemetry(parsed: dict | None, session_id: str) -> int:
+    """Append telemetry-marker events to state/rule-events.jsonl.
 
-    Returns list of commit message snippets found (may be empty).
+    The same transcript is rescanned on every Stop event, so dedup by a
+    content hash (kind|detail) recorded inside each line; existing hashes
+    are loaded from the ledger before appending. Best-effort.
+    """
+    if parsed is None or not parsed["jsonl"]:
+        return 0
+    found: list[tuple[str, str]] = []
+    for text in parsed["text_blocks"]:
+        for m in TELEMETRY_RE.finditer(text):
+            kind, detail = m.group(1), m.group(2).strip()
+            if _is_placeholder(detail):
+                continue
+            found.append((kind, detail))
+    if not found:
+        return 0
+    seen: set = set()
+    try:
+        if RULE_EVENTS_LEDGER.is_file():
+            for line in RULE_EVENTS_LEDGER.read_text(encoding="utf-8").splitlines():
+                try:
+                    seen.add(json.loads(line).get("hash"))
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    appended = 0
+    for kind, detail in found:
+        h = hashlib.sha1(
+            f"{kind}|{detail}|{session_id}".encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()[:10]
+        if h in seen:
+            continue
+        seen.add(h)
+        append_jsonl(
+            RULE_EVENTS_LEDGER,
+            {"ts": now_iso(), "session": session_id, "kind": kind,
+             "detail": detail[:160], "hash": h},
+        )
+        appended += 1
+    return appended
+
+
+def _detect_verdict(parsed: dict | None) -> dict | None:
+    """Return the LAST `VERDICT: PASS|FAIL <path>` line emitted in the
+    subagent's assistant text blocks, or None. Last one wins so a
+    corrected re-run inside the same agent supersedes earlier lines."""
+    if parsed is None or not parsed["jsonl"]:
+        return None
+    verdict: dict | None = None
+    for text in parsed["text_blocks"]:
+        for m in VERDICT_RE.finditer(text):
+            verdict = {"verdict": m.group(1), "evidence_path": m.group(2) or ""}
+    return verdict
+
+
+_URL_RE = re.compile(r"https?://[^\s\)\]\}>\"'`，。；]+")
+_CITATION_EXEMPT_HOSTS = ("example.com", "example.org", "example.net",
+                          "localhost", "127.0.0.1", "your-domain")
+
+
+def detect_unfetched_citations(parsed: dict | None) -> dict | None:
+    """Flag URLs that a subagent CITES in its final report but that never
+    appear anywhere earlier in its transcript (no WebFetch/WebSearch
+    input, no tool result, no earlier mention) — i.e. links introduced
+    out of thin air. A fetched/observed URL necessarily occurs at least
+    once outside the final text block, so "appears only in the final
+    report" is the fabrication signal. False negatives are accepted
+    (agent mentioned it earlier without fetching); false positives are
+    not (research agents cite what search results showed them).
+    """
+    if parsed is None or not parsed["jsonl"]:
+        return None
+    final_block = parsed["final_block"]
+    if final_block is None or final_block.get("type") != "text":
+        return None
+    final_text = final_block.get("text", "")
+    cited = set()
+    for u in _URL_RE.findall(final_text):
+        u = u.rstrip(".,;:!?)('\"`")
+        if any(h in u for h in _CITATION_EXEMPT_HOSTS):
+            continue
+        cited.add(u)
+    if not cited:
+        return None
+    corpus = "\n".join(parsed["lines"])
+    unverified = []
+    for u in cited:
+        # Count occurrences across the whole transcript; the final report
+        # itself lives in the transcript, so a URL seen nowhere else has
+        # exactly the same count as in the final text.
+        if corpus.count(u) <= final_text.count(u):
+            unverified.append(u)
+    if not unverified:
+        return None
+    listing = "\n".join(sorted(unverified))[:300]
+    return {
+        "kind": "UNVERIFIED_CITATION",
+        "reason": (
+            f"{len(unverified)} cited URL(s) never fetched/observed in-session"
+        ),
+        "context": listing,
+    }
+
+
+_GIT_COMMIT_CMD_RE = re.compile(r"\bgit\s+commit\b")
+
+
+def _detect_git_commits(parsed: dict | None) -> list[str]:
+    """Return snippets of actual `git commit` Bash tool invocations.
+
+    Inspects only Bash tool_use `command` inputs from the parsed
+    transcript — NOT raw transcript text. The old raw-text regex counted
+    every prose/diff mention of "git commit" (delegation prompts, review
+    findings), which minted PR_RETRO reminders for sessions with zero
+    real commits (observed live: a 0-commit session credited with 7).
     Used by the PR_RETRO_HOOK to suggest running /pr-retro.
     """
-    p = Path(transcript_path)
-    if not p.is_file():
+    if parsed is None:
         return []
-    try:
-        text = p.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return []
-
     commits: list[str] = []
-    commit_re = re.compile(r'"git commit[^"]{0,200}"', re.DOTALL)
-    for m in commit_re.finditer(text):
-        snippet = m.group(0)[:80].replace("\n", " ")
-        commits.append(snippet)
+    for cmd in parsed["bash_commands"]:
+        m = _GIT_COMMIT_CMD_RE.search(cmd)
+        if m:
+            commits.append(cmd[m.start() : m.start() + 80].replace("\n", " "))
     return commits
 
 
@@ -417,6 +628,11 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
     """
     if not ERRORS_MD.is_file():
         return
+    with _errors_md_lock():
+        _append_retro_suggestion_locked(session_id, commit_count)
+
+
+def _append_retro_suggestion_locked(session_id: str, commit_count: int) -> None:
     try:
         text = ERRORS_MD.read_text(encoding="utf-8")
     except Exception:
@@ -467,16 +683,43 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
     _ledger_record([reminder_hash])
 
 
-def _rotate_jsonl(path: Path, days: int) -> None:
+def _rollup_dropped(dropped: list[dict]) -> None:
+    """Aggregate rotation-dropped hook-event lines into
+    state/metrics-monthly.jsonl before they are destroyed — otherwise
+    every trend question ("did the FAIL rate drop after rule X?") loses
+    its denominator after 30 days. One line per (month, hook, result,
+    reason) group; tiny and kept forever."""
+    if not dropped:
+        return
+    try:
+        groups: dict = {}
+        for obj in dropped:
+            ts = obj.get("ts") or ""
+            key = (ts[:7], obj.get("hook", ""), obj.get("result", ""),
+                   obj.get("reason", ""))
+            groups[key] = groups.get(key, 0) + 1
+        for (month, hook, result, reason), count in sorted(groups.items()):
+            append_jsonl(
+                METRICS_MONTHLY,
+                {"month": month, "hook": hook, "result": result,
+                 "reason": reason, "count": count, "rolled_at": now_iso()},
+            )
+    except Exception:
+        pass
+
+
+def _rotate_jsonl(path: Path, days: int, rollup: bool = False) -> None:
     """Drop lines whose `ts` is older than `days`. Best-effort; silent on
     any failure (malformed lines are kept rather than dropped, to avoid
-    accidental data loss from a parsing edge case).
+    accidental data loss from a parsing edge case). With rollup=True the
+    dropped lines are aggregated into metrics-monthly.jsonl first.
     """
     if not path.is_file():
         return
     try:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         kept: list[str] = []
+        dropped: list[dict] = []
         with path.open("r", encoding="utf-8") as f:
             for line in f:
                 stripped = line.strip()
@@ -487,10 +730,13 @@ def _rotate_jsonl(path: Path, days: int) -> None:
                     ts = obj.get("ts")
                     dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z")
                     if dt < cutoff:
+                        dropped.append(obj)
                         continue
                 except Exception:
                     pass  # keep unparseable lines rather than risk data loss
                 kept.append(stripped)
+        if rollup:
+            _rollup_dropped(dropped)
         path.write_text(("\n".join(kept) + "\n") if kept else "", encoding="utf-8")
     except Exception:
         pass
@@ -509,8 +755,9 @@ def rotate_state_if_due() -> None:
             last = datetime.fromtimestamp(LAST_ROTATE_FILE.stat().st_mtime, tz=timezone.utc)
             if (now - last).total_seconds() < 86400:
                 return
-        _rotate_jsonl(HOOK_EVENTS, HOOK_EVENTS_ROTATE_DAYS)
+        _rotate_jsonl(HOOK_EVENTS, HOOK_EVENTS_ROTATE_DAYS, rollup=True)
         _rotate_jsonl(RETRO_HASHES_LEDGER, RETRO_HASHES_ROTATE_DAYS)
+        _rotate_jsonl(RULE_EVENTS_LEDGER, RULE_EVENTS_ROTATE_DAYS)
         ensure_state_dirs()
         LAST_ROTATE_FILE.write_text(now_iso(), encoding="utf-8")
     except Exception:
@@ -536,6 +783,16 @@ def main() -> int:
     # PROTOCOL_VIOLATION entries, which is worse than missing one event.
     if hook_event_name == "SubagentStop":
         target_transcript = payload.get("agent_transcript_path", "")
+        # Flush race: heavyweight subagents' transcripts are sometimes not
+        # on disk yet at the moment SubagentStop fires (observed live: an
+        # agent whose file existed seconds later was skipped). Bounded
+        # retry before giving up; phantom intermediate stops (whose path
+        # never materializes) still fall through to the skip below.
+        if target_transcript and not Path(target_transcript).is_file():
+            for _ in range(3):
+                time.sleep(0.4)
+                if Path(target_transcript).is_file():
+                    break
         if not target_transcript or not Path(target_transcript).is_file():
             # Two distinct reasons so production logs can tell "payload has
             # no such field" (CLI too old / synthetic test input) apart from
@@ -561,7 +818,8 @@ def main() -> int:
         log_event(HOOK_NAME, "sentinel", reason="no-transcript-path", session=session_id)
         return 0
 
-    findings = harvest_markers(target_transcript)
+    parsed = _parse_transcript(target_transcript)
+    findings = harvest_markers(parsed)
 
     # handoff-protocol.md's own Audience line scopes the marker requirement
     # to sub-agents ("All sub-agents must use this protocol's markers at the
@@ -573,7 +831,7 @@ def main() -> int:
     # own agentic loop finishes — is in scope, and the check runs against
     # the subagent's own transcript (target_transcript above).
     missing_marker = (
-        detect_missing_marker(target_transcript)
+        detect_missing_marker(parsed)
         if hook_event_name == "SubagentStop"
         else None
     )
@@ -594,10 +852,81 @@ def main() -> int:
             detail=missing_marker["reason"],
         )
 
+    telemetry_count = harvest_telemetry(parsed, session_id)
+    if telemetry_count:
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="telemetry-harvested",
+            session=session_id,
+            count=telemetry_count,
+        )
+
+    # Citation check (SubagentStop only): URLs cited in the final report
+    # that never appear earlier in the transcript were never fetched.
+    if hook_event_name == "SubagentStop":
+        citation = detect_unfetched_citations(parsed)
+        if citation:
+            citation["hash"] = hashlib.sha1(
+                f"unverified-citation|{session_id}|{agent_id}".encode("utf-8"),
+                usedforsecurity=False,
+            ).hexdigest()[:10]
+            findings.append(citation)
+            log_event(
+                HOOK_NAME,
+                "sentinel",
+                reason="unverified-citation",
+                session=session_id,
+                agent=agent_id,
+                detail=citation["reason"],
+            )
+
+    # Verdict harvest (SubagentStop only): persist fresh-context
+    # acceptance outcomes; a FAIL additionally lands in Pending Review.
+    verdict = _detect_verdict(parsed) if hook_event_name == "SubagentStop" else None
+    if verdict:
+        append_jsonl(
+            VERIFICATIONS_LEDGER,
+            {
+                "ts": now_iso(),
+                "session": session_id,
+                "agent": agent_id,
+                "verdict": verdict["verdict"],
+                "evidence_path": verdict["evidence_path"],
+            },
+        )
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="verdict-recorded",
+            session=session_id,
+            agent=agent_id,
+            verdict=verdict["verdict"],
+        )
+        if verdict["verdict"] == "FAIL":
+            findings.append(
+                {
+                    "kind": "ACCEPTANCE_FAIL",
+                    "reason": (
+                        "fresh-context verification returned FAIL "
+                        f"({verdict['evidence_path'] or 'no evidence path'})"
+                    ),
+                    "context": (
+                        parsed["text_blocks"][-1][-300:]
+                        if parsed and parsed["text_blocks"]
+                        else ""
+                    ),
+                    "hash": hashlib.sha1(
+                        f"acceptance-fail|{session_id}|{agent_id}".encode("utf-8"),
+                        usedforsecurity=False,
+                    ).hexdigest()[:10],
+                }
+            )
+
     appended = append_to_pending(findings)
 
     # PR_RETRO_HOOK: detect git commits this session → suggest /pr-retro
-    commits = _detect_git_commits(target_transcript)
+    commits = _detect_git_commits(parsed)
     if commits:
         _append_retro_suggestion(session_id, len(commits))
         log_event(

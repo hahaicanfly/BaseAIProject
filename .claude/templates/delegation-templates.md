@@ -58,7 +58,10 @@ Acceptance criteria (all must be met to count as done):
 - [test command] passes; paste the last 10 lines of actual output
 - Every new/modified public function has [a test/usage example]
 - The list of changed files matches the plan, with no out-of-plan changes
-Report format: list of changed files (file:line ranges) + tail of test output + open items (if any).
+- API evidence table: every external API / third-party symbol used for the FIRST time gets a row
+  `symbol → definition location (repo file:line, or official-doc URL + access date)`; an external
+  symbol without an evidence row counts as guessed (CLAUDE.md: NEVER guess API signatures) → FAIL
+Report format: list of changed files (file:line ranges) + tail of test output + API evidence table + open items (if any).
 ```
 
 ## 3. Code Refactoring
@@ -87,7 +90,7 @@ Required sources: [official docs/repo/specified URLs]; prefer primary sources.
 Acceptance criteria:
 - Every conclusion has a source (URL or file:line) and a date
 - Separate "facts (sourced)" from "inference (your judgment)" into two sections
-- Anything not found is explicitly marked "unconfirmed" — fabrication is forbidden
+- Anything not found is tagged inline as `[UNCONFIRMED: <claim>]` (standard syntax, handoff-protocol.md "Inline Auxiliary Markers"; auto-harvested for weekly review) — fabrication is forbidden
 Report format: conclusions (≤5 items, each with a source) + unconfirmed list + recommendation (≤3 lines).
 ```
 
@@ -118,12 +121,50 @@ Acceptance criteria (check each one):
 Verification method:
 - Documents: re-read the file, check against each acceptance criterion, cite file:line as evidence
 - Code: actually run [tests/commands], paste the last 10 lines of actual output
+- API evidence table (if the deliverable has one): spot-check ≥3 rows — repo symbols must Grep at the
+  cited file:line; URL rows must WebFetch and the page must contain the symbol
 The acceptance report allows only two conclusions:
 - PASS: list each "criterion → evidence (file:line or output)"
 - FAIL: list unmet items → evidence → a one-sentence fix suggestion
 FAIL may only be based on the mechanically checkable acceptance criteria listed above; style/writing/opinion-type
 feedback goes into a separate "Suggestions (non-blocking, may be empty)" section and must not be used as a FAIL reason (model-dispatch §5).
 Evidence-free conclusions such as "看起來沒問題" (looks fine) or "應該可以" (should be OK) are forbidden.
+Verdict persistence (mandatory — acceptance outcomes must survive your ephemeral context):
+- Write the FULL report (each criterion → evidence, actual command outputs) to docs/reviews/<YYYY-MM-DD>-<slug>.md
+  with the Write tool. This is the ONLY file you may create; everything else stays read-only.
+- Your final message must contain the line `VERDICT: PASS docs/reviews/<file>.md` (or `VERDICT: FAIL docs/reviews/<file>.md`)
+  — stop-retro-logger harvests that line into state/verifications.jsonl, and a FAIL also lands in ERRORS.md Pending Review.
+- Then end with the handoff marker as usual ([HANDOFF: main] on PASS, [VERIFY_FAILED: <reason>] on FAIL).
 ```
 
 **Filled-in example**: "You are the reviewer. Deliverable under review: docs/harness/DIAGNOSIS.md. Acceptance criteria: 1) exactly 3 items in each of the three major pain-point categories, each with a fix 2) each item has at least one file:line piece of evidence 3) includes a Capability Limits section 4) no leftover `{{placeholders}}`. Verification method: re-read the file and check against each criterion. Output a PASS/FAIL report."
+
+## 7. Strategy Research (file-first)
+
+- Recommended: `pm` / `market-researcher` / `competitive-analyst` / `data-analyst` per topic
+  (see each agent's frontmatter `description` for scope boundaries — market sizing vs.
+  competitor comparison vs. quantitative KPI work are different agents, don't overlap them).
+  This template is "file-first": the full report always lands in `docs/research/`; the chat
+  reply is a bounded summary, never the deliverable itself.
+
+```
+Research question / strategy topic: [one-sentence question].
+Motivation & background: [what decision this will inform, why now].
+Required sources: [official docs/market reports/specified URLs]; prefer primary sources.
+Scope declaration: (per the standard block above; the write scope is exactly one new file:
+  docs/research/<YYYY-MM-DD>-<slug>.md — no other file may be modified/deleted/moved/created)
+Acceptance criteria (all must be met to count as done):
+- Full report has been written with the Write tool to docs/research/<YYYY-MM-DD>-<slug>.md
+  (naming rule: docs/research/README.md)
+- Report contains a `### 假設-證據表` with every row's confidence column filled
+  (高/中/低 — an empty confidence cell is a FAIL, not a placeholder)
+- Report contains a `### Sources` section with at least 3 verifiable URLs (or file:line for
+  internal data); any claim without a source is tagged inline `[UNCONFIRMED: <claim>]`
+- Chat reply is a summary ≤ 40 lines: key findings + open questions + the file path — full
+  detail stays in the file, never pasted into the reply
+Report format: ≤40-line chat summary (conclusions + path to the written report); the report
+file itself follows the agent's Output Format template (assumption-evidence table + Sources
+required — see agent frontmatter for the exact template).
+```
+
+Append **Common Conventions** (top of this file) to the end of every filled-in prompt, same as templates §1-6.

@@ -70,7 +70,7 @@ def latest_handoff_marker_from_execplan(execplan_path: str | None) -> str:
         text = full.read_text(encoding="utf-8", errors="ignore")
         # crude: find first [HANDOFF: / [VERIFY_FAILED: / [HUMAN_ATTENTION_REQUIRED: in last 50 lines
         tail = "\n".join(text.splitlines()[-80:])
-        for marker in ("[HUMAN_ATTENTION_REQUIRED:", "[VERIFY_FAILED:", "[HANDOFF:"]:
+        for marker in ("[HUMAN_ATTENTION_REQUIRED:", "[VERIFY_FAILED:", "[HANDOFF:"):
             idx = tail.rfind(marker)
             if idx != -1:
                 end = tail.find("]", idx)

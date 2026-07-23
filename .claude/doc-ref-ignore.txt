@@ -1,0 +1,72 @@
+# doc-ref-ignore.txt — allowlist for scripts/check-doc-refs.py R1/R2.
+#
+# One fnmatch glob per line, matched against the REFERENCED path string as
+# written in the citing document (not against the containing file, and not
+# against the resolved/normalized path). Blank lines and lines starting
+# with # are ignored.
+#
+# Only add a genuine template/example pattern here (a placeholder a human
+# is meant to fill in, or an illustrative path for a *different* project
+# that will never exist in this repo). Do NOT add entries for real,
+# currently-broken references in this repo's own docs — those are bugs;
+# report them so a human/orchestrator can fix the prose instead.
+
+# .claude/rules/parallel-worktree.md worktree-naming template placeholder.
+agent/{TASK_ID}
+
+# .claude/skills/skill-creator-plus/references/eval-loop.md eval-workspace
+# iteration-numbering placeholder (N stands in for a real integer).
+iteration-N/
+
+# .claude/skills/security-audit/references/domain*.md are a generic,
+# tech-stack-agnostic security-audit checklist. The illustrative example
+# paths below describe a *different*, hypothetical downstream project
+# (a Ktor/Cloudflare-Workers backend and an Android app) and are not
+# expected to exist anywhere in this repo.
+../Menu-Superpower*
+app/*
+core/*
+res/*
+
+# Generic tech-stack-agnostic example paths used by templates/skills that
+# are explicitly designed to be filled in after forking to a real project
+# (docs/architecture/domains.md module-boundary example table;
+# .claude/skills/techdebt-scanner/SKILL.md's build-artifact ignore-list
+# example; .claude/skills/gen-app-map/SKILL.md's per-stack scan-target
+# table; .claude/skills/ui-ux-pro-max/SKILL.md's design-system-file
+# convention; .claude/uiux/style-spec.template.md's save-as placeholder).
+# None of these directories/files exist in this repo, by design.
+src/*
+api/*
+ui/*
+infra/*
+node_modules/
+vendor/
+dist/
+build/
+.gradle/
+pages/*
+prisma/*
+design-system/*
+
+# .claude/skills/gen-app-map/SKILL.md's own documented *output* artifacts
+# (agent_docs/app-map.json / .html) — this repo has no application to scan,
+# so the skill has never been run here and hasn't produced them yet.
+agent_docs/app-map.json
+agent_docs/app-map.html
+
+# state/SCHEMA.md documents these two runtime-state files (§1, §5); both
+# are gitignored (state/.gitignore) and only materialize once the harness
+# actually runs the corresponding hook/flow, which hasn't happened yet in
+# this checkout. Distinct from `state/verification-log.jsonl`, which is a
+# *different*, never-implemented filename left over from an old proposal —
+# that one is reported as a finding, not allowlisted here.
+state/feature-list.json
+state/token-usage.jsonl
+
+# .claude/skills/gen-app-map/SKILL.md:142 lists four CSS pill class names
+# joined by "/" as shorthand ("one of these four classes") — not a path.
+.pill-critical/.pill-high/.pill-medium/.pill-low
+
+# Runtime state artifacts: created on first hook write; absent in a fresh clone by design (state/* is gitignored, see state/SCHEMA.md)
+state/*

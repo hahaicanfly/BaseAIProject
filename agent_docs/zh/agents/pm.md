@@ -4,7 +4,7 @@ description: 產品經理 - 需求分析、用戶故事、優先級排序。觸�
 tools: Read, Grep, Glob, WebSearch, WebFetch
 model: opus
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan 起草類任務仍寫入 docs/plans/active/<task-id>.md
 context_firewall: true
 ---
 
@@ -44,6 +44,11 @@ context_firewall: true
 ### 不在範圍內 (Out of Scope)
 - [明確排除的項目 — 這個功能刻意不做的事]
 
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
+
 ### 優先級評估
 - 用戶價值：高/中/低
 - 實作複雜度：高/中/低
@@ -55,6 +60,8 @@ context_firewall: true
 ### 開放問題
 - [需要進一步確認的問題]
 ```
+
+priority=P0 的功能/產品決策，交付必須同時產出一份 `docs/decisions/PDR-NNNN-<slug>.md`（使用 `docs/decisions/PDR-template.md`），並在報告中附上該 PDR 的路徑。
 
 ## 注意事項
 

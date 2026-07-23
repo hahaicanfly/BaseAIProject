@@ -48,7 +48,7 @@
 **Trigger**: Human or PM agent raises a requirement.
 **Owner**: `pm` agent (trigger words: requirement, planning, PRD, user story, feature).
 **Action**: Create `docs/plans/active/F-NNN-<slug>.md`, fill in §1 Goal + §2 Context (partial).
-**Exit**: Goal filled in, output `[HANDOFF: architect]`.
+**Exit**: Goal, §1's Non-Goals / Out of Scope line (at least one explicit boundary, or a justified "none identified"), **and** §1's Scope Baseline (target user / success metric / trigger condition, each with a non-empty confirmation source — see PLANS.md §2) all filled in, output `[HANDOFF: architect]`.
 
 ### Phase 2 — PLANNED
 
@@ -91,7 +91,7 @@
 
 **Owner**: `code-reviewer` agent (model: Sonnet).
 **Action**:
-1. Read ExecPlan §3 Constraints and §5 Verification Strategy
+1. Read ExecPlan §1 Goal + Non-Goals (reverse-check the diff against exclusions, per review-protocol checklist), §3 Constraints and §5 Verification Strategy
 2. Run `git diff master...HEAD` and compare against §4
 3. Check each INV-id one by one to confirm no violations
 4. Run all verification commands from §5
@@ -128,6 +128,15 @@
 2. `state/feature-list.json` `status: blocked`
 3. Output `[HUMAN_ATTENTION_REQUIRED: <reason>]`
 **Exit**: Blocker resolved → return to the original phase and continue.
+
+### Scope Change (user-initiated; reachable from Phases 4–7)
+
+**Trigger**: after human approval, the user requests any addition / removal / change of requirements. (clarify-first §3's "don't re-run the checklist mid-task" clause deliberately does NOT cover this case — without a procedure the model silently follows the new verbal ask and the plan drifts from reality.)
+**Action**:
+1. Run the clarify-first 4-field check on the **delta only** (target user / success metric / non-goals / trigger condition of the change).
+2. Append a version line to §1 Scope Baseline — `v2 (YYYY-MM-DD): <change summary + user quote>` — never delete earlier versions.
+3. Append one line to §6 Progress Log carrying the machine-greppable tag `[SCOPE-CHANGE: v1→v2]`.
+4. If the change touches §5 acceptance criteria or §1 Non-Goals → return to the human-approval gate (as after Phase 3) before continuing; otherwise record and continue execution.
 
 ### Phase 10 — REJECTED
 

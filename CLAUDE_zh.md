@@ -64,6 +64,7 @@ NEVER：硬編碼 secrets ／ commit 敏感檔（`.env`、`*.keystore`…）／ 
 | ExecPlan 10 階段生命週期 | `.claude/protocols/execplan-lifecycle.md` |
 | Harness 診斷書／給未來 session 的信 | `docs/harness/` |
 | UI 三階段流程 | `.claude/uiux/WORKFLOW.md` |
+| 機械驗證工具 | `scripts/`（acceptance-run／execplan-lint／check-doc-refs／retro-status）|
 | Runtime state 格式 | `state/SCHEMA.md` |
 
 ## Communication Style

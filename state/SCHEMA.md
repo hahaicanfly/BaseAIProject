@@ -80,7 +80,7 @@
 ### Schema (per line)
 
 ```json
-{ "ts": "ISO 8601", "hook": "pre-tool-use-guard|post-edit-lint|pre-compact-snapshot|stop-retro-logger", "tool": "<tool name if applicable>", "result": "pass|fail|sentinel|enforced_block", "reason": "<short msg>" }
+{ "ts": "ISO 8601", "hook": "pre-tool-use-guard|post-edit-lint|pre-compact-snapshot|stop-retro-logger|post-bash-commit-ledger|session-activation-check", "tool": "<tool name if applicable>", "result": "pass|fail|warn|sentinel|enforced_block", "reason": "<short msg>" }
 ```
 
 ---
@@ -109,17 +109,110 @@
 **Content**: output of `now_iso()`, e.g. `2026-07-04T12:46:33+0000`.
 
 ---
+## 3c. `state/rule-events.jsonl` — Rule-telemetry ledger
+
+**Nature**: JSON Lines, append-only; 90-day rotate (same gate as retro-hashes).
+**Writer**: `.claude/hooks/stop-retro-logger.py` — harvests inline telemetry markers `[RULE_FIRED:...]` / `[RULE_SKIPPED:...]` / `[ESCALATION:...]` (syntax: handoff-protocol.md "Inline Auxiliary Markers") from transcripts on Stop/SubagentStop, deduped per session by content hash.
+**Purpose**: answers "does clarify-first ever fire / how often do we escalate" from data instead of anecdote — the prerequisite for pruning rules that never hit.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "kind": "RULE_FIRED|RULE_SKIPPED|ESCALATION", "detail": "<marker payload ≤160>", "hash": "<10 hex>" }
+```
+
+---
+
+## 3d. `state/metrics-monthly.jsonl` — Pre-rotation monthly rollup
+
+**Nature**: JSON Lines, append-only, never rotated (tiny).
+**Writer**: `rotate_state_if_due()` in `stop-retro-logger.py` — aggregates hook-event lines about to be dropped by the 30-day rotation into one line per (month, hook, result, reason).
+**Purpose**: trend questions ("did the FAIL rate drop after rule X landed?") keep their denominator after raw events rotate away. Consumed by `scripts/retro-status.py`.
+
+### Schema
+
+```json
+{ "month": "YYYY-MM", "hook": "...", "result": "...", "reason": "...", "count": 0, "rolled_at": "ISO 8601" }
+```
+
+---
+
+## 3e. `state/retro-log.jsonl` — Weekly-review completion log (reserved)
+
+**Nature**: JSON Lines, append-only. **Not yet auto-written** — appended manually (or by future retro flows) when a weekly review of ERRORS.md Pending Review completes: `{ "ts": "ISO 8601", "type": "weekly|pr", "pending_before": 0, "pending_after": 0 }`. `scripts/retro-status.py` reports the newest entry as "last weekly review"; absent file → "unknown", never guessed.
+
+---
+
 
 ## 4. `state/tool-calls.jsonl` — Tool usage audit log
 
 **Nature**: JSON Lines, append-only.
 **Writer**: `.claude/hooks/post-edit-lint.py` writes it as a side effect; other hooks on PostToolUse may also write.
-**Purpose**: locate tool-routing errors, detect tool bloat.
+**Purpose**: locate tool-routing errors, detect tool bloat; `session` makes rows joinable with `hook-events.jsonl` / `commits.jsonl` ("which session edited this file").
 
 ### Schema
 
 ```json
-{ "ts": "ISO 8601", "tool": "<tool name>", "duration_ms": 1234, "exit_code": 0, "matcher": "<hook matcher>" }
+{ "ts": "ISO 8601", "tool": "Write|Edit|MultiEdit", "file": "<repo-relative path>", "matcher": "<hook matcher>", "session": "<claude session id>" }
+```
+
+> Historical note: an earlier version of this schema documented `duration_ms` / `exit_code` fields that no writer ever produced; the schema above now matches what `post-edit-lint.py` actually writes. Rows written before 2026-07-22 lack the `session` field — treat missing as unknown.
+
+---
+
+## 4a. `state/commits.jsonl` — Session↔commit join ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/post-bash-commit-ledger.py` (PostToolUse, matcher `Bash`).
+**Purpose**: git history is the only durable cross-machine trail; this ledger links each commit hash to the session that produced it, making `head_hash` the join key across commits ↔ sessions ↔ tool-calls ↔ hook-events.
+**Dedup / failure handling**: after a Bash command containing `git commit`, the hook records only if `git rev-parse HEAD` differs from the last recorded `head_hash` — denied/failed commit attempts leave HEAD unchanged and are skipped.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "branch": "<branch name>", "head_hash": "<full sha>", "msg_first_line": "<commit subject, ≤120 chars>" }
+```
+
+---
+
+## 4b. `state/delegations.jsonl` — Delegation ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/delegation-ledger.py` (PreToolUse, matcher `Task|Agent`; sentinel — always exit 0, a non-zero PreToolUse exit would block the delegation).
+**Purpose**: records every subagent delegation with prompt-quality signals — whether the prompt carries model-dispatch.md §2's mandatory trio (goal/acceptance-criteria/report-format) plus scope declaration and marker requirement. Weak delegations become measurable instead of anecdotal.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "subagent_type": "<agent type>", "model": "<override or empty>", "desc": "<description ≤120>", "prompt_sha1_10": "<10 hex>", "prompt_chars": 0, "has_goal": true, "has_ac": true, "has_report_format": true, "has_scope": true, "has_marker_req": true }
+```
+
+---
+
+## 4c. `state/verifications.jsonl` — Fresh-context verdict ledger
+
+**Nature**: JSON Lines, append-only.
+**Writer**: `.claude/hooks/stop-retro-logger.py` on `SubagentStop` — harvests the `VERDICT: PASS|FAIL <evidence-path>` line that delegation-templates.md §6 requires every fresh-context acceptance agent to emit (full report persisted under `docs/reviews/`).
+**Purpose**: acceptance outcomes survive the verifier's ephemeral context; `verdict=FAIL` additionally lands in `ERRORS.md` Pending Review as an `ACCEPTANCE_FAIL` finding.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "agent": "<subagent id>", "verdict": "PASS|FAIL", "evidence_path": "docs/reviews/<file>.md" }
+```
+
+---
+
+## 4d. `state/acceptance/<plan-stem>.jsonl` — ExecPlan acceptance-run evidence
+
+**Nature**: JSON Lines, append-only (one line per executed command per run).
+**Writer**: `scripts/acceptance-run.py` (executes the ExecPlan §5 ```acceptance block; see docs/plans/PLANS.md).
+**Purpose**: the §5 verification strategy stops being prose — every run leaves per-command evidence (exit code + output tail) reviewers and future sessions can re-check.
+
+### Schema
+
+```json
+{ "ts": "ISO 8601", "plan": "docs/plans/active/F-NNN-<slug>.md", "label": "build|lint|test|negative|...", "cmd": "<command>", "expect_fail": false, "exit_code": 0, "pass": true, "skipped": false, "output_tail": "<last ≤10 lines>" }
 ```
 
 ---

@@ -80,7 +80,7 @@ The following tasks **a weak model is destined to do poorly — don't pretend ot
 | Taste/aesthetic decisions | "Which design looks better/more premium" with no style spec | Produce 2-3 candidates + trade-offs each, hand to the user; don't decide unilaterally |
 | Fuzzy business judgment | "Is it worth doing" "will users like this" | List verifiable assumptions and how to test them; state plainly "this needs a human decision" |
 | Long inference chains with no ground truth | Conclusion can't be verified by test/run/documentation | Tag a confidence level and basis; escalate model or request a second opinion |
-| Facts beyond the environment | Needs current external info that can't be searched | Write "unconfirmed" — do not fabricate |
+| Facts beyond the environment | Needs current external info that can't be searched | Tag inline as `[UNCONFIRMED: <claim>]` (syntax in handoff-protocol.md "Inline Auxiliary Markers"; auto-harvested to ERRORS.md Pending Review) — do not fabricate |
 
 Decomposition, isolated verification, and multi-answer review can improve **execution quality** — they cannot fix **whether the goal is right**. Goal-level doubts always route to §3 circuit-break.
 

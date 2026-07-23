@@ -52,8 +52,9 @@ Every finding must be tagged with a severity:
 
 ```
 □ Read ExecPlan §1 Goal and confirm the PR diff's scope matches it
+□ Read ExecPlan §1 Non-Goals / Out of Scope; check the diff item by item for anything that IMPLEMENTS an excluded item — a hit is a Blocker tagged [SCOPE], citing the hunk and the violated Non-Goal line (the field is write-only otherwise)
 □ Read ExecPlan §3 Constraints; verify each INV-id against the diff
-□ Run every command in ExecPlan §5 Verification Strategy
+□ Run `python3 scripts/acceptance-run.py <execplan-path>` — it executes §5's ```acceptance block and logs evidence to state/acceptance/; paste its summary line in the report. §5 Manual items are run by hand. (Legacy plans without an acceptance block: run §5's prose commands manually.)
 □ git branch --show-current to confirm you're not on master
 □ Is the commit message atomic and in type(scope) format?
 □ Does each commit build independently?
@@ -63,6 +64,7 @@ Every finding must be tagged with a severity:
 □ Are all fakes/mocks updated for any new interface method?
 □ Is documentation in sync (TECHNICAL-REFERENCE.md / diagrams)?
 □ Are all cases covered for any new enum or sealed class?
+□ New externally-imported symbols in the diff are greppable at their API-evidence-row location (spot-check ≥3; rows required by delegation-templates §2)
 ```
 
 ---
@@ -92,6 +94,29 @@ Every finding must be tagged with a severity:
 □ All loading/error/empty states have test coverage
 □ Edge cases: empty values, overlong strings, extreme data volumes
 ```
+
+---
+
+## Document Reviewer Checklist
+
+For non-code deliverables — PRD / market & competitive research / data analyses / strategy docs / ADR & PDR — executed by a fresh-context reviewer (general-purpose + Write for its single report file) or `plan-reviewer`. This is where product-strategy hallucinations get caught; "reads well" is not a review.
+
+```
+□ Run `python3 scripts/check-doc-refs.py --file <doc>` — 0 ERROR (dead paths/refs)
+□ Every quantified claim (market size, %, price, benchmark, date) has a source (URL or file:line)
+  OR an inline [UNCONFIRMED: <claim>] tag — having neither is a FAIL
+□ Spot-fetch ≥3 cited URLs with WebFetch — the page must actually support the claim it backs;
+  paste a one-line evidence quote for each
+□ Re-read every file:line quote — content must match the citation
+□ Facts (sourced) and inference (author judgment) are separated (delegation-templates §4 format)
+□ Hypothesis-evidence table present with the confidence column filled (required for
+  pm / market-researcher / competitive-analyst / data-analyst outputs)
+□ If the doc feeds an architecture / security / irreversible decision (model-dispatch §5's
+  second-opinion triggers): a second-opinion record is attached — this checklist item is the
+  objective trigger; no record → FAIL
+```
+
+Verdict follows delegation-templates §6: full report to `docs/reviews/`, `VERDICT: PASS|FAIL <path>` line, ending marker.
 
 ---
 
@@ -130,6 +155,7 @@ Every finding must be tagged with a severity:
 | Build | ✓ / ✗ |
 | Lint  | ✓ / ✗ |
 | Tests | ✓ / ✗ |
+| Acceptance-run (§5 block) | ✓ / ✗ / n/a |
 
 ## Decision
 

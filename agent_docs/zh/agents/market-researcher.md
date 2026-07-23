@@ -4,7 +4,7 @@ description: 市場研究員 - 市場規模（TAM/SAM/SOM）、用戶調研、�
 tools: Read, Grep, Glob, WebFetch, WebSearch
 model: sonnet
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan 起草類任務仍寫入 docs/plans/active/<task-id>.md
 context_firewall: true
 ---
 
@@ -33,6 +33,11 @@ You are a senior market researcher with expertise in comprehensive market analys
 | 資料來源 | 至少 3 筆，皆附可驗證 URL |
 
 **來源要求**：至少 3 筆資料來源，每筆需附可驗證 URL；缺少 URL 的來源視為無效，不得引用。
+
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
 
 **Worked Example**（示意摘要，非完整報告）：
 1. 市場規模：目標市場 TAM 約 NT$45 億（2025），年增率 12%（來源：[產業統計報告](https://example.com/industry-report-2025)）。

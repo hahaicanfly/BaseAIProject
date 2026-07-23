@@ -52,8 +52,9 @@
 
 ```
 □ 讀 ExecPlan §1 Goal 並對照 PR diff 確認範圍一致
+□ 讀 ExecPlan §1 Non-Goals / Out of Scope；逐條核對 diff 中是否有實作到被排除的項目——命中即標記為 [SCOPE] 的 Blocker，並引用該 hunk 與違反的 Non-Goal 行（否則該欄位形同虛設）
 □ 讀 ExecPlan §3 Constraints，逐條 INV-id 在 diff 中驗證
-□ 跑 ExecPlan §5 Verification Strategy 的所有指令
+□ 跑 `python3 scripts/acceptance-run.py <execplan-path>` —— 它會執行 §5 的 ```acceptance 區塊並把證據記錄到 state/acceptance/；把其摘要行貼進報告。§5 的 Manual 項目手動執行。（沒有 acceptance block 的舊版 Plan：手動跑 §5 的文字指令。）
 □ git branch --show-current 確認非 master
 □ commit message 是否原子化、type(scope) 格式正確
 □ commit 是否能獨立編譯通過
@@ -63,6 +64,7 @@
 □ 新加 interface method 是否所有 fake/mock 都更新
 □ 文件同步（TECHNICAL-REFERENCE.md / diagrams）
 □ 涉及 enum 或 sealed class 是否所有 case 都補全
+□ diff 中新引入的外部 symbol，在其 API-evidence-row 位置皆可 grep 到（抽查 ≥3 筆；此列由 delegation-templates §2 規定必須存在）
 ```
 
 ---
@@ -92,6 +94,28 @@
 □ 所有 loading / error / empty state 有測試覆蓋
 □ Edge case：空值、超長字串、極端資料量
 ```
+
+---
+
+## Document Reviewer Checklist
+
+針對非程式碼產出物 —— PRD / 市場與競品研究 / 數據分析 / 策略文件 / ADR & PDR —— 由 fresh-context reviewer（general-purpose + Write，只寫單一報告檔）或 `plan-reviewer` 執行。這是抓出產品策略幻覺的關卡；「讀起來通順」不算 review。
+
+```
+□ 跑 `python3 scripts/check-doc-refs.py --file <doc>` —— 0 ERROR（失效路徑/引用）
+□ 每個量化主張（市場規模、%、價格、benchmark、日期）都要有出處（URL 或 file:line）
+  或內嵌 [UNCONFIRMED: <claim>] 標籤 —— 兩者皆無即 FAIL
+□ 用 WebFetch 抽查 ≥3 個引用 URL —— 該頁面須確實支持其佐證的主張；
+  每筆貼一行證據引用
+□ 逐條重讀 file:line 引用 —— 內容須與引用相符
+□ Facts（有出處）與 inference（作者判斷）需分開標示（delegation-templates §4 格式）
+□ 附上 Hypothesis-evidence table 並填妥 confidence 欄（pm / market-researcher /
+  competitive-analyst / data-analyst 產出物必附）
+□ 若該文件將餵入架構 / 安全 / 不可逆決策（model-dispatch §5 的 second-opinion
+  觸發條件）：須附上 second-opinion 紀錄 —— 此檢查項為客觀觸發條件；無紀錄即 FAIL
+```
+
+Verdict 依 delegation-templates §6：完整報告存到 `docs/reviews/`，附 `VERDICT: PASS|FAIL <path>` 行，結尾標記。
 
 ---
 
@@ -130,6 +154,7 @@
 | Build | ✓ / ✗ |
 | Lint  | ✓ / ✗ |
 | Tests | ✓ / ✗ |
+| Acceptance-run (§5 block) | ✓ / ✗ / n/a |
 
 ## Decision
 

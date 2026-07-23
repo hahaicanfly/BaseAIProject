@@ -70,6 +70,9 @@
 **待完成（§4 Step 標記未打勾）：**
 - [...]
 
+**Scope Baseline（複製自 ExecPlan §1——這行讓確認過的範圍能撐過 /clear）：**
+- [目標用戶 / 成功指標 / 觸發條件 / 確認來源；含任何 [SCOPE-CHANGE] 版本行]
+
 **當前 marker：** [HANDOFF: <next>] 或 [VERIFY_FAILED: <INV-id>]
 
 **接手 SOP：**

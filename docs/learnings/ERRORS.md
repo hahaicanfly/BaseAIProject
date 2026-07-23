@@ -45,6 +45,54 @@
 - [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 645b493e-20af-4689-9546-e5ddba056a8f
 
+<!-- harvest:b992aa36d0 -->
+- [2026-07-22T15:10:19+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
+<!-- harvest:cf9ceaf881 -->
+- [2026-07-22T15:35:35+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
+<!-- harvest:adb9e71e8a -->
+- [2026-07-22T15:41:29+0000] [VERIFY_FAILED] **item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)**
+  ```
+  明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
+<!-- harvest:18c2659f20 -->
+- [2026-07-22T15:41:29+0000] [PROTOCOL_VIOLATION] **VERIFY_FAILED reason exceeds 80 chars (83) — protocol requires a short specific reason**
+  ```
+  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
+<!-- harvest:6400140032 -->
+- [2026-07-22T15:41:29+0000] [ACCEPTANCE_FAIL] **fresh-context verification returned FAIL (docs/reviews/2026-07-22-f001-phase-c2.md)**
+  ```
+  `/Users/a17/AIproject/BaseAIProject/docs/reviews/2026-07-22-f001-phase-c2.md`。唯一失分項屬變更集衛生問題(建議合併前排除或明確宣告該行 ERRORS.md 變更),不影響 Phase C2 實作邏輯正確性。
+
+VERDICT: FAIL docs/reviews/2026-07-22-f001-phase-c2.md
+
+[VERIFY_FAILED: item1 git-status 變更集多出未宣告 M docs/learnings/ERRORS.md(session 自身 PR_RETRO 副作用,非實作內容)]
+  ```
+
+<!-- harvest:8056eb8b94 -->
+- [2026-07-22T15:46:35+0000] [PR_RETRO] **本 session 有 11 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
+
+### [2026-07-23] 提案:harness-maintenance §6 增設「Standing Rule」第三類品質閘門(該檔 §8 為 Red tier 不得自行修改,依規記錄於此送人審)
+- 情境:F-001 批次(O15)發現新增 always-on 規則零成本、零證據要求、零退場機制;§6 現只涵蓋 Agent/Skill 兩類
+- 提案內容:新增/擴編 `.claude/rules/*` 規則須附 (a) ≥2 條 ERRORS.md 條目或 harness-eval gap 編號作為需求證據;(b) 宣告一個遙測標記名(`[RULE_FIRED: <name>|...]`,語法見 handoff-protocol.md 行內輔助標記),否則命中率永遠不可測;(c) 90 天複審日期,屆時 state/rule-events.jsonl 命中為零者列入 §5 降級候選
+- 配套已就緒:rule-events.jsonl 收割管線與 scripts/retro-status.py 已在 F-001 落地,clarify-first / model-dispatch 已帶示範標記
+- 建議去向:人審同意後由人(或授權後的 session)修改 harness-maintenance.md §6
+
 ## Active Lessons
 
 > 依日期 descending 排列，分類標記在中括號中。

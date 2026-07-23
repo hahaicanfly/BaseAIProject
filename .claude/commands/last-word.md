@@ -70,6 +70,9 @@ I'm working on [F-NNN — feature name] (ExecPlan: docs/plans/active/F-NNN-<slug
 **Remaining (unchecked steps in §4):**
 - [...]
 
+**Scope Baseline (copied from ExecPlan §1 — the confirmed scope survives /clear via this line):**
+- [target user / success metric / trigger condition / confirmation source; include any [SCOPE-CHANGE] version lines]
+
 **Current marker:** [HANDOFF: <next>] or [VERIFY_FAILED: <INV-id>]
 
 **Pickup SOP:**

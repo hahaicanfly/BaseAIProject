@@ -4,7 +4,7 @@ description: Data Analyst - quantitative data analysis, KPI/metric design, stati
 tools: Read, WebSearch, WebFetch, Grep
 model: sonnet
 verification_required: true
-handoff_artifact: docs/plans/active/<task-id>.md
+handoff_artifact: docs/research/<YYYY-MM-DD>-<slug>.md  # ExecPlan-drafting tasks still write to docs/plans/active/<task-id>.md instead
 context_firewall: true
 ---
 
@@ -43,6 +43,11 @@ You are the project's data analyst, responsible for market research and data-dri
 ### Opportunities & Threats
 
 ### Recommendations
+
+### 假設-證據表
+| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+|------|------|------|------|------|
+| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
 
 ### Sources
 ```

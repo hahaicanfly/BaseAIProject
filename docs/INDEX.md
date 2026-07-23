@@ -29,8 +29,18 @@
 | File | Status | Summary |
 |------|------|------|
 | [`decisions/ADR-template.md`](decisions/ADR-template.md) | Template | ADR authoring template |
+| [`decisions/PDR-template.md`](decisions/PDR-template.md) | Template | Product Decision Record authoring template (product/feature decisions, not architecture — see file header for when PDR is mandatory) |
 
 > When adding an ADR: `decisions/ADR-NNNN-<short-slug>.md`, and add a row to this table.
+> When adding a PDR: `decisions/PDR-NNNN-<short-slug>.md`, and add a row to this table.
+
+---
+
+## Strategy & Market Research Reports
+
+| File / Directory | Purpose |
+|------------|------|
+| [`research/README.md`](research/README.md) | Filing point + naming rule (`docs/research/<YYYY-MM-DD>-<slug>.md`) for pm / market-researcher / competitive-analyst / data-analyst output; every report requires a 假設-證據表 and a Sources section, reviewed via review-protocol.md's Document Reviewer Checklist |
 
 ---
 
