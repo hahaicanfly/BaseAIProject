@@ -647,7 +647,9 @@ def _detect_git_commits(parsed: dict | None) -> list[str]:
 
 
 def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
-    """Append a /pr-retro reminder to ERRORS.md Pending Review.
+    """Append or update (in place) a /pr-retro reminder in ERRORS.md
+    Pending Review — one entry per session, refreshed as the session's
+    commit count grows.
 
     # PR_RETRO_HOOK — extend this function to trigger full pr-retro analysis.
     Currently only writes a lightweight reminder. To enable full automation:
@@ -670,15 +672,41 @@ def _append_retro_suggestion_locked(session_id: str, commit_count: int) -> None:
     iso = now_iso()
     # NOTE: hash must NOT include the timestamp, or every Stop event (which
     # always has a fresh `iso`) produces a unique hash and dedup never fires.
-    # Keep only event-essence fields: kind, session (source), commit_count
-    # (message body driver).
+    # It must not include commit_count either (lesson: a count-bearing hash
+    # minted one NEW Pending entry per growth step — observed live as
+    # 6→11→22 producing three stacked reminders for one session). One
+    # session = one stable hash = one entry; a grown count refreshes that
+    # entry's bullet line in place.
     reminder_hash = hashlib.sha1(
-        f"retro-reminder|{session_id}|{commit_count}".encode("utf-8"),
+        f"retro-reminder|{session_id}".encode("utf-8"),
         usedforsecurity=False,
     ).hexdigest()[:10]
+    marker = f"<!-- harvest:{reminder_hash} -->"
 
-    existing = existing_pending_hashes()
-    if reminder_hash in existing:
+    # Entry still present → refresh only its bullet line (timestamp + count);
+    # the Session line and any human ↳ annotations beneath are preserved.
+    if marker in text:
+        bullet_re = re.compile(
+            rf"({re.escape(marker)}\n)- \[[^\n\]]+\] \[PR_RETRO\] \*\*[^\n]*\*\*"
+        )
+        new_bullet = (
+            f"- [{iso}] [PR_RETRO] **本 session 有 {commit_count} 個 git commit，"
+            f"建議執行 `/pr-retro` 萃取教訓**"
+        )
+        new_text, n = bullet_re.subn(
+            lambda m: m.group(1) + new_bullet, text, count=1
+        )
+        if n and new_text != text:
+            try:
+                ERRORS_MD.write_text(new_text, encoding="utf-8")
+            except Exception:
+                pass
+        return
+
+    # Hash known to the tombstone ledger but absent from the file = a human
+    # deleted the entry during weekly review → it stays deleted, even if
+    # more commits land in this session.
+    if reminder_hash in existing_pending_hashes():
         return
 
     header_re = re.compile(rf"^{re.escape(PENDING_SECTION_HEADER)}\s*$", re.MULTILINE)
@@ -687,7 +715,7 @@ def _append_retro_suggestion_locked(session_id: str, commit_count: int) -> None:
         return
 
     block = (
-        f"<!-- harvest:{reminder_hash} -->\n"
+        f"{marker}\n"
         f"- [{iso}] [PR_RETRO] **本 session 有 {commit_count} 個 git commit，"
         f"建議執行 `/pr-retro` 萃取教訓**\n"
         f"  Session: {session_id or 'unknown'}\n"
