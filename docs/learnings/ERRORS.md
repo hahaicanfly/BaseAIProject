@@ -105,7 +105,7 @@ Criterion 5 is a mechanical literal-existence check and one of its five sub-path
 - ↳ 2026-07-23 使用者於對話中授權修復,已落地:harvest_telemetry 掃描前剝除 code span/fenced block,另過濾「|」後模板尾段(<3 字母數字視為範例)。沙盒煙霧測試:新版真實事件 2/2 保留、引用/模板事件 3/3 全擋;HEAD 基準版重現 5 筆(含 3 污染)。本地帳本污染首筆已清除
 
 <!-- harvest:0eae05c6d0 -->
-- [2026-07-24T01:15:02+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-24T08:53:20+0000] [PR_RETRO] **本 session 有 5 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: f5a5eb32-ebfb-4a8c-93c4-5cb175e899a9
   ↳ 條目已遷移至 per-session 穩定 hash(原 479f0ed722 含 commit 數);此後同 session 的 commit 數成長只就地更新本條,不再新增條目
 
@@ -117,6 +117,40 @@ Criterion 5 is a mechanical literal-existence check and one of its five sub-path
 Non-blocking suggestion: consider updating the acceptance-criteria snapshot timestamp when re-running this review later, since the hook continues to refresh the live entry.
 
 [HANDOFF: acceptance PASS]
+  ```
+
+<!-- harvest:3265e9b964 -->
+- [2026-07-24T02:36:31+0000] [UNCONFIRMED] **Replit Plan Mode是否支援計劃內逐步驟重排(僅查到「可見可審」,未查到重排功能證據)**
+  ```
+  。
+5. 反例:Claude Code的Plan Mode雖是最貼近本專案六階段的硬性關卡設計,但執行呈現仍以終端/diff為主,證明「計劃關卡」與「非技術友善執行呈現」是兩個需分開設計的問題。
+
+`[UNCONFIRMED: Replit Plan Mode是否支援計劃內逐步驟重排(僅查到「可見可審」,未查到重排功能證據)]`
+
+<!-- harvest:2066ff2b3d -->
+- [2026-07-24T08:06:35+0000] [PROTOCOL_VIOLATION] **subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker**
+  ```
+  Good, 149 characters. Now compiling the final structured output with all capability entries.
+  ```
+
+<!-- harvest:9afdc30531 -->
+- [2026-07-24T08:45:50+0000] [UNCONFIRMED] **Grok Build 官方 headless flag 語法**
+  ```
+  rok-oauth)
+**Partial**:官方文件未直接列出 headless/`-p` flag 語法,hooks 相容性來自第三方文件(Hermes Agent)非 xAI 一手文件,標記 `[UNCONFIRMED: Grok Build 官方 headless flag 語法]`。
+另有**社群版** `superagent-ai/grok-cli`(3.3k★,活躍,2026-07-06 仍在更新)早於官方版存在,MCP 支援 + `-p/--prompt` 非互動模式已確認。[repo](https://github.com/superagent-ai/grok-cli) / 
+  ```
+
+<!-- harvest:c26ac823ed -->
+- [2026-07-24T08:45:50+0000] [UNVERIFIED_CITATION] **1 cited URL(s) never fetched/observed in-session**
+  ```
+  https://forum.cursor.com/t/cursor-cli-the-non-interactive-mode-cannot-be-used/143045
+  ```
+
+## Sources
+- https://lovable.dev/blog/versioning-with-lovable-two-point-zero
+- https://lovable.dev/faq/projects/version-history
+- htt
   ```
 
 ## Active Lessons
