@@ -44,10 +44,10 @@ You are the project's data analyst, responsible for market research and data-dri
 
 ### Recommendations
 
-### 假設-證據表
-| 假設 | 證據（URL 或 file:line；無則 `[UNCONFIRMED: ...]`）| 證據型別（實測數據/外部引述/模型推論）| 信心（高/中/低）| 可證偽檢驗（什麼觀察會推翻它）|
+### Hypothesis-Evidence Table
+| Hypothesis | Evidence (URL or file:line; else `[UNCONFIRMED: ...]`) | Evidence type (measured data / external citation / model inference) | Confidence (high/med/low) | Falsifiable check (what observation would overturn it) |
 |------|------|------|------|------|
-| [假設 1] | [URL 或 file:line，或 `[UNCONFIRMED: ...]`] | [實測數據/外部引述/模型推論] | [高/中/低] | [什麼觀察會推翻它] |
+| [Hypothesis 1] | [URL or file:line, or `[UNCONFIRMED: ...]`] | [measured data / external citation / model inference] | [high/med/low] | [what observation would overturn it] |
 
 ### Sources
 ```
