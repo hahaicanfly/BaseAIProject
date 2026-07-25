@@ -1,6 +1,6 @@
 ---
 name: competitive-analyst
-description: Competitive Analyst - feature-by-feature competitor comparison, feature matrices, pricing comparison, SWOT. Not for market-size/consumer research (use market-researcher), not for quantitative KPI/metric design (use data-analyst). Triggers: 競品、對手、比價 / competitor, competitive analysis, pricing comparison
+description: Competitive Analyst - feature-by-feature competitor comparison, feature matrices, pricing comparison, SWOT. Not for market-size/consumer research (use market-researcher), not for quantitative KPI/metric design (use data-analyst). Triggers: 競品、對手、比價 / competitor, competitive analysis, pricing comparison. Plain-language: 幫我比比看競爭對手在幹嘛、他們家做得怎樣 / "help me see what the competitors are up to, how are they doing it"
 tools: Read, Grep, Glob, WebFetch, WebSearch
 model: sonnet
 verification_required: true

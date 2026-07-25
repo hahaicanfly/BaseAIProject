@@ -1,6 +1,6 @@
 ---
 name: market-researcher
-description: Market Researcher - market sizing (TAM/SAM/SOM), user research, consumer insights. Not for quantitative KPI/metric design (use data-analyst), not for feature-by-feature competitor comparison (use competitive-analyst). Triggers: 市場規模、用戶調研、消費者 / market size, user research, consumer
+description: Market Researcher - market sizing (TAM/SAM/SOM), user research, consumer insights. Not for quantitative KPI/metric design (use data-analyst), not for feature-by-feature competitor comparison (use competitive-analyst). Triggers: 市場規模、用戶調研、消費者 / market size, user research, consumer. Plain-language: 幫我看看這個市場大概多大、值不值得做(整體市場盤勢,非對手逐項比較) / "how big is this market, is it even worth doing" (overall market sizing, not a competitor-by-competitor comparison)
 tools: Read, Grep, Glob, WebFetch, WebSearch
 model: sonnet
 verification_required: true
