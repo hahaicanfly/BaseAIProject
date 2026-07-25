@@ -57,6 +57,7 @@
 
 | Command | File |
 |------|------|
+| `/guided-start` | `.claude/commands/guided-start.md` |
 | `/last-word` | `.claude/commands/last-word.md` |
 | `/techdebt` | `.claude/commands/techdebt.md` |
 
