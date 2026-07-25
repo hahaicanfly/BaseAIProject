@@ -53,23 +53,23 @@ Scope Baseline: target user=BaseAIProject 的非技術背景使用者 / success 
 
 ## 4. Step-by-step Plan
 
-- [ ] 1. Baseline:自最新 `master` 切 `feat/guided-start-mvp`(INV-GIT-005);確認 `git branch --show-current` ≠ master 且工作樹乾淨(Yellow-tier 依賴 clean tree 作回滾點)。確認三個 fixture 存在:`state/acceptance/F-001-harness-verifiability-batch.jsonl`、`docs/reviews/2026-07-22-f001-phase-c2.md`、`docs/reviews/2026-07-23-f001-phase-c3c4.md`。_Verify_:分支名正確、三檔 `ls` 皆在。
-- [ ] 2. 撰寫 `.claude/commands/guided-start.md`(仿 `last-word.md`:無 YAML frontmatter、開場 prose + `## Step N` 段 + 結尾 `## References`)。五段內容:
+- [x] 1. Baseline:自最新 `master` 切 `feat/guided-start-mvp`(INV-GIT-005);確認 `git branch --show-current` ≠ master 且工作樹乾淨(Yellow-tier 依賴 clean tree 作回滾點)。確認三個 fixture 存在:`state/acceptance/F-001-harness-verifiability-batch.jsonl`、`docs/reviews/2026-07-22-f001-phase-c2.md`、`docs/reviews/2026-07-23-f001-phase-c3c4.md`。_Verify_:分支名正確、三檔 `ls` 皆在。實際執行於 Claude Code 內建 worktree 隔離(branch 名為 `worktree-agent-aa389e2d2f5398d37`,已 fast-forward 含入 `feat/guided-start-mvp` 這顆 commit,非文字上的 `feat/guided-start-mvp` 這個分支名本身);三個 fixture 中 jsonl 屬 `state/` gitignore 範圍(runtime state,不進 git),已從共用 checkout 複製唯讀副本供本機驗證用,兩份 review `.md` 本身即為 git 追蹤檔案、原生存在。
+- [x] 2. 撰寫 `.claude/commands/guided-start.md`(仿 `last-word.md`:無 YAML frontmatter、開場 prose + `## Step N` 段 + 結尾 `## References`)。五段內容:
   - Step 0(自動偵測接續):掃 `docs/plans/active/F-*.md`,若有進行中 ExecPlan 且對話像接續 → 跳 Step 4;不確定時明講一句問使用者確認,不靜默假設。
   - Step 1-2(需求收集):一句話覆誦已知意圖 → 即時讀取 `.claude/rules/clarify-first.md` §1 四欄位(target user / success metric / non-goals / trigger),不複製其判準 → 分批 1-2 題 `AskUserQuestion`,已知不重問;若已符合 `.claude/rules/plan-first.md` Exceptions → 跳過 Step 3 直接執行。
   - Step 3(路由防線):逐字讀取 `CLAUDE.md`「Decision Tree Before Acting」本文做路由,本指令不自帶任何判準、只翻譯呈現層 → 把控制權交還對應分支(ExecPlan / Plan Mode / 直接做),不追蹤後續進度。
   - Step 4(驗收白話):呼叫 `scripts/translate-acceptance.py`,把結果套進 `CLAUDE.md` 既有 Done/Next/Note 三行模板並連結真實證據檔路徑。
   - References:指向 `clarify-first.md` / `CLAUDE.md` / `plan-first.md` / `execplan-lifecycle.md` / `translate-acceptance.py` / `review-protocol.md`。
   - _Verify_:首行非 `---`(無 frontmatter);grep 命中 `## Step 0`、`## Step 1`、`## Step 3`、`## Step 4`、`## References`;fresh-context agent read-back(Yellow-tier)。
-- [ ] 3. 撰寫中文鏡像 `agent_docs/zh/commands/guided-start.md`——與 EN 逐段對應。_Verify_:`## Step N` 段數與 EN 一致;read-back 核對無漏段/漏 References。
-- [ ] 4. 撰寫 `scripts/translate-acceptance.py`(唯讀衍生工具,仿 `check-doc-refs.py`/`acceptance-run.py`、不 import 共用模組):
+- [x] 3. 撰寫中文鏡像 `agent_docs/zh/commands/guided-start.md`——與 EN 逐段對應。_Verify_:`## Step N` 段數與 EN 一致;read-back 核對無漏段/漏 References。
+- [x] 4. 撰寫 `scripts/translate-acceptance.py`(唯讀衍生工具,仿 `check-doc-refs.py`/`acceptance-run.py`、不 import 共用模組):
   - CLI:`plan`(positional,可省略取 active/ 最新 `F-*.md`)、`--review <file>`、`--json`;exit code 恆為 0;全程唯讀開檔、無寫入路徑(INV-SEC-*)。
   - acceptance:讀 `state/acceptance/<stem>.jsonl` 取每 label 最後一筆 → emoji 化 + 複用 `acceptance-run.py` 的 `Summary: N total…` 與 expect-fail 措辭(不重寫白話邏輯);無 jsonl → 明講「尚無驗收紀錄」不捏造。
   - review:讀 `docs/reviews/<file>.md` 抓 `review-protocol.md` 燈號行(🟢/🟡/🔴)與 `VERDICT` 行(需同時支援 `**VERDICT: PASS**` 粗體無路徑、與 `VERDICT: FAIL <path>` 無粗體帶路徑兩種既有格式);抓不到燈號 → 明講「此報告無白話層,以下為技術原文摘錄」。
   - join:`state/verifications.jsonl` 無 `plan` 欄 → 檔名子字串啟發式比對,找不到明確對應時明講但書;`--review` 可明確指定跳過猜測。
   - _Verify_:見 §5 acceptance block。
-- [ ] 5. 更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表新增 `/guided-start` 一列。_Verify_:grep `/guided-start` 命中該表;read-back。
-- [ ] 6. 跑 §5 全部 acceptance + Manual golden path;全綠後結尾 `[HANDOFF: code-reviewer]`。
+- [x] 5. 更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表新增 `/guided-start` 一列。_Verify_:grep `/guided-start` 命中該表;read-back。
+- [x] 6. 跑 §5 全部 acceptance + Manual golden path;全綠後結尾 `[HANDOFF: code-reviewer]`。實跑結果:compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan 六項皆如預期;`doc-refs-all --strict` exit 1,但以 `git stash` 前後比對確認差異僅為本次改動修掉的 10 條「向前引用尚未存在檔案」ERROR,新增 ERROR 數為 0——剩餘 5 個 ERROR 為與本次改動無關的既有問題(`.claude/skills/harness-eval/SKILL.md`/`SKILL_zh.md` 的 `session-handoffs/` 死連結、`docs/research/2026-07-25-non-technical-accessibility.md` 的 `docs/PLAIN-INDEX.md`/`.claude/protocols/{...}.md` 死連結),詳見交由 code-reviewer 複核時的完整報告。
 
 ## 5. Verification Strategy
 
@@ -98,6 +98,7 @@ doc-refs-all: python3 scripts/check-doc-refs.py --all --strict
 
 - [2026-07-25 00:00] main conversation(dev):plan drafted via pm → architect → plan-reviewer pipeline(Workflow tool),assembled into this file,pending human approval(Phase 3 gate).
 - [2026-07-26 00:00] main conversation(dev):使用者核准(Phase 3 human approval gate passed),開 `feat/guided-start-mvp` 分支,建立 `state/feature-list.json` 骨架(F-002, in_progress),進入 Phase 4 實作。
+- [2026-07-26 00:30] dev(worktree-isolated agent, worktree-agent-aa389e2d2f5398d37):完成 §4 Step 1-6。新增 `.claude/commands/guided-start.md`、`agent_docs/zh/commands/guided-start.md`、`scripts/translate-acceptance.py`;更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表(commit `6e28dae`)。§5 acceptance block 六項全綠(compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan);`doc-refs-all --strict` exit 1 但經 `git stash` 前後比對確認本次改動淨新增 ERROR 為 0(修掉 10 條、剩 5 條與本次無關的既有死連結)。Manual G1-G6 golden path(含 `--review` 兩種既有 VERDICT 格式、空 jsonl 優雅降級、唯讀性驗證)全數人工核對通過。`[HANDOFF: code-reviewer]`。
 
 ## 7. Decision Log
 
