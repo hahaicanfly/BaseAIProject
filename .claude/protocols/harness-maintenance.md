@@ -2,6 +2,7 @@
 
 > Audience: a long-running weak model. Defines how to **safely** update the harness's own files.
 > Principle: lessons can be appended anytime; rules should be changed cautiously; defenses (hooks/invariants) require asking a human before touching.
+> 人類讀者:這份是給 AI 看的安全改動流程,你不需要照著做;想了解 harness 怎麼分級保護的白話說明,目前(尚待撰寫,見 docs/research/2026-07-25-non-technical-accessibility.md Tier C)。
 
 ## 1. File Permission Tiers
 

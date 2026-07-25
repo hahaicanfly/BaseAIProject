@@ -288,6 +288,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(
             "Summary: {} total, {} pass, {} fail, {} skip".format(total, n_pass, n_fail, n_skip)
         )
+        if any(r.get("expect_fail") for r in results):
+            # Plain-language note only -- does not affect pass/fail logic or the
+            # exit code below. For expect-fail (negative-lint style) checks, a
+            # PASS means the command intentionally failing succeeded, not that
+            # something is broken.
+            print(
+                "Note: some checks above are expect-fail (negative-lint style) -- "
+                "for those, PASS means the intentional failure succeeded, it does "
+                "not mean something broke."
+            )
 
     return 1 if any_fail else 0
 

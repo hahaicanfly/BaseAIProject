@@ -122,6 +122,8 @@ Verdict follows delegation-templates §6: full report to `docs/reviews/`, `VERDI
 
 ## Output Format (required for every reviewer)
 
+> Plain-language layer: the one-line verdict + traffic-light shown above `## Decision` below is an **additive** summary layer for non-technical readers — it does not replace or alter the `## Decision` field, the INV-id references, or the `[SEC]`/`[QA]` tags, which stay exactly as specified (in parentheses if needed). See docs/research/2026-07-25-non-technical-accessibility.md §2 principle 4 for the rationale.
+
 ```markdown
 # Review Report — F-NNN
 
@@ -156,6 +158,8 @@ Verdict follows delegation-templates §6: full report to `docs/reviews/`, `VERDI
 | Lint  | ✓ / ✗ |
 | Tests | ✓ / ✗ |
 | Acceptance-run (§5 block) | ✓ / ✗ / n/a |
+
+🟢/🟡/🔴 <one-sentence plain-language verdict> (<one-sentence reason>) → <what happens next>
 
 ## Decision
 

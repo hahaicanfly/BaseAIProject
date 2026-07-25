@@ -6,9 +6,11 @@ always: true
 
 # Parallel Worktree Development Rules
 
+*白話:多個任務同時進行時,各自在獨立的資料夾分身裡工作,彼此不會互相干擾或覆蓋檔案,這樣多個任務不會打架。*
+
 ## Overview
 
-When multiple AI agents or sessions work on the same project simultaneously, each MUST use an isolated git worktree to prevent conflicts.
+When multiple AI agents or sessions work on the same project simultaneously, each MUST use an isolated git worktree(白話:同時開好幾個獨立資料夾工作,互不干擾,這樣多個任務不會互相打架) to prevent conflicts.
 
 ## General Rules
 
@@ -55,7 +57,7 @@ git fetch / git rebase <base>         # Stay up to date
 
 ## Prohibited Git Operations
 
-- `git reset --hard` (use `git stash` instead)
+- `git reset --hard`(白話:這個指令會永久丟棄修改,無法復原,要小心) (use `git stash`(白話:先把目前的修改暫存起來,之後可以復原,不會丟掉) instead)
 - Deleting branches that are not yours (`agent/other-task`)
 - Modifying remote configuration
 - Force push to shared branches
