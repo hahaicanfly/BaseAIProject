@@ -8,6 +8,7 @@
 
 - If any file still contains `{{placeholder}}` = **not activated**: skip it — do not follow it literally, do not invent content to fill the gap.
 - Once `agent_docs/TECHNICAL-REFERENCE.md` is filled in (no placeholders) → it regains "must-read before any task" status; if not filled in → skip it.
+- 不會打指令?直接把這句貼給 Claude Code:「幫我完成專案初始化,交給它做前兩步」
 
 ## Quick Commands
 
@@ -26,6 +27,8 @@ git branch --show-current   # confirm not on master/main before making changes
 On conflict: trust per the table above, log the conflict in `docs/learnings/ERRORS.md`, and don't stop to deliberate.
 
 ## Decision Tree Before Acting (single entry point)
+
+> 不熟悉 ExecPlan / Plan Mode 是什麼?→ 先看 `docs/PLAIN/claude-md-crib-sheet.md` 一頁對照卡
 
 0. Scope/requirements unclear (2+ of: target user, success metric, non-goals/boundaries, trigger condition are missing) → clarify first in the main conversation before drafting an ExecPlan or Plan Mode plan (`.claude/rules/clarify-first.md`)
 1. Cross-module / API changes / large-scale refactors → create an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`), **wait for human approval**

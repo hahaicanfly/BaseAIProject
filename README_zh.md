@@ -14,6 +14,8 @@ BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**�
 2. **啟用防線**：`chmod +x .claude/hooks/*.py`，照 `.claude/protocols/harness-maintenance.md` §4 跑煙霧測試（block 與 pass 兩情境都要實測）
 3. **Canary 驗收**：用一個 30 分鐘小任務照 `docs/harness/NEW-PROJECT-VALIDATION.md` 走完整流程（分支→計劃→派工→review→教訓寫回），全通即可正式使用
 
+不會打指令?直接把這句貼給 Claude Code:「幫我完成專案初始化,交給它做前兩步」
+
 語言慣例：AI 讀取的制度檔一律為**英文正典**；中文人類版在同目錄 `_zh` 後綴檔或 `agent_docs/zh/` 鏡像。以下為完整介紹。
 
 ---

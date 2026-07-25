@@ -14,6 +14,8 @@ BaseAIProject is a directly-forkable **Claude Code AI development governance tem
 2. **Activate the guardrails**: `chmod +x .claude/hooks/*.py`, then run the smoke tests per `.claude/protocols/harness-maintenance.md` §4 (test both the block and pass scenarios)
 3. **Canary acceptance**: Run a 30-minute small task through the full flow per `docs/harness/NEW-PROJECT-VALIDATION.md` (branch → plan → delegate → review → write lessons back); once it all passes, it's ready for real use
 
+Don't know how to run commands? Just paste this to Claude Code: "Help me finish project initialization — you handle the first two steps."
+
 Language convention: institutional files that AI reads are always the **English canon**; the Traditional Chinese human-facing version lives in a `_zh`-suffixed file in the same directory, or mirrored under `agent_docs/zh/`. The full introduction follows below.
 
 ---

@@ -6,11 +6,13 @@ always: true
 
 # Plan First Rule
 
+*白話:不是芝麻小事的任務,先讓 Claude 寫一份計畫給你看過、你同意了才會動手做,不會沒說一聲就直接改東西。*
+
 ## Principle
 
-**Before executing any non-trivial task, you must first enter Plan Mode and write a plan for the user to review.**
+**Before executing any non-trivial task, you must first enter Plan Mode(白話:先寫一份計畫給你看過、你同意後才開始做,不是立刻動手改檔案) and write a plan for the user to review.**
 
-> Entry point follows CLAUDE.md's "Decision Tree Before Acting": cross-module / API changes / large-scale refactors go through **ExecPlan** (`docs/plans/PLANS.md`, requires human approval) and are not covered by this file; this file covers all other non-trivial tasks.
+> Entry point follows CLAUDE.md's "Decision Tree Before Acting": cross-module / API changes / large-scale refactors go through **ExecPlan**(白話:規模較大、跨檔案或跨模組的正式計畫文件,一樣要你同意才會執行,只是流程比 Plan Mode 更完整) (`docs/plans/PLANS.md`, requires human approval) and are not covered by this file; this file covers all other non-trivial tasks.
 
 ## Applicable Situations
 

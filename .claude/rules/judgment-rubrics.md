@@ -6,6 +6,8 @@ always: true
 
 # Judgment Rubrics
 
+*白話:遇到沒把握的決定,先照這裡的判斷準則停下來問你,不要硬做。*
+
 > Always-on rule. Each entry follows the format: **Signal (observable) → Action**, with a positive/negative example.
 > A signal must be "a fact you can point to in the conversation transcript," not a feeling.
 
@@ -16,7 +18,7 @@ always: true
 - Reasoning requires tracing causality across 3+ modules (A's change affects B, which affects C)
 - The task involves a trade-off with no standard answer (architecture choice, API contract, security boundary)
 
-- ✅ Good: Sonnet fixes a race condition — first attempt (add lock) fails, second attempt (restructure flow) also fails → escalate to Opus with both diffs and error output attached.
+- ✅ Good: Sonnet fixes a race condition(白話:兩個流程同時搶著改同一份資料,順序一亂就出錯的臭蟲) — first attempt (add lock) fails, second attempt (restructure flow) also fails → escalate to Opus with both diffs and error output attached.
 - ❌ Bad: Sonnet's first test run fails because of a typo'd path → this is a typo, not a capability gap; fix the path and rerun, no escalation needed.
 
 ## 2. What Counts as "Actually Done" and Deliverable
@@ -54,7 +56,7 @@ always: true
 - The patch code volume already exceeds half of the original change
 - You've had to explain to yourself "why this is actually fine" more than once (a rationalization signal)
 
-**Reroute action**: `git stash` or roll back to the last clean point → write one sentence on why it failed → list at least 2 alternative paths before choosing.
+**Reroute action**: `git stash`(白話:先把目前的修改暫存起來,之後可以復原,不會丟掉) or roll back to the last clean point → write one sentence on why it failed → list at least 2 alternative paths before choosing.
 
 - ✅ Good: changing function A broke test B, fixing B broke C — stop and roll back on the 3rd occurrence, discover the correct fix is to change the interface definition first.
 - ❌ Bad: adding skip markers to all 3 broken tests and declaring "core functionality works."

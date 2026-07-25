@@ -16,4 +16,16 @@ echo "== 3/4 Build =="
 echo "== 4/4 Verification command (Feedback subsystem; must match CLAUDE.md Quick Commands) =="
 # {{e.g.: npm test && npm run lint}}
 
-echo "init OK"
+# Honest final message: if this script still contains its own unfilled
+# template placeholders, an unconditional "init OK" would be a false-success
+# message (see docs/research/2026-07-25-non-technical-accessibility.md Tier A).
+# Check the script's own source for leftover placeholder slots before declaring
+# success. The brace is built from two single characters so this detector line
+# itself never contains the two-brace token it's searching for (else it would
+# always match itself and the warning could never clear once slots are filled).
+OPEN_BRACE='{'
+if grep -qF "${OPEN_BRACE}${OPEN_BRACE}" "$0"; then
+  echo "⚠ 尚未設定,不代表通過(此為範本原樣,請先照上面的 TODO 替換內容)"
+else
+  echo "init OK"
+fi

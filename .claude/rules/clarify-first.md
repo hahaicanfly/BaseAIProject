@@ -6,6 +6,8 @@ always: true
 
 # Clarify First
 
+*白話:資訊不夠清楚時,先停下來問你,不要自己亂猜就開始做。*
+
 > Always-on rule. Complements `judgment-rubrics.md` §3 (reactive circuit-break, fires mid-task) — this rule is **proactive**: it runs *before* you start drafting an ExecPlan or a Plan Mode plan, not after ambiguity is hit while executing. Format follows the `judgment-rubrics.md` convention: **Signal (observable) → Action**, with positive/negative examples.
 
 ## 1. When to Stop and Clarify Before Drafting a Plan
@@ -19,21 +21,21 @@ always: true
 - ✅ Good: User says "add an export feature." Missing: target user, success metric, non-goals, trigger condition (4/4 missing) → stop, ask before opening Plan Mode or an ExecPlan.
 - ❌ Bad: Same request → immediately start Plan Mode, silently deciding "export to CSV, triggered by a button, for all users" without confirming any of it.
 
-When this gate runs, emit the telemetry marker inline — `[RULE_FIRED: clarify-first|missing=N, asked]` when it triggers clarification, `[RULE_SKIPPED: clarify-first|<§4 exception>]` when skipped — so the rule's hit-rate is measurable (syntax: handoff-protocol.md "Inline Auxiliary Markers"; harvested to state/rule-events.jsonl).
+When this gate runs, emit the telemetry marker inline — `[RULE_FIRED: clarify-first|missing=N, asked]`(白話:這不是要你打的指令,是留給系統統計用的紀錄標記,方便事後檢查這條規則有沒有真的發揮作用) when it triggers clarification, `[RULE_SKIPPED: clarify-first|<§4 exception>]` when skipped — so the rule's hit-rate is measurable (syntax: handoff-protocol.md "Inline Auxiliary Markers"; harvested to state/rule-events.jsonl).
 
 ## 2. Where Clarification Happens (context_firewall constraint)
 
-All agents in `.claude/agents/` run with `context_firewall: true` — non-interactive subagents that cannot pause mid-task to ask the user something live. Clarification must therefore happen in the **main conversation**, never inside a delegated subagent:
+All agents in `.claude/agents/` run with `context_firewall: true`(白話:子 agent 像隔了一道防火牆,任務做到一半沒辦法回頭問你問題) — non-interactive subagents that cannot pause mid-task to ask the user something live. Clarification must therefore happen in the **main conversation**, never inside a delegated subagent:
 
 - Ask directly in the main conversation (`AskUserQuestion` or plain text), or
-- Invoke `pm` or `spectra-amplifier` to draft candidate interpretations, then relay their output back to the user **in the main conversation** for confirmation before handing off to ExecPlan/Plan Mode.
+- Invoke `pm`(白話:負責釐清需求、寫使用者故事的 AI 角色) or `spectra-amplifier`(白話:把粗略的需求描述補上明確驗收標準的工具) to draft candidate interpretations, then relay their output back to the user **in the main conversation** for confirmation before handing off to ExecPlan/Plan Mode.
 
 - ✅ Good: Main conversation asks "which of these two did you mean?" before delegating to `architect`.
 - ❌ Bad: Delegate straight to a subagent hoping it will "ask the user" — a context-firewalled subagent's questions never reach the user; it will silently guess, stall, or fabricate an answer.
 
 ## 3. Relationship to judgment-rubrics.md §3
 
-§3 is the **reactive** exit: it fires *during* execution, once "two reasonable interpretations exist and picking the wrong one would waste 30+ minutes." This rule is the **proactive** gate: it fires *before* drafting starts, using the objective 4-field checklist in §1 above. Passing this gate does not exempt you from §3 later — if ambiguity surfaces mid-task anyway, handle it there; don't re-run this checklist mid-task. One exception: a **user-initiated requirement change** mid-task is not covered by this don't-re-run clause — it goes through execplan-lifecycle.md's "Scope Change" procedure (delta-only 4-field check + Scope Baseline version line).
+§3 is the **reactive** exit: it fires *during* execution, once "two reasonable interpretations exist and picking the wrong one would waste 30+ minutes." This rule is the **proactive** gate: it fires *before* drafting starts, using the objective 4-field checklist in §1 above. Passing this gate does not exempt you from §3 later — if ambiguity surfaces mid-task anyway, handle it there; don't re-run this checklist mid-task. One exception: a **user-initiated requirement change** mid-task is not covered by this don't-re-run clause — it goes through execplan-lifecycle.md's "Scope Change" procedure (delta-only 4-field check(白話:只針對這次新增或變動的部分,重新檢查那 4 個問題,不必整份重問一次) + Scope Baseline version line(白話:在計畫文件裡加一行有日期、有你原話的版本紀錄,讓需求變動有歷史可查)).
 
 ## 4. When to Skip
 
