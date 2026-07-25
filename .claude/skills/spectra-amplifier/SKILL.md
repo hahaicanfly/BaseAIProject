@@ -1,6 +1,6 @@
 ---
 name: spectra-amplifier
-description: Strengthens a thin requirements description or PRD draft into a complete spec where every requirement carries verifiable acceptance criteria; triggers when the user wants to strengthen a spec or mentions "spectra-amplifier" "acceptance criteria".
+description: Strengthens a thin requirements description or PRD draft into a complete spec where every requirement carries verifiable acceptance criteria; triggers when the user wants to strengthen a spec or mentions "spectra-amplifier" "acceptance criteria". Plain-language: 這份規格寫得不夠仔細、每一條都要補上驗收標準(已有草稿要加強,不是從零開始想新東西) / "this draft is too thin, every item needs acceptance criteria filled in" (strengthening an existing draft, not dreaming up something from a blank page).
 ---
 
 # Skill: spectra-amplifier

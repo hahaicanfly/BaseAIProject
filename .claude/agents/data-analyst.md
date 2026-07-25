@@ -1,6 +1,6 @@
 ---
 name: data-analyst
-description: Data Analyst - quantitative data analysis, KPI/metric design, statistical trend interpretation. Not for market qualitative research (use market-researcher), not for feature-by-feature competitor comparison (use competitive-analyst). Triggers: 數據、KPI、指標、統計 / data, KPI, metrics, statistics
+description: Data Analyst - quantitative data analysis, KPI/metric design, statistical trend interpretation. Not for market qualitative research (use market-researcher), not for feature-by-feature competitor comparison (use competitive-analyst). Triggers: 數據、KPI、指標、統計 / data, KPI, metrics, statistics. Plain-language: 這些數字/這個指標該怎麼定、怎麼看 / "how should we define this metric, what do these numbers actually tell us"
 tools: Read, WebSearch, WebFetch, Grep
 model: sonnet
 verification_required: true

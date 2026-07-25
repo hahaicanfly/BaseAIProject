@@ -6,6 +6,10 @@
 
 ---
 
+> **Plain language first**: every step below can be triggered just by describing what you need in your own words — you don't need to memorize any command syntax. Wherever this doc shows `@agent`/slash syntax (e.g. `@uiux-agent`, `/ui-ux-pro-max`), treat it as an **optional shortcut**, not a requirement.
+
+---
+
 ## Workflow Overview
 
 ```
@@ -35,7 +39,7 @@
 Confirm information architecture and layout structure — **no visual details involved**.
 
 ### Owner
-`@uiux-agent` or `/ui-ux-pro-max`
+Just say something like "help me sketch a wireframe for [screen]" and the agent picks it up from there. (Advanced/optional shortcut: `@uiux-agent` or `/ui-ux-pro-max`)
 
 ### Input
 - User requirements description
@@ -68,7 +72,7 @@ User replies "OK" or explicitly approves the wireframe.
 Review the wireframe from a designer's perspective, identify issues, and propose alternatives.
 
 ### Owner
-`@uiux-agent` or `/frontend-design`
+Just say something like "critique this wireframe" or "what's wrong with this design" and the agent takes it from there. (Advanced/optional shortcut: `@uiux-agent` or `/frontend-design`)
 
 ### Input
 - Phase 1 wireframe
@@ -185,13 +189,19 @@ Agent: ✅ Critique approved, moving to the implementation phase...
 
 ### Start a UI Task
 
+Just say something like "help me design a login screen" — the agent will automatically start from Phase 1.
+
+(Advanced/optional shortcut — the same effect via slash-style invocation:)
+
 ```
 @uiux-agent please help me design [screen name]
 ```
 
-The agent will automatically start from Phase 1.
-
 ### Skip Critique (emergencies only)
+
+In a genuine emergency, just say something like "skip the critique this time, go straight to implementation."
+
+(Advanced/optional shortcut:)
 
 ```
 @uiux-agent skip critique, implement directly
@@ -210,7 +220,7 @@ The agent will automatically start from Phase 1.
 **A**: For minor tweaks (spacing, color), use [Prompt 6: UI Polish](prompt-templates.md#prompt-6-ui-polish-fine-tuning) directly. If it involves layout changes, the three-phase flow is required.
 
 ### Q: Can I do the critique myself?
-**A**: Yes, but it's recommended to let `@uiux-agent` review from a third-party perspective — it catches blind spots more easily.
+**A**: Yes, but it's recommended to bring in a third-party perspective — it catches blind spots more easily. Just say something like "review this design from a third-party perspective" (advanced/optional shortcut: `@uiux-agent`).
 
 ---
 
