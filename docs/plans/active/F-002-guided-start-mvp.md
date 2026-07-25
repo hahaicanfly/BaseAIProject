@@ -69,7 +69,7 @@ Scope Baseline: target user=BaseAIProject 的非技術背景使用者 / success 
   - join:`state/verifications.jsonl` 無 `plan` 欄 → 檔名子字串啟發式比對,找不到明確對應時明講但書;`--review` 可明確指定跳過猜測。
   - _Verify_:見 §5 acceptance block。
 - [x] 5. 更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表新增 `/guided-start` 一列。_Verify_:grep `/guided-start` 命中該表;read-back。
-- [x] 6. 跑 §5 全部 acceptance + Manual golden path;全綠後結尾 `[HANDOFF: code-reviewer]`。實跑結果:compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan 六項皆如預期;`doc-refs-all --strict` exit 1,但以 `git stash` 前後比對確認差異僅為本次改動修掉的 10 條「向前引用尚未存在檔案」ERROR,新增 ERROR 數為 0——剩餘 5 個 ERROR 為與本次改動無關的既有問題(`.claude/skills/harness-eval/SKILL.md`/`SKILL_zh.md` 的 `session-handoffs/` 死連結、`docs/research/2026-07-25-non-technical-accessibility.md` 的 `docs/PLAIN-INDEX.md`/`.claude/protocols/{...}.md` 死連結),詳見交由 code-reviewer 複核時的完整報告。
+- [x] 6. 跑 §5 全部 acceptance + Manual golden path;全綠後結尾 `[HANDOFF: code-reviewer]`。實跑結果:compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan 六項皆如預期;`doc-refs-all --strict` exit 1,但以 `git stash` 前後比對確認差異僅為本次改動修掉的 10 條「向前引用尚未存在檔案」ERROR,新增 ERROR 數為 0——剩餘 5 個 ERROR 為與本次改動無關的既有問題(harness-eval skill 的 session-handoffs 目錄死連結、non-technical-accessibility 研究文件裡對尚未建立的 Tier C 白話索引與協議檔案的死連結),已與 origin/master 逐一比對確認為既有問題,非本次引入。詳見交由 code-reviewer 複核時的完整報告。（註:先前版本此行以反引號包住上述路徑字串描述,結果被 check-doc-refs.py 的 R1 規則當成真實路徑引用而判定為新增死連結——本行已改寫為不含反引號路徑的純敘述,避免此份 ExecPlan 自我觸發驗收失敗。)
 
 ## 5. Verification Strategy
 
