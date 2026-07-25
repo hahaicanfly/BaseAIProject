@@ -16,8 +16,8 @@ Before asking the user anything, check `docs/plans/active/` for `F-*.md` files.
 
 1. Echo back, in one plain sentence, what you understood the user wants — so a misunderstanding surfaces immediately instead of after a plan is drafted.
 2. Read `.claude/rules/clarify-first.md` §1 **right now** (its current text, not a memorized summary) and check the request against its 4-field checklist: target user, success metric, non-goals/boundaries, trigger condition. This command does not maintain its own copy of that checklist — it re-reads the rule file live so it can never drift out of sync with it.
-3. If 2 or more of those 4 fields are genuinely missing, ask about them — but batch it into 1-2 short questions per round (via `AskUserQuestion` if available, plain text otherwise), and never re-ask about something the user already told you in this conversation.
-4. While gathering, also read `.claude/rules/plan-first.md`'s Exceptions list (its current text). If the request already and obviously falls under an Exception (single file < 20 lines, formatting-only, an already-located bug fix, or the user explicitly said "just do it") → skip Step 3 entirely and go straight to executing the task directly. Say so explicitly, one sentence, citing which Exception applies.
+3. Apply clarify-first.md §1's current signal for whether to stop and ask (this command holds no copy of that threshold — read it fresh each time). If it says to ask, batch the missing fields into 1-2 short questions per round (via `AskUserQuestion` if available, plain text otherwise), and never re-ask about something the user already told you in this conversation.
+4. While gathering, also read `.claude/rules/plan-first.md`'s Exceptions list **live** (this command holds no copy of that list either). If the request already and obviously falls under one of its current Exceptions → skip Step 3 entirely and go straight to executing the task directly. Say so explicitly, one sentence, citing which Exception applies — quoting it from the file you just read, not from memory.
 5. Otherwise, once the 4 fields are adequately covered (or the user has confirmed there's nothing more to add), move on to Step 3.
 
 ## Step 3: Route through CLAUDE.md's Decision Tree Before Acting
@@ -27,7 +27,7 @@ This is the only judgment call this command makes, and it is not really this com
 1. Read the live text of `CLAUDE.md`'s "Decision Tree Before Acting" section right now, in full — not a paraphrase, not a memory of what it said last time you read it.
 2. Apply its numbered criteria (0-5) to the gathered request exactly as written there. This command holds no routing table, no threshold list, and no shortcut copy of that tree — it only translates the tree's own output into a plain-language handoff for the user.
 3. Hand control to whichever branch the Decision Tree names — draft an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`, per `.claude/protocols/execplan-lifecycle.md`), enter Plan Mode, or execute the task directly — and say in one sentence which branch was chosen and why, quoting the matching criterion.
-4. Once control is hand off, this command's job is done for this pass — it does not stay in the loop watching the work happen, and does not re-run this checklist mid-task (that is `judgment-rubrics.md` §3's job, not this command's).
+4. Once control is handed off, this command's job is done for this pass — it does not stay in the loop watching the work happen, and does not re-run this checklist mid-task (that is `judgment-rubrics.md` §3's job, not this command's).
 
 ## Step 4: Translate acceptance evidence into plain language
 
