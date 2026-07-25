@@ -2,7 +2,7 @@
 
 | Field | Value |
 |------|-----|
-| Status | in_progress |
+| Status | review |
 | Owner Agent | dev (main conversation) |
 | Branch | feat/guided-start-mvp |
 | Created | 2026-07-25 |
@@ -99,12 +99,15 @@ doc-refs-all: python3 scripts/check-doc-refs.py --all --strict
 - [2026-07-25 00:00] main conversation(dev):plan drafted via pm → architect → plan-reviewer pipeline(Workflow tool),assembled into this file,pending human approval(Phase 3 gate).
 - [2026-07-26 00:00] main conversation(dev):使用者核准(Phase 3 human approval gate passed),開 `feat/guided-start-mvp` 分支,建立 `state/feature-list.json` 骨架(F-002, in_progress),進入 Phase 4 實作。
 - [2026-07-26 00:30] dev(worktree-isolated agent, worktree-agent-aa389e2d2f5398d37):完成 §4 Step 1-6。新增 `.claude/commands/guided-start.md`、`agent_docs/zh/commands/guided-start.md`、`scripts/translate-acceptance.py`;更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表(commit `6e28dae`)。§5 acceptance block 六項全綠(compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan);`doc-refs-all --strict` exit 1 但經 `git stash` 前後比對確認本次改動淨新增 ERROR 為 0(修掉 10 條、剩 5 條與本次無關的既有死連結)。Manual G1-G6 golden path(含 `--review` 兩種既有 VERDICT 格式、空 jsonl 優雅降級、唯讀性驗證)全數人工核對通過。`[HANDOFF: code-reviewer]`。
+- [2026-07-26 01:00] main conversation(dev):獨立 fresh-context 驗收(非實作者)發現 §6 本行先前版本用反引號包住 `session-handoffs/`、`docs/PLAIN-INDEX.md` 描述,自我觸發 `check-doc-refs.py` R1 誤判為新增死連結;已改寫為純敘述(commit `2305007`),重跑 `check-doc-refs.py --all --strict` 確認淨新增 ERROR 歸零(僅存 3 個與本次無關、經 `git diff origin/master` 核實屬既有問題的 ERROR),同一驗收 agent 二次確認可交付。
+- [2026-07-26 01:15] code-reviewer 完成 Phase 6/8 審查,依 review-protocol.md 格式產出報告:Conditional Pass,2 項 Warning(見 DEC-4)。dev 修正後(commit `54b477d`)請同一 reviewer 做 diff-only 複核,確認無新問題,結論更新為 Pass,`[HANDOFF: human-pr-review]`。狀態轉 `review`,準備開 PR(Phase 9)。
 
 ## 7. Decision Log
 
 - DEC-1:採縮小版 `/guided-start`(需求收集 + 驗收白話摘要),不重寫人審調整/確認執行,因為重新實作會產生第二條治理路由來源、與 `plan-first.md`/`execplan-lifecycle.md` 既有判準分裂風險。使用者於 Plan Mode 階段以 AskUserQuestion 核准此範圍(2026-07-25)。
 - DEC-2:Step 0 採自動偵測(而非要求使用者明講)是否接續進行中的 ExecPlan,使用者於 Plan Mode 階段核准(2026-07-25)。
 - DEC-3:`translate-acceptance.py` exit code 恆為 0(格式轉換工具,非判定閘門),避免使其看起來擁有裁決權。
+- DEC-4:code-reviewer 首輪審查(2026-07-26)判定 Conditional Pass,2 項 Warning——Step 1 point 3-4 照抄 `clarify-first.md` 門檻數字與 `plan-first.md` Exceptions 清單內容(與本指令「不新增治理判斷」的設計承諾矛盾)、`agent_docs/zh/AI-TEAM-REGISTRY.md` Commands 表漏同步新增 `/guided-start` 一列。commit `54b477d` 修正兩處(改為「即時套用當下判定,不持有副本」措辭 + 補齊中文列),經 diff-only 複核(`git diff 2305007..54b477d`)確認判準文字已移除、Step 結構(0/1/3/4 + References)未破壞、中文列格式與既有列一致,結論更新為 **Pass**。
 
 ## 8. Open Questions
 
