@@ -2,12 +2,12 @@
 
 | Field | Value |
 |------|-----|
-| Status | review |
+| Status | done |
 | Owner Agent | dev (main conversation) |
 | Branch | feat/guided-start-mvp |
 | Created | 2026-07-25 |
 | Last Updated | 2026-07-26 |
-| Linked PR | (filled in at merge time) |
+| Linked PR | #11 |
 
 ## 1. Goal
 
@@ -101,6 +101,7 @@ doc-refs-all: python3 scripts/check-doc-refs.py --all --strict
 - [2026-07-26 00:30] dev(worktree-isolated agent, worktree-agent-aa389e2d2f5398d37):完成 §4 Step 1-6。新增 `.claude/commands/guided-start.md`、`agent_docs/zh/commands/guided-start.md`、`scripts/translate-acceptance.py`;更新 `agent_docs/AI-TEAM-REGISTRY.md` Commands 表(commit `6e28dae`)。§5 acceptance block 六項全綠(compile/fixture-acceptance/fixture-review/fixture-json/negative-graceful/doc-refs-plan);`doc-refs-all --strict` exit 1 但經 `git stash` 前後比對確認本次改動淨新增 ERROR 為 0(修掉 10 條、剩 5 條與本次無關的既有死連結)。Manual G1-G6 golden path(含 `--review` 兩種既有 VERDICT 格式、空 jsonl 優雅降級、唯讀性驗證)全數人工核對通過。`[HANDOFF: code-reviewer]`。
 - [2026-07-26 01:00] main conversation(dev):獨立 fresh-context 驗收(非實作者)發現 §6 本行先前版本用反引號包住 `session-handoffs/`、`docs/PLAIN-INDEX.md` 描述,自我觸發 `check-doc-refs.py` R1 誤判為新增死連結;已改寫為純敘述(commit `2305007`),重跑 `check-doc-refs.py --all --strict` 確認淨新增 ERROR 歸零(僅存 3 個與本次無關、經 `git diff origin/master` 核實屬既有問題的 ERROR),同一驗收 agent 二次確認可交付。
 - [2026-07-26 01:15] code-reviewer 完成 Phase 6/8 審查,依 review-protocol.md 格式產出報告:Conditional Pass,2 項 Warning(見 DEC-4)。dev 修正後(commit `54b477d`)請同一 reviewer 做 diff-only 複核,確認無新問題,結論更新為 Pass,`[HANDOFF: human-pr-review]`。狀態轉 `review`,準備開 PR(Phase 9)。
+- [2026-07-26 02:00] main conversation(dev):PR #11 開出、CI 四項全綠(execplan-lint/placeholder-gate/py-compile/secret-scan),使用者確認合併(2026-07-26T01:58:36Z)。Phase 10 歸檔:狀態轉 `done`,§8/§9 更新,`state/feature-list.json` 同步,檔案自 `docs/plans/active/` 移至 `docs/plans/completed/`。`[HANDOFF: done]`。
 
 ## 7. Decision Log
 
@@ -111,10 +112,11 @@ doc-refs-all: python3 scripts/check-doc-refs.py --all --strict
 
 ## 8. Open Questions
 
-- Q1:`state/feature-list.json` 目前不存在(state/ 下無此檔)。Phase 4 開分支時依 `docs/plans/PLANS.md` §5 慣例需新增/更新此 ledger 條目,§4 未列出建檔步驟——留待 Phase 4 執行時視情況建立最小骨架,不在此次 Phase 1-3 起草階段處理。
+- Q1(resolved 2026-07-26):`state/feature-list.json` 已於 Phase 4 開分支時建立最小骨架(F-002 條目),Phase 10 歸檔時同步標記 done。
+- Q2:完整六階段的 `/guided-start`(人審調整、確認執行兩段,含確認短語錯誤復原機制)是否值得投入——留待這次縮小版的實際使用回饋出來後,由人類決定是否開新 ExecPlan。
 
 ## 9. Handoff Manifest
 
-- Next agent: 使用者(human reviewer,Phase 3 approval gate)
-- Required reading before resuming: 本檔全文;`docs/research/2026-07-25-non-technical-accessibility.md` §3-4;已核准的 Plan Mode 計畫(`/Users/a17/.claude/plans/mellow-pondering-sparkle.md`)
-- Current state marker: [HANDOFF: human-approval]
+- Next agent: none(PR #11 已合併,ExecPlan 歸檔至 `docs/plans/completed/`)
+- Required reading before resuming(若日後要做完整六階段擴充): 本檔全文;`docs/research/2026-07-25-non-technical-accessibility.md` §3-4 Tier B/C
+- Current state marker: [HANDOFF: done]
