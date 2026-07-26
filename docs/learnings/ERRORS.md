@@ -67,6 +67,7 @@
 - 情境:harness-gates 首次實跑兩個 job 全掛——secret-scan 的 print-洩漏正則命中工作流自己的 `print("secret-scan: FAIL")`(job 名含 secret);placeholder-gate 的天真 `{{` 匹配命中 Actions 表達式語法、佔位符「偵測器」的字面字串、文件反引號引用;修復時註解裡寫了字面空表達式,又造成 workflow 解析 0 秒失敗(一般 YAML 驗證器驗不出,只有 Actions 表達式層會拒絕)
 - 教訓:(a) 內容掃描類閘門設計時先問「這條規則掃到自己的實作/文件引用時會怎樣」,豁免面(路徑範圍、code-span 剝除、語法前綴)要跟規則一起設計;(b) 修 CI 後除了 YAML lint 還要看 Actions 實跑(或用 actionlint),0 秒失敗=workflow 檔問題;(c) 負向測試不可省——豁免加寬後要證明真違規仍會被抓
 - 建議去向:留在 ERRORS;若未來引入 actionlint 可將 (b) 機械化為 CI job
+- Recurred: 2026-07-26 — F-002 guided-start ExecPlan 的 §6 Progress Log 描述「這幾個死連結是既有問題」時,把 `session-handoffs/`、`docs/PLAIN-INDEX.md` 這類字串包在反引號裡當範例引用,結果 `scripts/check-doc-refs.py` 的 R1 規則把它們當成真實路徑引用,平白造出 2 個新 ERROR,讓實作者「淨新增 ERROR = 0」的自我報告變成假結論。修法同上(b):敘述死連結範例時避免用會被 R1 規則當真的反引號路徑語法,改用純文字描述。這是同一失效家族第三次出現(前兩次為 harness-gates CI 首跑、telemetry harvester 誤收自身引用標記),值得列入 §6 標準 Skill/Agent/Rule 品質閘門考慮是否該有通用「豁免引用性內容」檢查項。
 
 <!-- harvest:d62918f522 -->
 - [2026-07-23T14:29:56+0000] [PROTOCOL_VIOLATION] **subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker**
@@ -105,7 +106,7 @@ Criterion 5 is a mechanical literal-existence check and one of its five sub-path
 - ↳ 2026-07-23 使用者於對話中授權修復,已落地:harvest_telemetry 掃描前剝除 code span/fenced block,另過濾「|」後模板尾段(<3 字母數字視為範例)。沙盒煙霧測試:新版真實事件 2/2 保留、引用/模板事件 3/3 全擋;HEAD 基準版重現 5 筆(含 3 污染)。本地帳本污染首筆已清除
 
 <!-- harvest:0eae05c6d0 -->
-- [2026-07-24T08:53:20+0000] [PR_RETRO] **本 session 有 5 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-25T16:53:59+0000] [PR_RETRO] **本 session 有 13 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: f5a5eb32-ebfb-4a8c-93c4-5cb175e899a9
   ↳ 條目已遷移至 per-session 穩定 hash(原 479f0ed722 含 commit 數);此後同 session 的 commit 數成長只就地更新本條,不再新增條目
 
