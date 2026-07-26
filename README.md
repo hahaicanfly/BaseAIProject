@@ -4,9 +4,29 @@ https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
 
 > English | [繁體中文](README_zh.md)
 
+## New to Command Lines? Start Here First
+
+BaseAIProject is a rulebook plus safety-net setup that lets an AI coding assistant build software reliably, with far less need for you to supervise every step.
+
+**Don't know how to type commands?**
+Just tell Claude Code what you want, in your own words — if that's too vague, it will ask you a question or two first, and it won't surprise you with a technical action you don't understand. You can also type `/guided-start` and describe your goal in plain language — that's an alternate on-ramp alongside the three steps below, it doesn't replace them.
+
+**What will actually happen, step by step:**
+1. Fill in a few basic facts about your project (the technical version calls this filling in "placeholders" — the layer that comes before ExecPlan/Plan Mode even starts).
+2. Turn on its own built-in safety checks (the technical version calls these "hooks" — think of them as an automatic seatbelt).
+3. Run one small 30-minute task through the whole flow first, so you see it work with your own eyes before relying on it for real — when the technical version has to decide "is this small enough to just do, or big enough that it needs a plan you approve first," that plan is called ExecPlan or Plan Mode here (don't know those two words? see the one-page crib sheet at `docs/PLAIN/claude-md-crib-sheet.md`).
+
+**How do you know it actually worked?**
+Every step ends with a fixed three-line report: what was done / what happens next / what to watch out for. Every line links to a real file — it's never just a claim.
+
+**Something went wrong, or you're stuck?**
+Just describe what you're seeing, in your own words — pasting the error message works fine too. It will stop and ask you whenever something is uncertain or high-risk, instead of guessing.
+
+Comfortable with a terminal and want the exact commands? Keep reading — the section right below is the same steps written precisely for developers.
+
 ## What This Is (30-Second Version)
 
-BaseAIProject is a directly-forkable **Claude Code AI development governance template**: it turns "how to delegate, how to verify, how to guard against failure, how to accumulate lessons" into institutional files — 7 always-on rules, 14 specialized agents, 17 trigger-based skills, 7 guard hooks, 4 mechanical gate scripts with a matching CI workflow, and one lessons pipeline — so AI can produce stable, verifiable, non-runaway output with minimal human intervention.
+BaseAIProject is a directly-forkable **Claude Code AI development governance template**: it turns "how to delegate, how to verify, how to guard against failure, how to accumulate lessons" into institutional files — 7 always-on rules, 14 specialized agents, 17 trigger-based skills, 7 guard hooks, 5 scripts in scripts/ (4 mechanical gates + 1 read-only plain-language translator) with a matching CI workflow, and one lessons pipeline — so AI can produce stable, verifiable, non-runaway output with minimal human intervention.
 
 **Three steps to get started**:
 
@@ -14,7 +34,7 @@ BaseAIProject is a directly-forkable **Claude Code AI development governance tem
 2. **Activate the guardrails**: `chmod +x .claude/hooks/*.py`, then run the smoke tests per `.claude/protocols/harness-maintenance.md` §4 (test both the block and pass scenarios)
 3. **Canary acceptance**: Run a 30-minute small task through the full flow per `docs/harness/NEW-PROJECT-VALIDATION.md` (branch → plan → delegate → review → write lessons back); once it all passes, it's ready for real use
 
-Don't know how to run commands? Just paste this to Claude Code: "Help me finish project initialization — you handle the first two steps."
+Prefer a plain-language walkthrough of these same steps? See the section above.
 
 Language convention: institutional files that AI reads are always the **English canon**; the Traditional Chinese human-facing version lives in a `_zh`-suffixed file in the same directory, or mirrored under `agent_docs/zh/`. The full introduction follows below.
 
@@ -49,18 +69,19 @@ AI-led development has three major failure modes, each with a corresponding phys
 | Hooks | 7 + shared library | 1 enforce (exit 2, tested for real interception) + 6 sentinels |
 | Always-on Rules | 7 (`always: true`) | Dispatch, judgment criteria, clarify-first, security, cost, worktree, plan-first (modularity has been demoted to non-always-on → `agent_docs/`) |
 | Protocols | 5 | ExecPlan lifecycle, handoff markers, review SOP, harness maintenance, (1 unwired draft) |
-| Mechanical Gates | 4 scripts + 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status; `harness-gates.yml` re-checks every PR (py-compile, secret-scan, execplan-lint, placeholder-gate) |
-| State Ledgers | 5 JSONL ledgers | commits / delegations / verifications / rule-events / metrics-monthly — delegations, acceptance outcomes, and rule hit-rates survive session context (schema: `state/SCHEMA.md`) |
+| Mechanical Gates | 5 scripts (4 gates + 1 translator) + 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status / translate-acceptance (read-only, always exit 0, not a gate); `harness-gates.yml` re-checks every PR (py-compile, secret-scan, execplan-lint, placeholder-gate) |
+| State Ledgers | 8 top-level JSONL ledgers + 2 sub-dirs | commits / delegations / hook-events / retro-hashes / rule-events / token-usage / tool-calls / verifications, plus `state/acceptance/` and `state/session-handoffs/` — delegations, acceptance outcomes, and rule hit-rates survive session context (schema: `state/SCHEMA.md`) |
 | Knowledge System | 5 layers | Lessons / hard rules / ADRs / session snapshots / native memory, each with its own write/read permissions and flow rules |
 
 ## The Six Subsystems
 
 ### 1. Command and Dispatch Layer
 
-- **`CLAUDE.md` (87-line routing hub)**: Canonical hierarchy (order of trust when documents conflict), pre-action decision tree (ExecPlan vs. Plan Mode vs. do it directly vs. acceptance criteria can't be mechanized → hand to human choice), hard-guardrail summary, document map. Exceeding 100 lines triggers mandatory trimming.
+- **`CLAUDE.md` (90-line routing hub)**: Canonical hierarchy (order of trust when documents conflict), pre-action decision tree (ExecPlan vs. Plan Mode vs. do it directly vs. acceptance criteria can't be mechanized → hand to human choice), hard-guardrail summary, document map. Exceeding 100 lines triggers mandatory trimming.
 - **`.claude/rules/model-dispatch.md`**: The actually-available model tiers on this machine, the delegation trio (goal & motivation / acceptance criteria / report format — missing any one means don't delegate), escalation/de-escalation path (same model fails twice in a row → escalate once → fails again → circuit-break and ask a human), report contract (≤40 lines, large artifacts get written to file with the path returned), acceptance boundary (FAIL may only be based on mechanically checkable criteria; style opinions go into a non-blocking suggestions column).
 - **`.claude/rules/judgment-rubrics.md`**: Seven sections of observable criteria, each with positive/negative examples — when to escalate, when something actually counts as done (including a gate-softening ban), when to circuit-break and ask (including no-improvement detection: two consecutive rounds with an identical FAIL set triggers a circuit-break), what signals mean you should change course, quality floor, capability limits, a Red Flags rationalization-phrase lookup table ("violating the letter is violating the spirit").
 - **`.claude/templates/delegation-templates.md`**: Six delegation templates — search / implementation / refactor / research / review / fresh-context acceptance — each including a scope declaration (allowed to read / allowed to write / off-limits / termination condition) and a blacklist of destructive commands (no rm / checkout / restore / clean on files outside the assignment).
+- **`.claude/commands/guided-start.md` + `scripts/translate-acceptance.py`**: A guided natural-language on-ramp for non-technical requests (alternate path alongside the Decision Tree, not a replacement) plus a read-only script that translates an ExecPlan/review's acceptance evidence into plain language after the fact.
 
 ### 2. Virtual Team (14 Agents)
 
@@ -94,7 +115,7 @@ The four review-category agents share a unified output format via the `review-pr
 
 Iron rule (from a real production lesson): **any hook addition or modification must be black-box smoke tested** (block scenario expects exit 2, pass scenario expects 0; commands in `harness-maintenance.md` §4) — this project's guard once went unnoticed for months as a "paper guardrail," doubly disabled by missing execute permission and a wrong exit code.
 
-Beyond runtime hooks, four **mechanical gate scripts** (`scripts/`) make claims checkable on demand: `acceptance-run.py` executes an ExecPlan's §5 acceptance block and stores the evidence, `execplan-lint.py` checks ExecPlan structure against the PLANS.md spec, `check-doc-refs.py` verifies every path/section reference in the canon actually exists (dead references are hallucination bait), and `retro-status.py` computes the §5 trim-trigger numbers by their literal definitions. The same checks run on every PR via `.github/workflows/harness-gates.yml` (4 jobs: py-compile, secret-scan, execplan-lint, placeholder-gate).
+Beyond runtime hooks, four **mechanical gate scripts** (`scripts/`) make claims checkable on demand: `acceptance-run.py` executes an ExecPlan's §5 acceptance block and stores the evidence, `execplan-lint.py` checks ExecPlan structure against the PLANS.md spec, `check-doc-refs.py` verifies every path/section reference in the canon actually exists (dead references are hallucination bait), and `retro-status.py` computes the §5 trim-trigger numbers by their literal definitions. The same checks run on every PR via `.github/workflows/harness-gates.yml` (4 jobs: py-compile, secret-scan, execplan-lint, placeholder-gate). A fifth script, `translate-acceptance.py`, sits alongside these four but is not a gate: it is a read-only translator that always exits 0 and only restates acceptance evidence already produced by the four gates above, in plain language; it does not add a new CI job or change the 4-job description above.
 
 ### 5. Knowledge Management (Five Layers; map at `docs/INDEX.md`)
 
@@ -109,6 +130,7 @@ Pitfall hit ──→ ERRORS.md (Pending, auto-harvested by hook + manual append
 ```
 
 Three more layers: `docs/decisions/ADR-*` (architectural decisions, human-approved), `state/session-handoffs/` (automatic PreCompact snapshots), Claude Code's native memory (**only cross-session metrics allowed**; the full text of lessons always goes through ERRORS.md). Maintenance permissions use a red/yellow/green tier system (`harness-maintenance.md`): lessons may be appended anytime, behavioral guidance may be changed after backup, always-on rules and guardrails require asking a human before touching.
+A plain-language derived layer also exists at `docs/PLAIN/` (e.g. the CLAUDE.md crib sheet); it is not a sixth pipeline stage, just a read-only translation of the rule files above — if it ever disagrees with the source file, the source file governs.
 
 ### 6. UI/UX Three-Phase Flow (Optional)
 
@@ -138,10 +160,11 @@ BaseAIProject/
 │   ├── architecture/          # invariants.md (INV-* hard rules), domains.md
 │   ├── decisions/             # ADR-0001 + template
 │   ├── learnings/ERRORS.md    # Lessons pipeline (Pending → Active → invariants)
+│   ├── PLAIN/                 # Plain-language derived layer (crib sheet); canon stays in CLAUDE.md/.claude/rules
 │   └── plans/                 # ExecPlan spec + active/ + completed/
-├── scripts/                   # Mechanical gates: acceptance-run / execplan-lint / check-doc-refs / retro-status
+├── scripts/                   # Mechanical gates: acceptance-run / execplan-lint / check-doc-refs / retro-status + translate-acceptance (read-only translator, not a gate)
 ├── .github/workflows/         # harness-gates.yml CI (py-compile, secret-scan, execplan-lint, placeholder-gate)
-├── state/                     # runtime (gitignored): snapshots, hook events, 5 JSONL ledgers (schema: SCHEMA.md)
+├── state/                     # runtime (gitignored): snapshots, hook events, 8 top-level JSONL ledgers + acceptance/ + session-handoffs/ (schema: SCHEMA.md)
 └── .claude/
     ├── settings.json          # Hook wiring (6 events)
     ├── rules/                 # 7 always-on rules (always: true)
@@ -150,7 +173,7 @@ BaseAIProject/
     ├── protocols/             # lifecycle / handoff / review / maintenance
     ├── templates/             # delegation templates, init.sh environment template
     ├── hooks/                 # 7 hooks + _lib
-    ├── commands/               # /last-word, /techdebt
+    ├── commands/               # /guided-start, /last-word, /techdebt
     └── uiux/                   # UI three-phase flow (optional)
 ```
 
