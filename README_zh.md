@@ -4,9 +4,29 @@ https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
 
 > [English](README.md) | 繁體中文
 
+## 不會打指令？先看這裡
+
+BaseAIProject 是一套規則加防呆機制，讓 AI 寫程式助理能穩定產出，你不必逐步盯著每一個動作。
+
+**不會打指令？**
+直接用你自己的話跟 Claude Code 講你想做什麼——如果講得不夠清楚，它會先問你一兩個小問題，不會用你看不懂的技術動作嚇你一跳。你也可以打 `/guided-start`，用自己的話描述你的目標——這是決策樹外的替代路徑，跟下面三步驟殊途同歸，不會取代它。
+
+**接下來實際會發生什麼事，一步步來：**
+1. 填好你專案的幾項基本資訊（技術版說法是填「佔位符」——這是 ExecPlan/Plan Mode 開始運作之前的那一層）。
+2. 打開它自己內建的安全檢查（技術版說法是「hooks」——想成自動安全帶就好）。
+3. 先跑一個 30 分鐘的小任務，把整個流程走一遍，親眼看到它能用之後再正式依賴它——技術版遇到「這件事規模小到可以直接做，還是大到需要先寫一份計畫給你看過同意」的判斷時，那份計畫在這裡就叫 ExecPlan 或 Plan Mode（不熟這兩個詞?見一頁對照卡 `docs/PLAIN/claude-md-crib-sheet.md`）。
+
+**怎麼知道真的做對了？**
+每一步結束都會用固定的三行報告：做了什麼／接下來是什麼／要注意什麼。每一行都連結到真實檔案，不是空口說白話。
+
+**卡住了,或出了狀況?**
+照實講你看到的狀況就好，用自己的話講（貼錯誤訊息也可以）。遇到不確定或高風險的狀況，它會停下來問你，不會自己亂猜。
+
+習慣用終端機、想看精確指令？繼續往下讀——下面那段用同樣的步驟，寫給開發者看的精確版本。
+
 ## 這是什麼（30 秒版）
 
-BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**：把「怎麼派工、怎麼驗收、怎麼防呆、怎麼累積教訓」寫成制度檔案——7 條常駐規則、14 個專業 agents、17 個觸發式 skills、7 個 guard hooks、4 支機械閘門腳本與對應 CI、一條教訓管線——讓 AI 在最少人工介入下穩定產出、可驗證、不失控。
+BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**：把「怎麼派工、怎麼驗收、怎麼防呆、怎麼累積教訓」寫成制度檔案——7 條常駐規則、14 個專業 agents、17 個觸發式 skills、7 個 guard hooks、scripts/ 下 5 支腳本（4 支機械閘門 + 1 支唯讀白話翻譯器）與對應 CI、一條教訓管線——讓 AI 在最少人工介入下穩定產出、可驗證、不失控。
 
 **三步上手**：
 
@@ -14,7 +34,7 @@ BaseAIProject 是一套可直接 fork 的 **Claude Code AI 開發治理模板**�
 2. **啟用防線**：`chmod +x .claude/hooks/*.py`，照 `.claude/protocols/harness-maintenance.md` §4 跑煙霧測試（block 與 pass 兩情境都要實測）
 3. **Canary 驗收**：用一個 30 分鐘小任務照 `docs/harness/NEW-PROJECT-VALIDATION.md` 走完整流程（分支→計劃→派工→review→教訓寫回），全通即可正式使用
 
-不會打指令?直接把這句貼給 Claude Code:「幫我完成專案初始化,交給它做前兩步」
+想看白話版的同一套步驟?見上面那段。
 
 語言慣例：AI 讀取的制度檔一律為**英文正典**；中文人類版在同目錄 `_zh` 後綴檔或 `agent_docs/zh/` 鏡像。以下為完整介紹。
 
@@ -49,18 +69,19 @@ AI 主導開發的三大失敗模式，各有對應的物理防線：
 | Hooks | 7 個 + 共用庫 | 1 個 enforce（exit 2 實測攔截）+ 6 個 sentinel |
 | 常駐 Rules | 7 條（`always: true`） | 調度、判準、clarify-first、安全、成本、worktree、plan-first（模組化已降非常駐 → `agent_docs/`） |
 | Protocols | 5 份 | ExecPlan 生命週期、交接 marker、review SOP、harness 維護、（1 份未接線草案） |
-| 機械閘門 | 4 支腳本 + 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status；`harness-gates.yml` 對每個 PR 重跑檢查（py-compile、secret-scan、execplan-lint、placeholder-gate） |
-| State 帳本 | 5 份 JSONL 帳本 | commits / delegations / verifications / rule-events / metrics-monthly——派工、驗收結果、規則命中率跨 session 存續（schema：`state/SCHEMA.md`） |
+| 機械閘門 | 5 支腳本（4 支閘門 + 1 支翻譯器）+ 4-job CI | `scripts/` acceptance-run / execplan-lint / check-doc-refs / retro-status / translate-acceptance（唯讀、恆 exit 0、非閘門）；`harness-gates.yml` 對每個 PR 重跑檢查（py-compile、secret-scan、execplan-lint、placeholder-gate） |
+| State 帳本 | 8 份頂層 JSONL 帳本 + 2 個子目錄 | commits / delegations / hook-events / retro-hashes / rule-events / token-usage / tool-calls / verifications，另加 `state/acceptance/` 與 `state/session-handoffs/`——派工、驗收結果、規則命中率跨 session 存續（schema：`state/SCHEMA.md`） |
 | 知識系統 | 5 層 | 教訓／硬規則／ADR／session 快照／原生 memory，各有寫讀權與流動規則 |
 
 ## 六大子系統
 
 ### 1. 指揮與調度層
 
-- **`CLAUDE.md`（87 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
+- **`CLAUDE.md`（90 行路由中心）**：正典層級（文件矛盾時的採信順序）、動手前決策樹（ExecPlan vs Plan Mode vs 直接做 vs 驗收無法機械化→交人選）、硬防線摘要、文件地圖。超過 100 行觸發強制精簡。
 - **`.claude/rules/model-dispatch.md`**：本機實際可用模型檔位、派工三件套（目標動機／驗收條件／回報格式，缺一不派）、升降級路徑（同模型連敗 2 次 → 升級一次 → 再敗 → 熔斷問人）、回報合約（≤40 行、長產物落檔傳路徑）、驗收邊界（FAIL 只准基於可機械檢查條件，風格意見進非阻斷建議欄）。
 - **`.claude/rules/judgment-rubrics.md`**：七節可觀察判準各附正反例——何時升級、何時算真完成（含 gate-softening 禁令）、何時熔斷提問（含無改善偵測：連續 2 輪 FAIL 集合相同即熔斷）、什麼訊號該換路、品質底線、能力極限、Red Flags 合理化話術對照表（「違反字面即違反精神」）。
 - **`.claude/templates/delegation-templates.md`**：搜尋／實作／重構／研究／審查／fresh-context 驗收六份派工模板，含範圍宣告（允許讀／允許寫／禁止觸碰／終止條件）與破壞性指令黑名單（禁對非指派檔案 rm / checkout / restore / clean）。
+- **`.claude/commands/guided-start.md` + `scripts/translate-acceptance.py`**：給非技術需求的引導式白話入口（決策樹外的替代路徑，不取代它），搭配一支事後把 ExecPlan/review 驗收證據翻成白話的唯讀腳本。
 
 ### 2. Virtual Team（14 agents）
 
@@ -94,7 +115,7 @@ sonnet ×10 執行 checklist 與模板化工作：`code-reviewer`（PR gating，
 
 鐵律（來自實戰教訓）：**任何 hook 新增或修改後，必須跑黑箱煙霧測試**（block 情境期望 exit 2、pass 期望 0，指令在 `harness-maintenance.md` §4）——本專案的 guard 曾因無執行權限＋錯誤 exit code 雙重失效而「紙上防線」數月無人發現。
 
-runtime hooks 之外，四支**機械閘門腳本**（`scripts/`）讓宣稱隨時可驗：`acceptance-run.py` 實跑 ExecPlan §5 驗收區塊並存證、`execplan-lint.py` 依 PLANS.md 規格檢查 ExecPlan 結構、`check-doc-refs.py` 驗證正典中每個路徑／節引用真實存在（死引用是幻覺誘餌）、`retro-status.py` 依字面定義計算 §5 精簡觸發線數字。同組檢查經 `.github/workflows/harness-gates.yml` 對每個 PR 重跑（4 jobs：py-compile、secret-scan、execplan-lint、placeholder-gate）。
+runtime hooks 之外，四支**機械閘門腳本**（`scripts/`）讓宣稱隨時可驗：`acceptance-run.py` 實跑 ExecPlan §5 驗收區塊並存證、`execplan-lint.py` 依 PLANS.md 規格檢查 ExecPlan 結構、`check-doc-refs.py` 驗證正典中每個路徑／節引用真實存在（死引用是幻覺誘餌）、`retro-status.py` 依字面定義計算 §5 精簡觸發線數字。同組檢查經 `.github/workflows/harness-gates.yml` 對每個 PR 重跑（4 jobs：py-compile、secret-scan、execplan-lint、placeholder-gate）。第五支腳本 `translate-acceptance.py` 與前四支並列但不是閘門：它是唯讀翻譯器，恆 exit 0，只把前四支閘門已產出的驗收證據翻成白話重述；不新增 CI job，也不改動上述 4-job 描述。
 
 ### 5. 知識管理（五層，地圖見 `docs/INDEX.md`）
 
@@ -109,6 +130,7 @@ runtime hooks 之外，四支**機械閘門腳本**（`scripts/`）讓宣稱隨�
 ```
 
 另三層：`docs/decisions/ADR-*`（架構決策，人核可）、`state/session-handoffs/`（PreCompact 自動快照）、Claude Code 原生 memory（**只准存跨 session 指標**，教訓全文一律走 ERRORS.md）。維護權限採紅黃綠三級（`harness-maintenance.md`）：教訓隨時可 append、行為指引備份後改、常駐規則與防線動之前問人。
+另有一層白話衍生層在 `docs/PLAIN/`（例如 CLAUDE.md 對照卡）；它不算第六層管線，只是把上面規則檔翻成白話的唯讀呈現——若與來源檔案有出入，以來源檔案為準。
 
 ### 6. UI/UX 三階段（可選）
 
@@ -138,10 +160,11 @@ BaseAIProject/
 │   ├── architecture/          # invariants.md（INV-* 硬規則）、domains.md
 │   ├── decisions/             # ADR-0001 + 範本
 │   ├── learnings/ERRORS.md    # 教訓管線（Pending → Active → invariants）
+│   ├── PLAIN/                 # 白話衍生層（對照卡）；正典仍在 CLAUDE.md/.claude/rules
 │   └── plans/                 # ExecPlan 規格 + active/ + completed/
-├── scripts/                   # 機械閘門：acceptance-run / execplan-lint / check-doc-refs / retro-status
+├── scripts/                   # 機械閘門：acceptance-run / execplan-lint / check-doc-refs / retro-status + translate-acceptance（唯讀翻譯器，非閘門）
 ├── .github/workflows/         # harness-gates.yml CI（py-compile、secret-scan、execplan-lint、placeholder-gate）
-├── state/                     # runtime（gitignored）：快照、hook 事件、5 份 JSONL 帳本（schema：SCHEMA.md）
+├── state/                     # runtime（gitignored）：快照、hook 事件、8 份頂層 JSONL 帳本 + acceptance/ + session-handoffs/（schema：SCHEMA.md）
 └── .claude/
     ├── settings.json          # hooks 接線（6 事件）
     ├── rules/                 # 7 條常駐規則（always: true）
@@ -150,7 +173,7 @@ BaseAIProject/
     ├── protocols/             # lifecycle / handoff / review / maintenance
     ├── templates/             # 派工模板、init.sh 環境範本
     ├── hooks/                 # 7 hooks + _lib
-    ├── commands/              # /last-word、/techdebt
+    ├── commands/              # /guided-start、/last-word、/techdebt
     └── uiux/                  # UI 三階段（可選）
 ```
 
