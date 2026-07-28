@@ -29,6 +29,13 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-28] 把「帳本是空的」直接當成「採收器壞了」，差點修一個沒壞的東西
+- 情境：F-003 Phase 0，計畫書步驟 5 寫的是「修復規則遙測管線：`state/rule-events.jsonl` 現為 0 筆，代表標記從未被採收；定位採收器缺口並修復」
+- 錯誤：0 筆是**觀察到的現象**，「採收器壞了」是**未經驗證的推論**，兩者在計畫書裡被寫成同一件事。實際以合格 fixture 做 end-to-end 測試後，`stop-retro-logger.py` 的 `harvest_telemetry` 完全正常，`RULE_FIRED` / `ESCALATION` 都正確入庫。真正的缺口在發射端——模型幾乎不主動輸出這些標記。若照計畫書執行，會去改一個功能正常的 Red-tier hook
+- 附帶教訓：第一次測試用的 fixture 缺 `message.role='assistant'`，harvest 回傳 0，差點被當成「證實壞掉」。**fixture 寫錯造成的假陰性，和真的壞掉，現象一模一樣**——測試失敗時要先驗證 fixture，再下結論
+- 教訓：`LETTER-TO-FUTURE-SESSIONS.md` §I.1 說「不要相信任何未經黑箱測試的防禦」；其鏡像同樣成立——**不要相信任何未經黑箱測試的「壞掉」診斷**。空帳本的成因至少有三種（採收器壞、發射端沒發、輪替清掉），區分它們只需一次 end-to-end 測試
+- 建議去向：留在 ERRORS（判斷型教訓，不易機械化為 invariant）
+
 ### [2026-07-07] 觸發線量測把 CLAUDE.md 一起算入 rules 總量，誤報 663>600 超線
 - 情境：round-4 吸收機制後檢查 harness-maintenance §5 的 rules 600 行觸發線
 - 錯誤：統計指令寫成 `wc -l CLAUDE.md .claude/rules/*.md`，把 84 行的 CLAUDE.md 算進 rules 總量，回報 663>600；實際 rules 只有 579，未破線。使用者基於錯誤數字核可了降級提案（後已重問並確認照做）
