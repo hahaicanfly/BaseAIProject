@@ -1,14 +1,18 @@
 ---
 name: judgment-rubrics
 description: Executable criteria for model escalation, completion definition, circuit-breaking, and quality floor
-always: true
+always: false
 ---
+
+> **Not auto-loaded.** Since F-003 this file is the full-text reference behind the
+> tier packs (`.claude/tiers/`), which are what actually gets injected each session.
+> Read this when a borderline case needs the reasoning or worked examples behind a criterion.
 
 # Judgment Rubrics
 
 *白話:遇到沒把握的決定,先照這裡的判斷準則停下來問你,不要硬做。*
 
-> Always-on rule. Each entry follows the format: **Signal (observable) → Action**, with a positive/negative example.
+> Each entry follows the format: **Signal (observable) → Action**, with a positive/negative example.
 > A signal must be "a fact you can point to in the conversation transcript," not a feeling.
 
 ## 1. When to Escalate the Model

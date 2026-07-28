@@ -48,6 +48,10 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-activation-check.py"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-tier-inject.py"
           }
         ]
       }
@@ -81,6 +85,28 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/stop-retro-logger.py"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/subagent-tier-inject.py"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/tier-drift-check.py"
           }
         ]
       }

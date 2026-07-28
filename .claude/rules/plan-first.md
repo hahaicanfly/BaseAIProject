@@ -1,8 +1,12 @@
 ---
 name: plan-first
 description: Non-trivial tasks must enter Plan Mode first (except ExecPlan scope — see CLAUDE.md decision tree)
-always: true
+always: false
 ---
+
+> **Not auto-loaded.** Since F-003 this file is the full-text reference behind the
+> tier packs (`.claude/tiers/`), which are what actually gets injected each session.
+> Read this when a borderline case needs the reasoning or worked examples behind a criterion.
 
 # Plan First Rule
 

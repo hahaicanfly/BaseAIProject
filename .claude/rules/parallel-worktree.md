@@ -1,8 +1,12 @@
 ---
 name: parallel-worktree
 description: Git worktree isolation rules for multi-agent parallel development
-always: true
+always: false
 ---
+
+> **Not auto-loaded.** Since F-003 this file is the full-text reference behind the
+> tier packs (`.claude/tiers/`), which are what actually gets injected each session.
+> Read this when a borderline case needs the reasoning or worked examples behind a criterion.
 
 # Parallel Worktree Development Rules
 

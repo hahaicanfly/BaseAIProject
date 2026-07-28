@@ -34,23 +34,17 @@ git branch --show-current   # confirm not on master/main before making changes
 
 On conflict: trust per the table above, log the conflict in `docs/learnings/ERRORS.md`, and don't stop to deliberate.
 
-## Decision Tree Before Acting (single entry point)
+## Operating Rules (tier pack, injected each session)
 
-> 不熟悉 ExecPlan / Plan Mode 是什麼?→ 先看 `docs/PLAIN/claude-md-crib-sheet.md` 一頁對照卡
+The criteria you work by — routing, delegation, escalation, when to stop, what counts as done — arrive as a **tier pack** matched to the running model: `.claude/tiers/{strong,mid,light}.md`. Follow the pack; it is the operative version.
 
-0. Scope/requirements unclear (2+ of: target user, success metric, non-goals/boundaries, trigger condition are missing) → clarify first in the main conversation before drafting an ExecPlan or Plan Mode plan (`.claude/rules/clarify-first.md`)
-1. Cross-module / API changes / large-scale refactors → create an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`), **wait for human approval**
-2. Other non-trivial tasks (new features, multi-file changes, file deletion) → propose a plan in Plan Mode, execute after approval
-3. Single file < 20 lines, already-located bug fix, formatting change → do it directly
-4. Acceptance criteria cannot be made mechanical (taste/business judgment) → produce candidates + trade-offs for a human to choose (judgment-rubrics §6); do not enter an implementation loop
-5. Always applies: Read before editing; do not claim completion without verification
+`.claude/rules/*.md` holds the same rules in full with worked examples. Only `security.md` is auto-loaded (every tier); the rest are reference — read one when a borderline case needs the reasoning behind a criterion.
 
-## Standing Rules (auto-loaded from `.claude/rules/`, no need to re-read)
-
-security / model-dispatch (model dispatch & delegation) / judgment-rubrics (escalation·completion·circuit-breaker·path-switch criteria) / clarify-first (proactive scope check before ExecPlan/Plan Mode) / plan-first / parallel-worktree / cost-optimization (modularity demoted from standing → `agent_docs/modularity.md`)
+Tier is **declared, not detected** (no hook can see the model before the first response). Set `HARNESS_TIER` in this project's `.claude/settings.json` `env` block; otherwise it is guessed from `~/.claude/settings.json`, and anything unknown falls back to `light` (full SOP). A mismatch against the real model is caught from the second turn and announced. Details: `.claude/tiers/README.md`.
 
 - Delegation prompt templates: `.claude/templates/delegation-templates.md`
 - How to safely edit harness files: `.claude/protocols/harness-maintenance.md`
+- 不熟悉 ExecPlan / Plan Mode 是什麼?→ `docs/PLAIN/claude-md-crib-sheet.md` 一頁對照卡
 
 ## Hard Guardrails
 

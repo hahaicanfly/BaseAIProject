@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "_purpose": "Which source fragments compose each tier pack. Tiers are cumulative: strong is a prefix of mid, mid is a prefix of light. Adding a fragment to a lower tier never removes it from a higher one.",
+  "_build": "python3 scripts/build-tier-packs.py   (--check to verify packs match sources without writing)",
+  "_core_note": "CLAUDE.md and .claude/rules/security.md are NOT listed here. They stay `always: true` and are loaded by Claude Code itself for every tier; the packs are what gets injected on top.",
+  "packs": {
+    "strong": [
+      ".claude/tiers/src/00-core-criteria.md"
+    ],
+    "mid": [
+      ".claude/tiers/src/00-core-criteria.md",
+      ".claude/tiers/src/10-mid-expansion.md"
+    ],
+    "light": [
+      ".claude/tiers/src/00-core-criteria.md",
+      ".claude/tiers/src/10-mid-expansion.md",
+      ".claude/tiers/src/20-light-expansion.md"
+    ]
+  }
+}

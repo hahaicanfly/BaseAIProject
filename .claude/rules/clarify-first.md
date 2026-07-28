@@ -1,14 +1,18 @@
 ---
 name: clarify-first
 description: Proactive scope/requirement check before entering ExecPlan or Plan Mode — objective signal, not vibes
-always: true
+always: false
 ---
+
+> **Not auto-loaded.** Since F-003 this file is the full-text reference behind the
+> tier packs (`.claude/tiers/`), which are what actually gets injected each session.
+> Read this when a borderline case needs the reasoning or worked examples behind a criterion.
 
 # Clarify First
 
 *白話:資訊不夠清楚時,先停下來問你,不要自己亂猜就開始做。*
 
-> Always-on rule. Complements `judgment-rubrics.md` §3 (reactive circuit-break, fires mid-task) — this rule is **proactive**: it runs *before* you start drafting an ExecPlan or a Plan Mode plan, not after ambiguity is hit while executing. Format follows the `judgment-rubrics.md` convention: **Signal (observable) → Action**, with positive/negative examples.
+> Complements `judgment-rubrics.md` §3 (reactive circuit-break, fires mid-task) — this rule is **proactive**: it runs *before* you start drafting an ExecPlan or a Plan Mode plan, not after ambiguity is hit while executing. Format follows the `judgment-rubrics.md` convention: **Signal (observable) → Action**, with positive/negative examples.
 
 ## 1. When to Stop and Clarify Before Drafting a Plan
 
