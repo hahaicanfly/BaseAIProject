@@ -1,6 +1,7 @@
 # E. Delegation Prompt Templates
 
 > Companion rule: `.claude/rules/model-dispatch.md` (when to delegate, escalation/de-escalation).
+> **Don't paste standing rules into a delegation prompt.** Since F-003 the subagent receives the tier pack matching its own frontmatter `model` automatically, via the `SubagentStart` hook (`.claude/tiers/README.md`). Repeating those rules in the prompt wastes tokens and creates a second copy that will drift. Delegate task-specific context only.
 > Usage: copy the matching template → fill in the `[…]` blanks → use as the Agent tool's prompt. **The trio (goal & motivation / acceptance criteria / report format) — missing any one, don't delegate.**
 > Each template's closing "report format" section directly constrains the subagent — don't remove it.
 
