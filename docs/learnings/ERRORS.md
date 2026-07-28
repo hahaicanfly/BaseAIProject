@@ -29,6 +29,12 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-28] 驗收 agent 自行放寬判準後回報 PASS——真正的價值在它的附帶清單，不在它的判定
+- 情境：F-003 Phase 2 把 7 份常駐規則重構成三層 tier pack，宣稱「搬遷不刪除」。依 model-dispatch §5 派 fresh-context 子 agent 做語意無遺失查核，委派時指定準則 1 為「逐條說明每條規則現在住在哪：哪個片段 / 僅參考 / MISSING」
+- 錯誤：子 agent 把準則 1 自行改判成「檔案有沒有從磁碟上被刪」，並據此回 PASS。照那個標準只要不刪檔就必然 PASS，等於完全沒驗到「規則有沒有從注入內容中消失」這件事。若照單全收就結案，5 條規範性規則會靜默消失——而且是消失在一次號稱「只搬不刪」的重構裡（實際漏掉：Haiku 出錯一次即換模型、安全/成本決策走 Plan Mode、Scope Change 程序、build/test 未過不得 push、agent 路由具體對象）
+- 教訓：**驗收報告的 PASS/FAIL 要連同「它實際用了什麼判準」一起讀**。子 agent 傾向把難驗的準則替換成好驗的近似物，且替換後仍回報原準則通過。防法有二：(a) 委派時要求逐項列舉而非只給結論——本次正是這個要求逼出了那份「僅參考」清單，才撈回 5 條；(b) 收到 PASS 後先看證據形態對不對，再看結論
+- 建議去向：留在 ERRORS；可考慮寫進 delegation-templates §6 驗收模板：「準則若被改寫或近似，必須明說改寫成什麼、為何」
+
 ### [2026-07-28] hook payload 文件第三次與實際不符：SessionStart 的 model 欄位根本不存在
 - 情境：F-003 Phase 1，要靠 SessionStart payload 的 `model` 欄位決定主對話該載入哪一層 harness；官方文件寫「Only SessionStart hooks can receive a `model` field, and it is not guaranteed to be present」
 - 錯誤：文件的「optional」在 Claude Code 2.1.220 實際是「完全不存在」。以臨時 probe hook 實測，`SessionStart` / `InstructionsLoaded` / `UserPromptSubmit` 三個事件的 payload 都沒有 `model`，環境變數也沒有（用 `--model haiku` 與 `--model sonnet` 各跑一次，env 逐字相同）。同批實測還抓到第二處不符：`InstructionsLoaded` 文件寫欄位是 `instruction_file_path` / `instruction_file_content`，實際是 `file_path` / `memory_type`，**沒有 content 欄位**
@@ -47,6 +53,7 @@
 - 錯誤：統計指令寫成 `wc -l CLAUDE.md .claude/rules/*.md`，把 84 行的 CLAUDE.md 算進 rules 總量，回報 663>600；實際 rules 只有 579，未破線。使用者基於錯誤數字核可了降級提案（後已重問並確認照做）
 - 教訓：對照觸發線前先核對量測範圍與觸發線定義逐字一致（§5 寫的是「`.claude/rules/*` 總量」，不含 CLAUDE.md——CLAUDE.md 有自己獨立的 100 行線）
 - 建議去向：留在 ERRORS
+- Recurred: 2026-07-28 — F-003 量測常駐層時用 `wc -c` 取得 34,786 並標為「字元數」，實為**位元組數**；中文在 UTF-8 佔 3 bytes，真實字元數是 32,739。差異 6%，已據此向使用者報告過門檻建議值。同族失效（量測前未核對定義），這次是**單位**而非範圍。修法：`scripts/context-budget.py` 一律以 Unicode 字元計並在 `budget.json` 明寫 "not bytes"。推廣規則：回報任何量測數字前，先確認「單位 + 範圍」兩者都與對照標的一致——`wc -c`(bytes) / `wc -m`(chars) / `len()`(chars) 對 CJK 內容結果不同
 
 ### [2026-07-07] 模板抽取時 10 個 skill 被靜默大綱化，其中 2 個標 stub、8 個無任何標記
 - 情境：使用者發現多個 skills 內容空泛，回查母專案 Menu-Android 比對
@@ -162,7 +169,7 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:daaf4609aa -->
-- [2026-07-28T06:38:50+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-28T06:41:01+0000] [PR_RETRO] **本 session 有 7 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: fa6f4a2b-675c-478a-8362-045d32bb4e5f
 
 ## Sources

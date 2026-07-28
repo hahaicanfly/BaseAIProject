@@ -115,6 +115,7 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 
 - [2026-07-28 --:--] main-conversation 建立 ExecPlan；基線實測：常駐層 = CLAUDE.md 90 行 + rules 7 檔 537 行 = 627 行 / 34,786 **bytes**；agent+skill description 8,722 bytes；`state/rule-events.jsonl` 0 筆；skills 17 個中 14 個為單檔。
 - [2026-07-28 --:--] dev 基線單位修正：初次記錄的 34,786 來自 `wc -c`（位元組），非字元。實測字元數為 **32,739**（中文於 UTF-8 佔 3 bytes）。`context-budget.py` 一律以 Unicode 字元計——對中文而言字元數較接近 token 數。門檻比例實質不變（14,000/32,739 ≈ 43%），Q1 裁決不受影響。
+- [2026-07-28 --:--] dev /last-word 收尾：本 session 完成 Phase 0/1/2 + Phase 3 步驟 18-19，8 個 commit 於 `feat/tiered-harness`（未推送、未開 PR）。教訓兩則歸檔 ERRORS.md Pending Review（驗收 agent 自我放寬判準、bytes/chars 單位誤植併入既有量測條目為 Recurred）。提請人審一項 invariant 候選：常駐層預算上限已由 `context-budget.py` 機械化，可升格 INV-ARC-001（invariants.md 屬 Red tier，未經同意不自行寫入）。
 - [2026-07-28 --:--] dev **獨立查核回報 PASS，但查核本身找出 5 條真實缺漏並已補**。fresh-context 子 agent（Sonnet）逐檔審完 6 份降級規則，判定無刪除、無語意/門檻變更、無死連結、無過時自我描述。惟其準則 1 的判準被自行放寬為「檔案沒被刪」，較委派時指定的「每條規則現在住在哪」寬鬆；實質產出是它列出的 7 條「僅存於參考檔、未進任何 pack」，其中 5 條經覆核屬真實規範性缺漏，已補入對應層：(a) Haiku 出錯一次即換 Sonnet 不重試 → mid；(b) 涉及安全或成本的決策一律走 Plan Mode → strong；(c) 任務中途需求變更走 Scope Change 程序 → strong；(d) build/test 未過不得 push → light；(e) agent 路由具體對象（Explore / general-purpose+sonnet / worktree 批改）→ mid。另修正其指出的自相矛盾：light pack 原本逐字複製 CLAUDE.md 的正典層級表，卻同段寫著「不要把正典表複製到第二個檔案」——改為引用。其餘 2 條（cost-optimization 的 Input Optimization、model-dispatch 的 effort 參數說明）判定維持參考層即可。補完後重建 pack，acceptance 12/12 PASS，strong 244 行/13,420 字元仍在預算內。
 - [2026-07-28 --:--] dev Phase 2 完成 + Phase 3 步驟 18 提前完成。建立三份累加來源片段（core-criteria / mid-expansion / light-expansion）、manifest、`scripts/build-tier-packs.py`（含 `--check` 防止 pack 與來源漂移，實測抓到一次真實漂移）、`.claude/tiers/README.md`；6 份規則檔改 `always: false` 並加註「非自動載入」，三處「Always-on rule」假敘述一併修正；CLAUDE.md「Standing Rules」改寫為「Operating Rules (tier pack)」。三個 hook 接入 settings.json。**量測結果（balanced 模式）**：strong 635 行/33,164 字元 → **243 行/13,035 字元（減 61%）**；mid 314 行/17,682；light 382 行/21,870。原訂搬移 6 檔到 `agent_docs/rules-reference/` 一案否決——實測會打斷約 50 處既有引用，風險高於效益，改為原地降級（DEC-10）。
 - [2026-07-28 --:--] dev 驗證：三個 hook 各自 smoke test 通過（session 5 情境 / subagent 5 情境 / drift-check 7 情境，含非 JSON 與空 stdin 皆 exit 0）；**真實 session 端對端驗證**（巢狀 `claude -p`）確認 pack 確實抵達模型：無宣告時猜測為 strong、`HARNESS_TIER` 宣告優先、`qa-engineer` 子 agent 依自身 frontmatter 取得 mid 而非繼承主對話。acceptance-run 12/12 PASS。
@@ -152,6 +153,9 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 
 ## 9. Handoff Manifest
 
-- Next agent: 人類審核者（lifecycle stage [3]：核准 §1–§5 後才切分支、status 改 in_progress）
-- Required reading before resuming: `docs/plans/active/F-003-tiered-harness.md`（本檔）、`docs/harness/DIAGNOSIS.md` §IV、`.claude/protocols/harness-maintenance.md` §1 與 §4、`CLAUDE.md`「Canon Hierarchy」
-- Current state marker: [HANDOFF: human-review]
+- Next agent: dev（續作 Phase 3 步驟 20-23），完成後轉 code-reviewer
+- Required reading before resuming: `docs/plans/active/F-003-tiered-harness.md`（本檔 §4 Phase 3、§7 DEC-1~11、§8 Q5/Q6）、`.claude/tiers/README.md`（分層機制與已知限制）、`.claude/protocols/harness-maintenance.md` §1 與 §4（Red/Yellow tier 改動程序）
+- 剩餘工作（§4 未打勾者）：步驟 20（拆分 8 個 >150 行 SKILL.md）、步驟 21（AI-TEAM-REGISTRY / INDEX / CLAUDE.md 文件地圖）、步驟 22（全量 read-back，本次已做過一輪並補回 5 條缺漏，Phase 3 完成後需再跑一次）、步驟 23（LETTER §3 交接清單 + ERRORS）
+- 續作前必知：本 session 的改動要**開新 session 才生效**——舊 session 載入的仍是重構前的 7 份常駐規則。續作時應已在新 session，屆時主對話會收到 tier pack，可順便實地檢驗注入品質
+- 環境注意：本機殘留 `HARNESS_TIER=mid`（Phase 1 探測所致）。新 session 若未顯式宣告，預期走 `guessed:settings.json` 路徑；若看到 tier=mid 而非 strong，先查該變數是否仍在環境中
+- Current state marker: [HANDOFF: dev]
