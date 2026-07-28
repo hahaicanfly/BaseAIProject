@@ -29,6 +29,12 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-28] hook payload 文件第三次與實際不符：SessionStart 的 model 欄位根本不存在
+- 情境：F-003 Phase 1，要靠 SessionStart payload 的 `model` 欄位決定主對話該載入哪一層 harness；官方文件寫「Only SessionStart hooks can receive a `model` field, and it is not guaranteed to be present」
+- 錯誤：文件的「optional」在 Claude Code 2.1.220 實際是「完全不存在」。以臨時 probe hook 實測，`SessionStart` / `InstructionsLoaded` / `UserPromptSubmit` 三個事件的 payload 都沒有 `model`，環境變數也沒有（用 `--model haiku` 與 `--model sonnet` 各跑一次，env 逐字相同）。同批實測還抓到第二處不符：`InstructionsLoaded` 文件寫欄位是 `instruction_file_path` / `instruction_file_content`，實際是 `file_path` / `memory_type`，**沒有 content 欄位**
+- 教訓：這是同一失效家族第三次（前兩次：SubagentStop 的 `transcript_path` 實為 `agent_transcript_path`；本次兩處）。**hook payload 的欄位一律以實測為準，文件只當線索**。實測成本很低——一個 20 行的 dump hook + 一次 `claude -p` 巢狀 session 就能定案，遠低於照文件寫完才發現不對的代價。順帶記錄可用來源：transcript JSONL 的 assistant 訊息帶真實 model id 且正確反映 `--model` 覆寫，但要到第一個回應寫入後才存在
+- 建議去向：留在 ERRORS；「新 hook 上線前先 dump 一次真實 payload」已是 harness-maintenance §4 smoke test 的自然延伸，可考慮明文化為檢查項
+
 ### [2026-07-28] 把「帳本是空的」直接當成「採收器壞了」，差點修一個沒壞的東西
 - 情境：F-003 Phase 0，計畫書步驟 5 寫的是「修復規則遙測管線：`state/rule-events.jsonl` 現為 0 筆，代表標記從未被採收；定位採收器缺口並修復」
 - 錯誤：0 筆是**觀察到的現象**，「採收器壞了」是**未經驗證的推論**，兩者在計畫書裡被寫成同一件事。實際以合格 fixture 做 end-to-end 測試後，`stop-retro-logger.py` 的 `harvest_telemetry` 完全正常，`RULE_FIRED` / `ESCALATION` 都正確入庫。真正的缺口在發射端——模型幾乎不主動輸出這些標記。若照計畫書執行，會去改一個功能正常的 Red-tier hook
@@ -154,6 +160,10 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
   https://forum.cursor.com/t/cursor-cli-the-non-interactive-mode-cannot-be-used/143045
   ```
+
+<!-- harvest:daaf4609aa -->
+- [2026-07-28T05:51:04+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: fa6f4a2b-675c-478a-8362-045d32bb4e5f
 
 ## Sources
 - https://lovable.dev/blog/versioning-with-lovable-two-point-zero

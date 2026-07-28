@@ -113,6 +113,7 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 
 - [2026-07-28 --:--] main-conversation 建立 ExecPlan；基線實測：常駐層 = CLAUDE.md 90 行 + rules 7 檔 537 行 = 627 行 / 34,786 **bytes**；agent+skill description 8,722 bytes；`state/rule-events.jsonl` 0 筆；skills 17 個中 14 個為單檔。
 - [2026-07-28 --:--] dev 基線單位修正：初次記錄的 34,786 來自 `wc -c`（位元組），非字元。實測字元數為 **32,739**（中文於 UTF-8 佔 3 bytes）。`context-budget.py` 一律以 Unicode 字元計——對中文而言字元數較接近 token 數。門檻比例實質不變（14,000/32,739 ≈ 43%），Q1 裁決不受影響。
+- [2026-07-28 --:--] dev Phase 1 步驟 7-10 完成（實測法：臨時 probe hook 掛 SessionStart/SubagentStart/UserPromptSubmit/InstructionsLoaded + 巢狀 `claude -p` 觸發，測畢已完全移除、settings.json 還原無殘留）。結論：主對話模型在第一次回應前不可觀測（三事件 payload 與 env 皆無 `model`）→ DEC-4；子 agent 偵測可行（`agent_type` 實測有效）→ DEC-9。建立 `.claude/tiers/model-map.json`，`--self-test` 5 checks 0 failed。步驟 11 驗收與 Phase 2 阻塞於 §8 Q7 人裁。
 - [2026-07-28 --:--] dev Phase 0 步驟 4-6 完成：CLAUDE.md Quick Commands 填入 4 條 harness 自檢指令、產品層 build/test/lint 佔位符保留供 fork 使用；`session-activation-check.py` 警語修正（原句「未填 Quick Commands 前本 repo 沒有任何可執行驗證閘門」在閘門建立後已成假敘述），smoke test 3 情境 exit 0（正常 / 非 JSON / 空 stdin）。步驟 5 假設證偽，見下。
 - [2026-07-28 --:--] dev **Phase 0 發現：遙測管線未壞**。以合格 fixture 對 `stop-retro-logger.py` 做 end-to-end 測試，`RULE_FIRED` 與 `ESCALATION` 皆正確寫入 `rule-events.jsonl`；帳本恆空的成因在發射端而非採收端。測試資料已清除，採收器一行未改。教訓記入 ERRORS.md，後續方案記為 §8 Q6。
 - [2026-07-28 --:--] dev Phase 0 步驟 1-3 完成：切出 `feat/tiered-harness`、feature-list.json 新增 F-003、建立 `.claude/tiers/budget.json`（3 模式）與 `scripts/context-budget.py`。`--self-test` 5 checks 0 failed；`--list-modes` 正常；三個 tier 目前皆解析到同一組 8 檔 627 行 / 32,739 字元（tier pack 尚未建立，屬 Phase 2 前的預期狀態）。
@@ -122,7 +123,8 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 - DEC-1: 採「分層」而非「瘦身」路線——使用者 2026-07-28 裁定模板需同時服務 Haiku/Sonnet 與 Opus/Fable，「等未來基礎模型能力提升才會收斂」。因此弱模型防禦條款一律降級保存，不刪除。
 - DEC-2: tier pack 以 SessionStart hook 的 `additionalContext` 注入，而非新增 `always: true` 規則檔——後者是全域的，機制上無法依模型分流。
 - DEC-3: 偵測失敗一律 fallback light tier（全量）——漏載規則的風險高於多載規則的 token 成本。官方文件確認 `model` 欄位為 optional，此 fallback 為必要設計。
-- DEC-4: (Phase 1 步驟 8 後填入) tier 偵測來源的最終優先序。
+- DEC-4 (2026-07-28 Phase 1 實測後定案): **主對話 tier 無法偵測，只能宣告；子 agent tier 可以偵測。** 實測（Claude Code 2.1.220，臨時 probe hook + 巢狀 `claude -p`）證實第一次回應前沒有任何管道能得知主對話模型：`SessionStart`、`InstructionsLoaded`、`UserPromptSubmit` 三個事件的 payload 皆無 `model` 欄位，環境變數亦無（haiku 與 sonnet 兩次執行的 env 逐字相同）。官方文件宣稱 SessionStart「optionally includes model」在本版本不成立。另實測 `InstructionsLoaded` 為 context-only、exit code 被忽略，故「依 tier 抑制規則檔載入」亦不可行。唯一可信來源是 transcript 內的真實 model id（正確反映 `--model` 覆寫），但要到第一個 assistant 回應寫入後才存在。→ 架構改為「宣告 + 驗證」，細節見 §8 Q7。
+- DEC-9: 子 agent tier 判定維持偵測式。`SubagentStart` payload 實測為 `{session_id, prompt_id, agent_id, agent_type, hook_event_name}`，`agent_type` 確認可用（實測值 `Explore`），反查 `.claude/agents/<name>.md` frontmatter `model` 的設計成立。此為分層價值最高的一半——弱模型實際上就在子 agent 這端。
 - DEC-5: 預算門檻採**配置檔 + 可切換模式**而非固定驗收值（Q1 裁決）。理由：分層的最適門檻無法先驗得知，需依實際體驗調整；把門檻外部化後，調整不需改程式也不需改 acceptance 區塊。代價是驗收結果依賴 `active_mode`，故 §5 明列門檻來源以免日後誤讀。
 - DEC-6: 白話註解外移 `docs/PLAIN/`，但 light/mid pack 保留**引用路徑提示**、strong pack 不保留（Q2 裁決）。理由：非技術使用者的可讀性需求與弱模型的規則需求高度重疊，兩者共用同一 tier；strong tier 的讀者不需要這層鷹架。
 - DEC-7: 遙測修復後**不設觀察期**，直接進 Phase 2（Q3 裁決）。代價：無法以「哪條規則真的改變過行為」的資料驅動搬遷取捨，Phase 2 的分層判斷改以「是否為每個 session 第一個決策所需」的既有判準為準（LETTER §I.3）。遙測資料轉為事後驗證用途。
@@ -134,6 +136,10 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 - Q2 (resolved 2026-07-28): 白話註解外移 `docs/PLAIN/`，light/mid tier 保留引用路徑提示 → 見 DEC-6、Phase 2 步驟 15。
 - Q3 (resolved 2026-07-28): 修完遙測直接進 Phase 2，不設觀察期 → 見 DEC-7、Phase 0 步驟 6。
 - Q4 (resolved 2026-07-28): 子 agent 動態分層，以 `SubagentStart` hook 實作 → 見 DEC-8、Phase 3 步驟 18。
+- Q7 (**阻斷 Phase 2，待人裁**, 2026-07-28 Phase 1 實測後): 主對話 tier 既然無法偵測，來源要選哪一種？三個候選：
+  - **(a) 明確宣告 + 事後驗證（建議）**：優先序 = 專案 `settings.json` 的 `env` 區塊宣告（實測 env 區塊確實會傳進 hook 程序）→ `~/.claude/settings.json` 的 `model` 欄位（盡力猜測，遇 `--model` 覆寫會猜錯）→ light。另加一個 `UserPromptSubmit` hook：第二輪起 transcript 已有真實 model id，比對宣告值，不符就注入更正提示（「你被載入 strong pack，但你實際是 Haiku，請立即讀 `.claude/tiers/light.md`」）。優點：常見情境正確、罕見情境自癒；代價：每輪多一次 hook 執行（可用 per-session 標記在驗證完成後短路）。
+  - **(b) 一律注入 light（最保守）**：完全符合 fail-safe，但強模型永遠付全額 token，等於放棄本計畫的節省目標。
+  - **(c) 純手動宣告，不做驗證**：最簡單，但宣告與現實脫節時無人察覺——正是 `LETTER-TO-FUTURE-SESSIONS.md` §I.1 警告的「文件說有防禦 ≠ 防禦存在」。
 - Q6 (open, 非阻斷, 2026-07-28 Phase 0 發現): 規則遙測的採收器功能正常，但**發射端**失效——模型幾乎不主動輸出 `[RULE_FIRED:]` / `[RULE_SKIPPED:]`，因為該指示只是 `clarify-first.md` §1 與 `model-dispatch.md` §4 的括號附註，既無提醒也無強制。兩條路：(a) 把標記要求寫得更醒目——但那等於往常駐層加料，與本計畫方向直接衝突；(b) 放棄自陳式標記，改由可觀測行為反推（`delegation-ledger.py` 已用 regex 從委派 prompt 反推「三要素」是否齊備，同一手法可用 `AskUserQuestion` 工具呼叫反推 clarify-first 是否觸發）。**本計畫不處理**——超出 F-003 範圍，且 DEC-7 已將遙測定位為事後驗證用途。建議另開 ExecPlan 走 (b)。
 - Q5 (open, 非阻斷): tier 只在 session 開始時決定一次，中途 `/model` 切換不會重新注入（官方機制限制，見 §2）。目前處理方式是寫進文件告知使用者。若日後認為此限制影響實際體驗，可評估以 `UserPromptSubmit` hook 週期性重檢——但那會在每輪對話增加成本，本計畫不採用。
 
