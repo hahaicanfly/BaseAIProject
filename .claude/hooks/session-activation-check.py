@@ -25,7 +25,7 @@ HOOK_NAME = "session-activation-check"
 # (label, repo-relative path, predicate on file text -> unfilled?)
 CHECKS = [
     (
-        "CLAUDE.md Quick Commands build/test/lint 指令未填",
+        "CLAUDE.md 產品層 build/test/lint 未填（harness 自檢指令已就緒）",
         "CLAUDE.md",
         lambda t: "{{fill in" in t,
     ),
@@ -56,7 +56,7 @@ def main() -> int:
         print(
             f"[harness] 未活化槽位 {len(unfilled)} 項: "
             + "；".join(unfilled)
-            + " — 未填 Quick Commands 前，本 repo 沒有任何可執行驗證閘門"
+            + " — 未填的槽位一律視為未活化、直接略過，不要照字面執行也不要自行編造內容"
             "（CLAUDE.md Activation Status）。"
         )
         log_event(HOOK_NAME, "warn", reason="unactivated-slots", count=len(unfilled))

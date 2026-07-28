@@ -13,7 +13,15 @@
 ## Quick Commands
 
 ```bash
-# {{fill in project build/test/lint commands}} ← first must-fill after forking (executable verification commands are the biggest lever on success rate); env bootstrap template: .claude/templates/init.sh.template
+# --- Harness self-check (this template's own gates; always available) ---
+python3 scripts/context-budget.py --tier strong      # always-on context budget (thresholds: .claude/tiers/budget.json)
+python3 scripts/execplan-lint.py docs/plans/active/*.md   # ExecPlan structure
+python3 scripts/check-doc-refs.py                    # dead-reference sweep
+python3 scripts/acceptance-run.py <plan.md>          # run an ExecPlan's acceptance block
+
+# --- Product build/test/lint: {{fill in after forking}} ---
+# Executable verification commands are the biggest lever on success rate.
+# Env bootstrap template: .claude/templates/init.sh.template
 git branch --show-current   # confirm not on master/main before making changes
 ```
 
