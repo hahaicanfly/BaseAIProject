@@ -33,7 +33,7 @@ Run `git branch --show-current` and confirm you are not on master/main. Branch `
 
 ## Parallel work isolation
 
-When several agents or sessions work the same repo at once, each gets its own git worktree — one worktree, one task, one branch, one PR. Never edit the main project directory while operating in worktree mode, and never touch files belonging to another agent's task.
+When several agents or sessions work the same repo at once, each gets its own git worktree — one worktree, one task, one branch, one PR. Never edit the main project directory while operating in worktree mode, and never touch files belonging to another agent's task. **Never push without a passing build and tests.**
 
 ```bash
 git worktree add ../<project>-worktrees/<TASK_ID> -b agent/<TASK_ID> [BASE_BRANCH]
@@ -59,9 +59,6 @@ Lessons go to `docs/learnings/ERRORS.md`. Before appending, search for an existi
 
 ## When documents disagree
 
-1. Model and tool dispatch → `.claude/agents/*.md` frontmatter wins
-2. Review process and output format → `.claude/protocols/review-protocol.md` wins
-3. Agent / skill roster → `agent_docs/AI-TEAM-REGISTRY.md` wins
-4. Git and security hard rules → `docs/architecture/invariants.md` wins
+Resolve by the canon hierarchy in `CLAUDE.md` ("Canon Hierarchy") — it names which file wins for dispatch, review format, rosters, and hard rules. That table is deliberately not reproduced here: a copied canon drifts, which is the very failure the hierarchy exists to settle.
 
-Log the conflict in `ERRORS.md` and move on. Do not stop to deliberate, and do not copy a canonical table into a second file — reference it.
+Log the conflict in `ERRORS.md` and move on. Don't stop to deliberate.

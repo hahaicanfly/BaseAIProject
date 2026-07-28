@@ -1,6 +1,6 @@
 ---
 name: model-dispatch
-description: Model dispatch, the delegation trio, escalation/de-escalation path, verification-not-self-certified (single source of truth)
+description: Model dispatch, the delegation trio, escalation/de-escalation path, verification-not-self-certified (full-text reference behind the tier packs)
 always: false
 ---
 

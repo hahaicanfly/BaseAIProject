@@ -6,7 +6,7 @@ This pack is the operative version. `.claude/rules/*.md` holds the same rules in
 
 ## Before acting
 
-Scope is unclear when 2+ of these are missing: target user, success metric, non-goals, trigger condition. Missing 2+ → clarify in the main conversation before drafting anything. Subagents run context-firewalled and cannot ask the user mid-task, so clarification never happens inside a delegation.
+Scope is unclear when 2+ of these are missing: target user, success metric, non-goals, trigger condition. Missing 2+ → clarify in the main conversation before drafting anything. If the user changes the requirement *mid-task*, that is not a re-run of this check — it goes through the Scope Change procedure in `.claude/protocols/execplan-lifecycle.md`: a delta-only 4-field check on what changed, plus a new dated Scope Baseline line quoting the user. Never rewrite an earlier baseline. Subagents run context-firewalled and cannot ask the user mid-task, so clarification never happens inside a delegation.
 
 Route by blast radius, not by how big the task feels:
 
@@ -14,6 +14,7 @@ Route by blast radius, not by how big the task feels:
 |---|---|
 | Cross-module / API change / large refactor | ExecPlan (`docs/plans/`), human approval required |
 | Other non-trivial work (new feature, multi-file, deletions) | Plan Mode, execute after approval |
+| Any decision involving security or cost | Plan Mode — never "just do it" |
 | Single file <20 lines, located bug fix, formatting | Do it directly |
 | Acceptance can't be made mechanical (taste, business judgment) | Produce candidates + trade-offs, let a human choose |
 

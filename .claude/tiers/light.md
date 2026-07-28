@@ -10,7 +10,7 @@ This pack is the operative version. `.claude/rules/*.md` holds the same rules in
 
 ## Before acting
 
-Scope is unclear when 2+ of these are missing: target user, success metric, non-goals, trigger condition. Missing 2+ → clarify in the main conversation before drafting anything. Subagents run context-firewalled and cannot ask the user mid-task, so clarification never happens inside a delegation.
+Scope is unclear when 2+ of these are missing: target user, success metric, non-goals, trigger condition. Missing 2+ → clarify in the main conversation before drafting anything. If the user changes the requirement *mid-task*, that is not a re-run of this check — it goes through the Scope Change procedure in `.claude/protocols/execplan-lifecycle.md`: a delta-only 4-field check on what changed, plus a new dated Scope Baseline line quoting the user. Never rewrite an earlier baseline. Subagents run context-firewalled and cannot ask the user mid-task, so clarification never happens inside a delegation.
 
 Route by blast radius, not by how big the task feels:
 
@@ -18,6 +18,7 @@ Route by blast radius, not by how big the task feels:
 |---|---|
 | Cross-module / API change / large refactor | ExecPlan (`docs/plans/`), human approval required |
 | Other non-trivial work (new feature, multi-file, deletions) | Plan Mode, execute after approval |
+| Any decision involving security or cost | Plan Mode — never "just do it" |
 | Single file <20 lines, located bug fix, formatting | Do it directly |
 | Acceptance can't be made mechanical (taste, business judgment) | Produce candidates + trade-offs, let a human choose |
 
@@ -81,6 +82,8 @@ The section above states the criteria. This one shows what each looks like when 
 
 "Same subtask" is judged by matching goal and acceptance criteria. Rewording the prompt and re-delegating still counts toward the failure count.
 
+Haiku is the exception to "twice": a tool-call or syntax error **once** means re-delegate straight to Sonnet. Don't retry Haiku on it.
+
 When you escalate, emit `[ESCALATION: <from>-><to>|<task>]` inline so escalation frequency is measurable rather than anecdotal.
 
 ## Clarify-first, concretely
@@ -139,6 +142,8 @@ A plan states: goal, scope (files and modules), numbered steps, risks with mitig
 | Opus | `opus` | Architecture, cross-module refactors, hard debugging |
 | Fable 5 | `fable` | Specially authorised sessions only |
 
+Which agent for which shape of work: repo-wide scans and keyword tracing → `Explore`; web search and documentation research → `general-purpose` with `model: sonnet`; batch edits across 5+ files → delegate with worktree isolation.
+
 Don't assume which model you are mid-conversation — go by behaviour, not self-identification. When Opus solves something with a repeatable pattern, write the pattern down, then de-escalate to Sonnet or Haiku for batch application.
 
 # Guardrails (light tier)
@@ -176,7 +181,7 @@ Run `git branch --show-current` and confirm you are not on master/main. Branch `
 
 ## Parallel work isolation
 
-When several agents or sessions work the same repo at once, each gets its own git worktree — one worktree, one task, one branch, one PR. Never edit the main project directory while operating in worktree mode, and never touch files belonging to another agent's task.
+When several agents or sessions work the same repo at once, each gets its own git worktree — one worktree, one task, one branch, one PR. Never edit the main project directory while operating in worktree mode, and never touch files belonging to another agent's task. **Never push without a passing build and tests.**
 
 ```bash
 git worktree add ../<project>-worktrees/<TASK_ID> -b agent/<TASK_ID> [BASE_BRANCH]
@@ -202,9 +207,6 @@ Lessons go to `docs/learnings/ERRORS.md`. Before appending, search for an existi
 
 ## When documents disagree
 
-1. Model and tool dispatch → `.claude/agents/*.md` frontmatter wins
-2. Review process and output format → `.claude/protocols/review-protocol.md` wins
-3. Agent / skill roster → `agent_docs/AI-TEAM-REGISTRY.md` wins
-4. Git and security hard rules → `docs/architecture/invariants.md` wins
+Resolve by the canon hierarchy in `CLAUDE.md` ("Canon Hierarchy") — it names which file wins for dispatch, review format, rosters, and hard rules. That table is deliberately not reproduced here: a copied canon drifts, which is the very failure the hierarchy exists to settle.
 
-Log the conflict in `ERRORS.md` and move on. Do not stop to deliberate, and do not copy a canonical table into a second file — reference it.
+Log the conflict in `ERRORS.md` and move on. Don't stop to deliberate.

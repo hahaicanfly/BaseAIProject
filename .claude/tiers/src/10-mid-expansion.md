@@ -9,6 +9,8 @@ The section above states the criteria. This one shows what each looks like when 
 
 "Same subtask" is judged by matching goal and acceptance criteria. Rewording the prompt and re-delegating still counts toward the failure count.
 
+Haiku is the exception to "twice": a tool-call or syntax error **once** means re-delegate straight to Sonnet. Don't retry Haiku on it.
+
 When you escalate, emit `[ESCALATION: <from>-><to>|<task>]` inline so escalation frequency is measurable rather than anecdotal.
 
 ## Clarify-first, concretely
@@ -66,5 +68,7 @@ A plan states: goal, scope (files and modules), numbered steps, risks with mitig
 | Sonnet | `sonnet` | Default workhorse: implementation, search, review, research |
 | Opus | `opus` | Architecture, cross-module refactors, hard debugging |
 | Fable 5 | `fable` | Specially authorised sessions only |
+
+Which agent for which shape of work: repo-wide scans and keyword tracing → `Explore`; web search and documentation research → `general-purpose` with `model: sonnet`; batch edits across 5+ files → delegate with worktree isolation.
 
 Don't assume which model you are mid-conversation — go by behaviour, not self-identification. When Opus solves something with a repeatable pattern, write the pattern down, then de-escalate to Sonnet or Haiku for batch application.

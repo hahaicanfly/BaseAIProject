@@ -162,7 +162,7 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:daaf4609aa -->
-- [2026-07-28T05:51:04+0000] [PR_RETRO] **本 session 有 2 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-28T06:38:50+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: fa6f4a2b-675c-478a-8362-045d32bb4e5f
 
 ## Sources
