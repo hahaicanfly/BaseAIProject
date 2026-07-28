@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "_purpose": "Always-on context budget per model tier. Thresholds live here, NOT in scripts or the ExecPlan acceptance block, so they can be retuned from real usage without touching code (F-003 DEC-5).",
+  "_how_to_switch": "Change active_mode to any key under modes, or edit a mode's numbers directly. Run: python3 scripts/context-budget.py --list-modes",
+  "_null_means": "null = no cap for that dimension. light tier is intentionally uncapped: it carries the full weak-model SOP.",
+  "active_mode": "balanced",
+  "modes": {
+    "strict": {
+      "_note": "Aggressive trimming. Use when token cost matters more than guardrail density.",
+      "strong": { "max_lines": 150, "max_chars": 9000 },
+      "mid": { "max_lines": 380, "max_chars": 18000 },
+      "light": { "max_lines": null, "max_chars": null }
+    },
+    "balanced": {
+      "_note": "Default. Targets set from the 2026-07-28 baseline of 627 lines / 32,739 chars (Unicode chars, not bytes).",
+      "strong": { "max_lines": 250, "max_chars": 14000 },
+      "mid": { "max_lines": 450, "max_chars": 24000 },
+      "light": { "max_lines": null, "max_chars": null }
+    },
+    "generous": {
+      "_note": "Use when a forked project adds heavy project-specific standing rules and the trim would cost more than the tokens.",
+      "strong": { "max_lines": 400, "max_chars": 20000 },
+      "mid": { "max_lines": 600, "max_chars": 32000 },
+      "light": { "max_lines": null, "max_chars": null }
+    }
+  }
+}
