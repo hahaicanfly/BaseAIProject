@@ -29,6 +29,13 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-29] 兩個 harness 機制對同一個字串下了相反的要求：hook 要求它存在，CI 閘門禁止它出現
+- 情境：F-003 的 PR #14 開出來後，CI 四個 job 三過一掛，`placeholder-gate` 擋在 `CLAUDE.md:22` 的 `{{fill in after forking}}`
+- 錯誤：**兩邊都沒寫錯，是適用範圍沒有交集**。`placeholder-gate` 的前提是「fork 出去的專案不該新增未填槽位」，這對產品專案完全正確；但 BaseAIProject 自己就是模板，產出未填槽位正是它的本分。更麻煩的是那組大括號是**承重的**——`session-activation-check.py:30` 判斷「產品層 build/test/lint 未填」的方式就是字面檢查 `"{{fill in"`，所以「把大括號拿掉讓 CI 過」會靜默關掉每個 session 的活化提醒。衝突是 17 個 commit 前的 `82b5aeb` 種下的，期間沒有人開 PR，所以到最後一刻才引爆
+- 教訓：**寫防線時要問「這條規則在模板自己身上成不成立」**，不是只問「在使用這個模板的專案上成不成立」。同一個 repo 同時是「規則的作者」和「規則的受檢對象」時，兩種身分的要求可能剛好相反。另一半教訓是關於**耦合**：一個 hook 用字面字串偵測另一份文件的內容，等於在兩個檔案之間建立了一條沒有宣告的依賴——CI 要改那個字串時，沒有任何機制會告訴你 hook 會跟著壞
+- 修法：閘門加一條**窄門豁免**，只放行已文件化的活化槽標記 `{{fill in ...}}`，其餘 `{{` 照擋。負向測試證明豁免沒有過寬：`{{fill in later}} 加上 {{TODO}}` 仍然被抓、`{{fillin}}`（少一個空格）不豁免
+- 建議去向：留在 ERRORS。可機械化的部分是那條隱性耦合——若日後做「誰依賴誰」的引用檢查，`hook 以字面字串偵測某文件內容` 應該要能被列出來
+
 ### [2026-07-28] 中文鏡像沒跟著改，於是 CLAUDE_zh.md 對人類讀者宣稱一個已經不存在的機制
 - 情境：F-003 Phase 3 收尾時更新文件地圖，順手比對 `CLAUDE.md` 與 `CLAUDE_zh.md` 的章節結構
 - 錯誤：Phase 2 把 `CLAUDE.md` 的「Standing Rules」整段改寫成「Operating Rules (tier pack)」，但 `CLAUDE_zh.md` 一個字沒動——它到本次為止仍寫著「## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）」並逐一列出 7 份規則檔。同一份改動橫跨 8 個 commit，期間中文讀者看到的是一個已被拆掉的機制。這正是 DIAGNOSIS §II.1 的正典分裂模式，只是分裂發生在語言之間
@@ -147,7 +154,7 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:c4cbdfce60 -->
-- [2026-07-29T01:46:49+0000] [PR_RETRO] **本 session 有 3 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-29T02:20:23+0000] [PR_RETRO] **本 session 有 4 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
 
 ## Sources

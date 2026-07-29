@@ -213,10 +213,20 @@ jobs:
           # spans` are stripped first (docs QUOTING a placeholder are fine),
           # and only a non-$-prefixed {{ counts (real slot, not an Actions
           # expression). Template-path files may introduce placeholders.
+          # One documented exception: the ACTIVATION SLOT marker. This repo is
+          # itself the template, so shipping a deliberately unfilled slot is its
+          # job, not a defect — and the marker is load-bearing, because
+          # session-activation-check.py detects an unfilled product build/test
+          # slot by testing for the literal "{{fill in". Forbidding it here
+          # while a hook requires it made two harness mechanisms contradict
+          # each other (caught by this gate on PR #14). Narrow by design: only
+          # this exact marker is dropped, so a stray {{PROJECT_NAME}} on the
+          # same line is still a hit.
           TEMPLATE_DIR_RE = re.compile(r"(^|/)\.claude/templates/", re.IGNORECASE)
           TEMPLATE_PATH_RE = re.compile(r"template", re.IGNORECASE)
           HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
           CODE_SPAN_RE = re.compile(r"`[^`]*`")
+          ACTIVATION_SLOT_RE = re.compile(r"\{\{fill in[^}]*\}\}", re.IGNORECASE)
           PLACEHOLDER_RE = re.compile(r"(?<!\$)\{\{")
 
           diff_output = subprocess.run(
@@ -252,6 +262,7 @@ jobs:
                   if TEMPLATE_DIR_RE.search(current_file) or TEMPLATE_PATH_RE.search(current_file):
                       continue
                   scannable = CODE_SPAN_RE.sub("", added_line)
+                  scannable = ACTIVATION_SLOT_RE.sub("", scannable)
                   if PLACEHOLDER_RE.search(scannable):
                       print(f"::error::PLACEHOLDER HIT: {current_file}:{this_lineno}: {added_line.strip()}")
                       failed = True
