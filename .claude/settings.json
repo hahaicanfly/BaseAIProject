@@ -1,5 +1,8 @@
 {
   "enabledPlugins": {},
+  "env": {
+    "HARNESS_TIER": "auto"
+  },
   "hooks": {
     "PreToolUse": [
       {

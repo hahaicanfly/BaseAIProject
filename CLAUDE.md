@@ -36,11 +36,11 @@ On conflict: trust per the table above, log the conflict in `docs/learnings/ERRO
 
 ## Operating Rules (tier pack, injected each session)
 
-The criteria you work by — routing, delegation, escalation, when to stop, what counts as done — arrive as a **tier pack** matched to the running model: `.claude/tiers/{strong,mid,light}.md`. Follow the pack; it is the operative version.
+The criteria you work by — routing, delegation, escalation, when to stop, what counts as done — arrive as a **tier pack** matched to the running model — `strong.md`, `mid.md` or `light.md` under `.claude/tiers/`. Follow the pack; it is the operative version.
 
 `.claude/rules/*.md` holds the same rules in full with worked examples. Only `security.md` is auto-loaded (every tier); the rest are reference — read one when a borderline case needs the reasoning behind a criterion.
 
-Tier is **declared, not detected** (no hook can see the model before the first response). Set `HARNESS_TIER` in this project's `.claude/settings.json` `env` block; otherwise it is guessed from `~/.claude/settings.json`, and anything unknown falls back to `light` (full SOP). A mismatch against the real model is caught from the second turn and announced. Details: `.claude/tiers/README.md`.
+Tier is **declared, not detected** (no hook can see the model before the first response). `HARNESS_TIER` in this project's `.claude/settings.json` `env` block decides it; the shipped value `auto` declares nothing, so the tier is guessed from `~/.claude/settings.json`, and anything unknown falls back to `light` (full SOP). A mismatch against the real model is caught from the second turn and announced. **Tier is fixed once per session** — switching models mid-session with `/model` does not re-inject; it takes effect in the next session. Details: `.claude/tiers/README.md`.
 
 - Delegation prompt templates: `.claude/templates/delegation-templates.md`
 - How to safely edit harness files: `.claude/protocols/harness-maintenance.md`
@@ -65,6 +65,7 @@ NEVER: hardcode secrets / commit sensitive files (`.env`, `*.keystore`, …) / g
 | Full document index | `docs/INDEX.md` |
 | Current architecture (must-read once filled in) | `agent_docs/TECHNICAL-REFERENCE.md` |
 | Team roster, model dispatch, skills | `agent_docs/AI-TEAM-REGISTRY.md` |
+| Tier packs: how the harness sizes itself | `.claude/tiers/README.md` |
 | Multi-agent collaboration patterns | `agent_docs/multi-agent-guide.md` |
 | ExecPlan 10-stage lifecycle | `.claude/protocols/execplan-lifecycle.md` |
 | Harness diagnosis / letter to future sessions | `docs/harness/` |

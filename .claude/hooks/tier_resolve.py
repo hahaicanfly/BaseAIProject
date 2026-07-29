@@ -35,6 +35,13 @@ USER_SETTINGS = Path.home() / ".claude" / "settings.json"
 TIERS = ("strong", "mid", "light")
 FALLBACK_TIER = "light"
 
+# What `HARNESS_TIER` may say to mean "I am not declaring anything — go guess".
+# `auto` is the value this template ships with, so the knob is visible in
+# settings.json without any project being forced onto a tier. Empty and unset
+# mean the same thing. Anything else that is not a tier name is a typo and is
+# treated the same way: ignored, never trusted.
+NO_DECLARATION = ("", "auto")
+
 _FRONTMATTER_MODEL_RE = re.compile(r"^model:\s*[\"']?([A-Za-z0-9._\-\[\]]+)", re.M)
 
 
@@ -68,9 +75,13 @@ def _declared_tier() -> str | None:
     """HARNESS_TIER from the project's settings.json `env` block.
 
     Verified empirically that a project-level env block does reach hook
-    processes. An invalid value is ignored rather than trusted.
+    processes. `auto` (the shipped default) and anything that is not a tier
+    name are ignored rather than trusted, so resolution falls through to the
+    guess and then to `light`.
     """
     val = (os.environ.get("HARNESS_TIER") or "").strip().lower()
+    if val in NO_DECLARATION:
+        return None
     return val if val in TIERS else None
 
 

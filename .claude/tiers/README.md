@@ -18,6 +18,8 @@ Packs are **generated**. Edit the fragments in `src/`, then run `python3 scripts
 2. the `model` field in `~/.claude/settings.json` — a guess; right for `/model`, wrong for a `--model` CLI override
 3. `light` — anything unknown, invalid or unreadable
 
+The template ships `"HARNESS_TIER": "auto"`, which declares nothing: `auto`, empty and any non-tier value all fall through to the guess. The knob is in settings.json so a forked project can see it exists; set it to `strong` / `mid` / `light` to pin a tier and skip the guess. Because it is an environment variable, a change lands on the next config load, and clearing it needs a new session (see the caveat below).
+
 **Subagent — detected.** `SubagentStart` carries `agent_type`, so the tier comes from that agent's frontmatter `model`. An agent that declares no model inherits the main conversation's tier; a built-in agent with no definition file gets `light`.
 
 **Everything unknown resolves to `light`.** Over-loading rules costs tokens; under-loading them costs correctness.
