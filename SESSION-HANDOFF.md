@@ -1,54 +1,49 @@
-# SESSION-HANDOFF — 2026-07-28
+# SESSION-HANDOFF — 2026-07-29
 
-> Produced by /last-word. After `/clear`, read this file to resume; once resumption is complete this file may be deleted or will be overwritten by the next /last-word.
+> F-003 已結案。這份不是「未完成工作的交接」，是「**現在這套 harness 長什麼樣**」的落地說明，寫給下一個 session。
+> 下次 `/last-word` 會覆寫本檔。
 
-## Handoff prompt (paste directly to resume)
+## 一句話
 
-I'm working on **F-003 — Tiered Harness (依模型等級分層的 harness 架構)**（ExecPlan: `docs/plans/active/F-003-tiered-harness.md`）。
+分層 harness 上線了。規則不再是一份全量常駐，而是**依當下執行的模型注入對應重量的 tier pack**；strong tier 常駐量從 635 行 / 33,164 字元降到 **245 行 / 13,669 字元（減 59%）**，且這個上限現在是 `INV-ARC-001`，由 `scripts/context-budget.py` 在每次 acceptance 強制執行。
 
-**Completed（§6 Progress Log 最新條目）:**
-- Phase 0：可執行閘門落地——`.claude/tiers/budget.json`（3 個可切換模式）、`scripts/context-budget.py`、CLAUDE.md Quick Commands 填入 4 條 harness 自檢指令。原計畫步驟 5「修復遙測管線」經實測**證偽**（採收器功能正常，缺口在發射端），未動該 Red-tier hook。
-- Phase 1：實測確認主對話模型在第一次回應前**不可觀測**（SessionStart / InstructionsLoaded / UserPromptSubmit payload 與 env 皆無 `model`），故架構定為「主對話宣告 + 事後驗證，子 agent 真偵測」。建立 `model-map.json`。
-- Phase 2：三份累加來源片段 + `build-tier-packs.py` 生成三個 pack；6 份規則檔降級 `always: false` 原地保留；CLAUDE.md「Standing Rules」改寫。**strong 常駐量 635 行/33,164 字元 → 244 行/13,420 字元（−61%）**，mid −47%，light −34%。
-- Phase 3 步驟 18-19：`SubagentStart` 動態分層 hook + 委派模板去重複。
-- 獨立 read-back 查核完成，並據其附帶清單補回 **5 條被重構漏掉的規範性規則**。
-- acceptance-run **12/12 PASS**；三個 hook smoke test 共 17 情境全通過；巢狀 `claude -p` 真實 session 端對端驗證通過。
+## 下一個 session 開場會看到什麼
 
-**Remaining（§4 未打勾步驟）:**
-- 步驟 20：拆分 8 個 >150 行的 SKILL.md（ui-ux-pro-max 394、frontend-design 281、pr-review-cycle-mob 190、spectra-amplifier 189、tdd-workflow 184、beautiful-mermaid 176、feature-pipeline 171、gen-app-map 168）為「SKILL.md 路由 ≤80 行 + references/」，比照既有 `security-audit` 結構（Yellow tier）
-- 步驟 21：更新 `agent_docs/AI-TEAM-REGISTRY.md`、`docs/INDEX.md`、CLAUDE.md 文件地圖
-- 步驟 22：Phase 3 完成後再跑一次全量 read-back
-- 步驟 23：更新 `docs/harness/LETTER-TO-FUTURE-SESSIONS.md` §3 交接清單
+`SessionStart` hook 注入一份 tier pack，開頭寫著 `# Harness tier: <tier>` 與來源。**那份 pack 就是正典**，`.claude/rules/*.md` 是它背後的全文參考（只有 `security.md` 仍然常駐）。
 
-**Scope Baseline（copied from ExecPlan §1）:**
-- target user = fork 本模板的新產品開發專案，主對話與子 agent 涵蓋 Haiku / Sonnet / Opus / Fable 四級
-- success metric = 可切換模式的預算配置檔；預設 `balanced` 下 strong ≤250 行 / ≤14,000 字元、mid ≤24,000 字元；light 內容無語意遺失
-- trigger condition = 使用者裁定採用分層路線後啟動
-- confirmation source = 使用者 2026-07-28 原話「預期要對不同模型等級做不同的 harness 框架設計，等未來基礎模型能力提升才會收斂」+「其餘的都可以依照分析結果進行優化調整」
-- **v2 (2026-07-28)**：門檻改為可調式配置（DEC-5）；子 agent 分層改動態（DEC-8）。來源：使用者「成功門檻做成可調式 -> 可選模式」「子 agent 也動態分層」
+- tier 由 `.claude/settings.json` 的 `HARNESS_TIER` 決定，出廠值 `auto` = 不宣告 → 從 `~/.claude/settings.json` 猜
+- 猜錯的話，第二輪起 `tier-drift-check.py` 會比對 transcript 裡的真實 model id 並要求改讀正確的 pack
+- **本機殘留 `HARNESS_TIER=mid` 環境變數**（Phase 1 探測所致）。上一個 session 實際跑 Opus 卻載入 mid，靠 drift-check 更正。開新 session 就會消失——若仍看到 tier=mid，先查這個變數
 
-**Current marker:** `[HANDOFF: dev]`
+## 這輪新增、之後會一直生效的閘門
 
-**Pickup SOP:**
-1. 讀 ExecPlan §3 Constraints + §9 Handoff Manifest + §7 DEC-1~11
-2. 讀 `.claude/tiers/README.md`（分層機制、偵測優先序、已知限制）
-3. 確認分支為 `feat/tiered-harness`
-4. 從 §4 步驟 20 開始
+| 閘門 | 它擋什麼 |
+|---|---|
+| `context-budget.py` | 常駐層超過 `budget.json` 當前模式上限（`INV-ARC-001`） |
+| `build-tier-packs.py --check` | tier pack 與 `src/` 片段漂移 |
+| `check-mirror-parity.py` | `_zh` 鏡像與原文的章節／子章節／表格列結構不符 |
+| `check-hook-doc-coupling.py` | hook 靠某份文件的字面字串做判斷卻未加 `# COUPLING:` 宣告 |
 
-**必知事項:**
-- 本次改動**要開新 session 才生效**。續作時應已在新 session，主對話會收到 tier pack——順便實地檢驗注入品質與可讀性。
-- 本機殘留 `HARNESS_TIER=mid`（Phase 1 探測所致，設定會即時生效但取消需開新 session）。若新 session 顯示 tier=mid 而非預期的 strong，先查此變數。
-- tier pack 是**生成物**，永遠不要直接編輯 `.claude/tiers/{strong,mid,light}.md`；改 `src/` 片段後跑 `python3 scripts/build-tier-packs.py`。acceptance 的 `packs-fresh` 會擋住漂移。
-- 授權範圍：使用者已同意「進行測試時可委派子 agent」。skill 拆檔屬實作，**不在該授權範圍**，需先確認。
+acceptance **14/14**，CI **6 job**。改 harness 檔之前先讀 `.claude/protocols/harness-maintenance.md` §1（紅黃綠分級）與 §4（安全改動程序，本輪新增三條 hook 撰寫規則）。
 
-**Related info:**
-- Branch: `feat/tiered-harness`（latest commit: 2bbd863，領先 master 8 個 commit，**未推送、未開 PR**）
-- Linked PR: 尚未開立
-- Related invariants: INV-GIT-002 / INV-GIT-005 / INV-SEC-003
-- 待人審 invariant 候選：常駐層預算上限（已由 `context-budget.py` 機械化）可升格 **INV-ARC-001**
+## 三個容易踩的坑（都已寫進 §4，這裡只提醒存在）
 
-## This session's archive summary
-- invariants.md 新增：0（1 項候選待人審——invariants.md 屬 Red tier）
-- ERRORS.md Pending Review 新增：3 則（hook payload 文件第三次不符、空帳本≠採收器壞掉、驗收 agent 自我放寬判準）+ 1 則 Recurred（bytes/chars 單位誤植，併入 2026-07-07 量測條目）
-- ExecPlan 更新：F-003（§6 Progress Log ×6 條、§7 Decision Log DEC-1~11、§8 Q1-Q7、§9 Handoff Manifest 全面改寫）
-- state/feature-list.json：F-003 verification 三項轉 true
+1. **hook payload 欄位一律以實測為準** —— 官方文件已經錯了三次。先寫一個 dump hook 跑一次 `claude -p`，再寫邏輯。
+2. **內容掃描類防線的豁免面要跟規則同時設計** —— 掃描器誤打自己引用的內容，本 repo 已發生四次，第四次真的擋下合法操作。
+3. **改一份有 `_zh` 鏡像的檔案，鏡像要在同一個 commit 內一起改** —— 分兩次做等於承諾一個不會兌現的 TODO。
+
+## 待人類裁決（沒有時效壓力，但沒人做就一直在）
+
+- `docs/harness/LETTER-TO-FUTURE-SESSIONS.md` §III 剩 3 項：skillopt-loop 去留、session-handoffs 首次運轉驗證、Menu-Android guard 修復未 commit
+- `docs/learnings/ERRORS.md` Pending Review 13 條：其中 3 條是 PR #14 retro 的新產出（含 `INV-ARC-002` 候選：ExecPlan 完成宣稱與勾選狀態必須一致），其餘是 `/pr-retro` 提醒與外部工具待查證事實
+- `agent_docs/TECHNICAL-REFERENCE.md` 仍全檔未填 → 依 CLAUDE.md「Activation Status」跳過
+
+## 非技術使用者入口
+
+`docs/PLAIN/START-HERE_zh.md` —— 第一句話該打什麼、接下來會發生什麼、它絕對不會擅自做的事。`/guided-start` 是引導式入口（本輪修好：它原本指向 CLAUDE.md 一個已被搬走的章節，壞了 15 個 commit）。
+
+## 相關
+
+- 設計紀錄：`docs/plans/completed/F-003-tiered-harness.md`（§7 DEC-1~12 是「為什麼這樣做」的完整理由）
+- 分層機制與已知限制：`.claude/tiers/README.md`
+- PR：[#14](https://github.com/hahaicanfly/BaseAIProject/pull/14)，2026-07-29 合併為 `b777d98`
