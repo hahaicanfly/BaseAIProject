@@ -10,7 +10,7 @@ always: true
 
 **執行任何非瑣碎任務前，必須先進入 Plan Mode，撰寫計劃供用戶審查。**
 
-> 入口以 CLAUDE.md「動手前決策樹」為準：跨模組／API 變更／大規模重構走 **ExecPlan**（`docs/plans/PLANS.md`，需人類核可），不適用本檔；本檔涵蓋其餘非瑣碎任務。
+> 入口以本 session 注入的 tier pack（`.claude/tiers/`）中「Before acting」路由表為準（F-003 之前這張表放在 CLAUDE.md）：跨模組／API 變更／大規模重構走 **ExecPlan**（`docs/plans/PLANS.md`，需人類核可），不適用本檔；本檔涵蓋其餘非瑣碎任務。
 
 ## 適用情境
 

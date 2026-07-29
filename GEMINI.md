@@ -14,7 +14,7 @@ Required reading: CLAUDE.md (project root)
 
 `CLAUDE.md` is this project's operations map, containing:
 - Quick Commands
-- Canon hierarchy and decision tree before acting (including hard guardrails, INV-* rule entry points)
+- Canon hierarchy and hard guardrails (INV-* rule entry points); the pre-action routing table now lives in the injected tier pack under `.claude/tiers/`
 - Standing rules, handoff, and session management
 - Document map (Virtual Team / Multi-Agent Skills roster in `agent_docs/AI-TEAM-REGISTRY.md`)
 - Tech Stack and Project Relations

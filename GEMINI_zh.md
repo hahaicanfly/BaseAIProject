@@ -14,7 +14,7 @@
 
 `CLAUDE.md` 是本專案的操作地圖，包含：
 - Quick Commands（常用指令）
-- 正典層級與動手前決策樹（含硬防線、INV-* 規則入口）
+- 正典層級與硬防線（INV-* 規則入口）；動手前的路由表現在放在 `.claude/tiers/` 下注入的 tier pack
 - 常駐規則、交接與 Session 管理
 - 文件地圖（Virtual Team／Multi-Agent Skills 清單見 `agent_docs/AI-TEAM-REGISTRY.md`）
 - Tech Stack 與 Project Relations

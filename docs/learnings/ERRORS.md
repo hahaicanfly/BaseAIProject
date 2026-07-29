@@ -88,6 +88,7 @@
 - 教訓:(a) 內容掃描類閘門設計時先問「這條規則掃到自己的實作/文件引用時會怎樣」,豁免面(路徑範圍、code-span 剝除、語法前綴)要跟規則一起設計;(b) 修 CI 後除了 YAML lint 還要看 Actions 實跑(或用 actionlint),0 秒失敗=workflow 檔問題;(c) 負向測試不可省——豁免加寬後要證明真違規仍會被抓
 - 建議去向:留在 ERRORS;若未來引入 actionlint 可將 (b) 機械化為 CI job
 - Recurred: 2026-07-26 — F-002 guided-start ExecPlan 的 §6 Progress Log 描述「這幾個死連結是既有問題」時,把 `session-handoffs/`、`docs/PLAIN-INDEX.md` 這類字串包在反引號裡當範例引用,結果 `scripts/check-doc-refs.py` 的 R1 規則把它們當成真實路徑引用,平白造出 2 個新 ERROR,讓實作者「淨新增 ERROR = 0」的自我報告變成假結論。修法同上(b):敘述死連結範例時避免用會被 R1 規則當真的反引號路徑語法,改用純文字描述。這是同一失效家族第三次出現(前兩次為 harness-gates CI 首跑、telemetry harvester 誤收自身引用標記),值得列入 §6 標準 Skill/Agent/Rule 品質閘門考慮是否該有通用「豁免引用性內容」檢查項。
+- Recurred: 2026-07-29 — **第四次,這次是 enforce 級的 guard**。重寫 README 時要寫入的內容裡引用了 `pre-tool-use-guard.py` 自己負責攔截的那個「把網路內容灌進 shell」樣式(README 的 hooks 職責表本來就該寫出它擋什麼),於是 guard 以 REMOTE_PIPE_SHELL 擋下這次 heredoc 寫檔。改用 Write 工具即可繞開(未停用也未修改 guard),但這證明前三次的教訓一直沒被機械化:**攔截型 hook 至今仍未區分「指令要執行這個東西」與「文字要描述這個東西」**。與前三次不同的是,前三次都只造成誤報噪音,這次是真的擋下了合法操作。修法方向:guard 對寫檔類指令(heredoc、tee、Write)的內容應與可執行指令段分開判定。
 
 ### [2026-07-23] 遙測收割器把「引用性標記」當真實事件:rule-events.jsonl 首筆即污染
 - 情境:驗收代理報告中「引用」clarify-first 的示範標記字串(RULE_FIRED 語法、detail 為字面三點省略號),SubagentStop 收割時被當成真實規則命中寫入 state/rule-events.jsonl——帳本因此首次建立,首筆即假事件(hash 8f8af8ab88)
@@ -144,6 +145,10 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
 
 [VERIFY_FAILED: D3 en/zh heading+table parity gaps and D4 one newly-introduced check-doc-refs.py ERROR in CLAUDE_zh.md:30]
   ```
+
+<!-- harvest:c4cbdfce60 -->
+- [2026-07-29T01:46:49+0000] [PR_RETRO] **本 session 有 3 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+  Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
 
 ## Sources
 - https://lovable.dev/blog/versioning-with-lovable-two-point-zero
