@@ -183,6 +183,78 @@ def check_e6_placeholders(text: str, findings: List[Finding]) -> None:
         )
 
 
+def _status_value(text: str) -> Optional[str]:
+    m = re.search(r"^\|\s*Status\s*\|\s*([^|]+?)\s*\|", text, re.M)
+    return m.group(1).strip().lower() if m else None
+
+
+def _step_boxes(lines: List[str]) -> tuple[int, int]:
+    """(ticked, unticked) step checkboxes in §4."""
+    section4 = get_section_content(lines, 4)
+    if section4 is None:
+        return (0, 0)
+    ticked = sum(1 for l in section4 if re.match(r"^\s*\d+[a-z]?\.\s*\[x\]", l, re.I))
+    unticked = sum(1 for l in section4 if re.match(r"^\s*\d+[a-z]?\.\s*\[ \]", l))
+    return (ticked, unticked)
+
+
+def check_e7_completion_consistency(
+    path: str, text: str, lines: List[str], findings: List[Finding]
+) -> None:
+    """INV-ARC-002 — a completion claim must agree with the checkboxes.
+
+    F-003 shipped with §6 recording twelve phases as finished while every
+    step in §4 sat unticked, and every gate stayed green. One step really
+    had not been done, and nobody noticed across three sessions, because
+    nothing compared the plan's own two accounts of itself.
+    """
+    status = _status_value(text)
+    if status is None:
+        return  # E1 already reports a missing Status field
+    in_completed = "docs/plans/completed/" in path.replace(os.sep, "/")
+    done = status in ("done", "completed")
+
+    if done:
+        _, unticked = _step_boxes(lines)
+        if unticked:
+            findings.append(Finding(
+                "ERROR", "E7",
+                "Status is '%s' but §4 still has %d unticked step(s) — tick them "
+                "or say why they were dropped" % (status, unticked),
+            ))
+        if not in_completed:
+            findings.append(Finding(
+                "ERROR", "E7",
+                "Status is '%s' but the file is not under docs/plans/completed/ "
+                "(execplan-lifecycle.md Phase 8 step 2)" % status,
+            ))
+    elif in_completed:
+        findings.append(Finding(
+            "ERROR", "E7",
+            "file is under docs/plans/completed/ but Status is '%s'" % status,
+        ))
+
+
+def check_w2_progress_without_ticks(lines: List[str], findings: List[Finding]) -> None:
+    """The shape F-003 was in for three sessions: §6 narrates progress,
+    §4 records none of it. Not an error — a plan can legitimately log a
+    decision before finishing step 1 — but past a few entries it means the
+    two halves have stopped being reconciled."""
+    ticked, unticked = _step_boxes(lines)
+    if ticked or not unticked:
+        return
+    section6 = get_section_content(lines, 6)
+    if section6 is None:
+        return
+    entries = sum(1 for l in section6 if l.lstrip().startswith("- ["))
+    if entries >= 3:
+        findings.append(Finding(
+            "WARN", "W2",
+            "§6 has %d progress entries but §4 has no ticked steps — the plan's "
+            "two accounts of itself have diverged" % entries,
+        ))
+
+
 def check_w1_clarify_first(lines: List[str], findings: List[Finding]) -> None:
     section1 = get_section_content(lines, 1)
     if section1 is None:
@@ -206,7 +278,9 @@ def lint_file(path: str) -> List[Finding]:
     check_e4_constraints(lines, findings)
     check_e5_handoff(lines, findings)
     check_e6_placeholders(text, findings)
+    check_e7_completion_consistency(path, text, lines, findings)
     check_w1_clarify_first(lines, findings)
+    check_w2_progress_without_ticks(lines, findings)
     return findings
 
 

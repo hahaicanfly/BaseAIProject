@@ -84,7 +84,7 @@ negative: [command that must fail] expect-fail
 - Current state marker: [HANDOFF: <next>] or [VERIFY_FAILED: <reason>]
 ````
 
-> **§5 acceptance block is machine-run**: `python3 scripts/acceptance-run.py <plan.md>` executes each `label: command` line (a trailing ` expect-fail` inverts the expectation), logs per-command evidence to `state/acceptance/<plan>.jsonl`, and exits non-zero on any FAIL — reviewers run this instead of eyeballing prose (see review-protocol.md checklist). Lines still containing `{{` or `[your ` placeholders are SKIPped (unactivated template). Structure of the plan itself is checked by `python3 scripts/execplan-lint.py` (9 sections, non-empty Non-Goals, INV reference, §9 marker, no leftover placeholders).
+> **§5 acceptance block is machine-run**: `python3 scripts/acceptance-run.py <plan.md>` executes each `label: command` line (a trailing ` expect-fail` inverts the expectation), logs per-command evidence to `state/acceptance/<plan>.jsonl`, and exits non-zero on any FAIL — reviewers run this instead of eyeballing prose (see review-protocol.md checklist). Lines still containing `{{` or `[your ` placeholders are SKIPped (unactivated template). Structure of the plan itself is checked by `python3 scripts/execplan-lint.py` (9 sections, non-empty Non-Goals, INV reference, §9 marker, no leftover placeholders, and `INV-ARC-002` completion consistency: a `done` plan has no unticked steps and lives under `completed/`).
 
 ---
 
