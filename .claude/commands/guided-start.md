@@ -1,4 +1,4 @@
-Guided, natural-language entry point for non-technical users of BaseAIProject. Turns a plain-language ask into: (0) detect whether this continues in-progress work, (1) fill in the missing pieces of intent with a couple of targeted questions, (3) hand routing off to CLAUDE.md's existing Decision Tree Before Acting, and (4) once work is done, translate the acceptance evidence into plain language. This command adds **no new governance judgment of its own** — every routing decision and every acceptance criterion it reports comes from a file that already exists and is read fresh, every time, at the moment it is needed.
+Guided, natural-language entry point for non-technical users of BaseAIProject. Turns a plain-language ask into: (0) detect whether this continues in-progress work, (1) fill in the missing pieces of intent with a couple of targeted questions, (3) hand routing off to the routing table in the session's injected tier pack, and (4) once work is done, translate the acceptance evidence into plain language. This command adds **no new governance judgment of its own** — every routing decision and every acceptance criterion it reports comes from a file that already exists and is read fresh, every time, at the moment it is needed.
 
 **Non-Goals (this reduced version deliberately does not do)**: there is no "confirm before executing" / error-recovery stage (the full six-stage guided flow this MVP is a slice of); this command is not wired into README/CLAUDE.md as a new canonical entry point — it is an alternate on-ramp that sits alongside the Decision Tree, never a replacement for it; it does not track a request's progress after handing off control in Step 3.
 
@@ -20,11 +20,11 @@ Before asking the user anything, check `docs/plans/active/` for `F-*.md` files.
 4. While gathering, also read `.claude/rules/plan-first.md`'s Exceptions list **live** (this command holds no copy of that list either). If the request already and obviously falls under one of its current Exceptions → skip Step 3 entirely and go straight to executing the task directly. Say so explicitly, one sentence, citing which Exception applies — quoting it from the file you just read, not from memory.
 5. Otherwise, once the 4 fields are adequately covered (or the user has confirmed there's nothing more to add), move on to Step 3.
 
-## Step 3: Route through CLAUDE.md's Decision Tree Before Acting
+## Step 3: Route through the tier pack's routing table
 
 This is the only judgment call this command makes, and it is not really this command's judgment — it is CLAUDE.md's.
 
-1. Read the live text of `CLAUDE.md`'s "Decision Tree Before Acting" section right now, in full — not a paraphrase, not a memory of what it said last time you read it.
+1. Read the live text of the **"Before acting"** section of this session's tier pack right now, in full — `.claude/tiers/strong.md`, `mid.md` or `light.md`, whichever was injected (`.claude/tiers/README.md` explains which one that is). Read the file; do not paraphrase it and do not rely on a memory of the injected copy. Until F-003 this table lived in `CLAUDE.md` as "Decision Tree Before Acting"; it does not any more.
 2. Apply its numbered criteria (0-5) to the gathered request exactly as written there. This command holds no routing table, no threshold list, and no shortcut copy of that tree — it only translates the tree's own output into a plain-language handoff for the user.
 3. Hand control to whichever branch the Decision Tree names — draft an ExecPlan (`docs/plans/active/`, spec in `docs/plans/PLANS.md`, per `.claude/protocols/execplan-lifecycle.md`), enter Plan Mode, or execute the task directly — and say in one sentence which branch was chosen and why, quoting the matching criterion.
 4. Once control is handed off, this command's job is done for this pass — it does not stay in the loop watching the work happen, and does not re-run this checklist mid-task (that is `judgment-rubrics.md` §3's job, not this command's).
@@ -41,7 +41,7 @@ Once the handed-off work has actually run its verification (an ExecPlan's §5 Ve
 ## References
 
 - `.claude/rules/clarify-first.md` — the 4-field checklist Step 1 reads live
-- `CLAUDE.md` — "Decision Tree Before Acting", the routing authority Step 3 defers to
+- `.claude/tiers/strong.md` / `mid.md` / `light.md` — the "Before acting" routing table Step 3 defers to; `.claude/tiers/README.md` explains which pack a session gets
 - `.claude/rules/plan-first.md` — the Exceptions list Step 1 checks before deciding whether Step 3 is even needed
 - `.claude/protocols/execplan-lifecycle.md` — the 10-phase ExecPlan lifecycle a Step 3 hand-off into ExecPlan territory enters
 - `scripts/translate-acceptance.py` — the read-only acceptance/review translator Step 4 calls

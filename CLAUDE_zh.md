@@ -25,21 +25,17 @@ git branch --show-current   # 動手前確認不在 master/main
 
 遇到矛盾：按上表採信，並把矛盾記入 `docs/learnings/ERRORS.md`，不要停下來糾結。
 
-## 動手前決策樹（唯一入口）
+## 運作規則（tier pack，每個 session 注入）
 
-0. 範疇/需求不清（下列 4 項缺 2 項以上：目標用戶、成功指標、明確邊界/非目標、觸發條件）→ 先在主對話釐清，才進 ExecPlan 或 Plan Mode（詳見 `.claude/rules/clarify-first.md`）
-1. 跨模組 / API 變更 / 大規模重構 → 建 ExecPlan（`docs/plans/active/`，規格見 `docs/plans/PLANS.md`），**等人類核可**
-2. 其餘非瑣碎任務（新功能、多檔修改、刪檔）→ Plan Mode 提計劃，同意後執行
-3. 單檔 < 20 行、已定位的 bug 修復、格式調整 → 直接做
-4. 驗收條件無法機械化（品味／商業判斷）→ 產出候選＋trade-off 交人選（judgment-rubrics §6），不進實作迴圈
-5. 永遠適用：改檔前必先 Read；未經驗證不得宣稱完成
+你依循的判準——路由、派工、升級、何時停手、什麼算做完——以**對應執行模型等級的 tier pack** 形式送達 — `.claude/tiers/` 下的 `strong.md`、`mid.md` 或 `light.md`。以 pack 為準，它才是正典版本。決策樹（含「範疇不清先釐清」「跨模組走 ExecPlan」「單檔 <20 行直接做」等分支）現在住在 pack 裡，不在本檔重複。
 
-## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）
+`.claude/rules/*.md` 是同一批規則的全文版，附完整範例。其中只有 `security.md` 自動載入（每個 tier 都有），其餘皆為參考檔——邊界情況需要查判準背後的理由時才讀。
 
-security ／ model-dispatch（模型調度與派工）／ judgment-rubrics（升級·完成·熔斷·換路判準）／ clarify-first（進 ExecPlan/Plan Mode 前的主動範圍確認）／ plan-first ／ parallel-worktree ／ cost-optimization（modularity 已降非常駐 → `agent_docs/modularity.md`）
+Tier 是**宣告的，不是偵測的**（第一次回應前沒有任何 hook 看得到模型）。由本專案 `.claude/settings.json` `env` 區塊的 `HARNESS_TIER` 決定；模板出廠值 `auto` 等於不宣告，此時改從 `~/.claude/settings.json` 猜測，未知一律退回 `light`（全量 SOP）。宣告與實際模型不符時，第二輪起會被偵測並提示更正。**Tier 每個 session 只決定一次**——中途用 `/model` 換模型不會重新注入，要下一個 session 才生效。細節見 `.claude/tiers/README.md`。
 
 - 派工 prompt 模板：`.claude/templates/delegation-templates.md`
 - Harness 檔案怎麼安全地改：`.claude/protocols/harness-maintenance.md`
+- 不熟悉 ExecPlan / Plan Mode 是什麼？→ `docs/PLAIN/claude-md-crib-sheet.md` 一頁對照卡
 
 ## 硬防線
 
@@ -60,6 +56,8 @@ NEVER：硬編碼 secrets ／ commit 敏感檔（`.env`、`*.keystore`…）／ 
 | 文件總索引 | `docs/INDEX.md` |
 | 當前架構（填實後必讀） | `agent_docs/TECHNICAL-REFERENCE.md` |
 | 團隊名單、模型分派、skills | `agent_docs/AI-TEAM-REGISTRY.md` |
+| Tier pack：harness 如何依模型調整重量 | `.claude/tiers/README.md` |
+| 中文人類可讀鏡像 | 自動探索目錄（agents/rules/commands）→ `agent_docs/zh/`；其餘一律同目錄 `*_zh.md` |
 | 多代理協作模式 | `agent_docs/multi-agent-guide.md` |
 | ExecPlan 10 階段生命週期 | `.claude/protocols/execplan-lifecycle.md` |
 | Harness 診斷書／給未來 session 的信 | `docs/harness/` |

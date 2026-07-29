@@ -6,7 +6,7 @@ always: true
 
 # Security Rules
 
-*白話:密碼、金鑰這類機密資訊絕對不能寫死在程式碼或紀錄裡,也不能被提交進版本控制。*
+> Plain-language version for human readers: `docs/PLAIN/security-plain.md`
 
 ## Absolutely Forbidden
 
@@ -67,7 +67,7 @@ Proactively check security at the following times:
 ### Input Validation
 - Validate all external input
 - Set reasonable length/size limits
-- Use allowlists(白話:只放行清單內許可的東西,其餘一律擋下,預設最安全) rather than denylists(白話:只擋清單內禁止的東西,清單外一律放行,容易漏掉沒想到的情況)
+- Use allowlists rather than denylists
 
 ### Error Handling
 - Don't expose internal details in error messages

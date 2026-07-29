@@ -29,8 +29,18 @@
 | 檔案 | 狀態 | 摘要 |
 |------|------|------|
 | [`decisions/ADR-template.md`](decisions/ADR-template.md) | Template | ADR 撰寫範本 |
+| [`decisions/PDR-template.md`](decisions/PDR-template.md) | Template | 產品決策記錄撰寫範本（產品／功能決策，非架構決策——何時強制寫 PDR 見該檔檔頭） |
 
 > 新增 ADR 時：`decisions/ADR-NNNN-<short-slug>.md`，並在此表新增一行。
+> 新增 PDR 時：`decisions/PDR-NNNN-<short-slug>.md`，並在此表新增一行。
+
+---
+
+## 策略與市場研究報告
+
+| 檔案／目錄 | 用途 |
+|------------|------|
+| [`research/README.md`](research/README.md) | pm ／ market-researcher ／ competitive-analyst ／ data-analyst 產出的歸檔點與命名規則（`docs/research/<YYYY-MM-DD>-<slug>.md`）；每份報告都必須有假設-證據表與 Sources 章節，並依 review-protocol.md 的 Document Reviewer Checklist 審查 |
 
 ---
 
@@ -40,6 +50,18 @@
 |------|------|
 | [`learnings/ERRORS.md`](learnings/ERRORS.md) | AI 犯錯紀錄（Pending Review → Active Lessons） |
 
+
+## 白話層（給非技術背景使用者）
+
+| 檔案 | 用途 |
+|------|------|
+| [`PLAIN/START-HERE_zh.md`](PLAIN/START-HERE_zh.md) | 無術語入口：第一句話該打什麼、接下來會發生什麼、它絕對不會擅自做的事 |
+| [`PLAIN/claude-md-crib-sheet.md`](PLAIN/claude-md-crib-sheet.md) | 一頁講清楚「直接做」與「先寫計畫」是怎麼分的 |
+
+> 衍生層，非正典。這些是規則檔的唯讀翻譯 —— 與來源檔牴觸時，以來源檔為準。
+
+---
+
 ---
 
 ## Harness 制度文件（2026-07-04 建立）
@@ -48,10 +70,13 @@
 |------|------|
 | [`harness/DIAGNOSIS.md`](harness/DIAGNOSIS.md) | 漏水診斷書：Top3 漏 token／失焦／易錯 + 修法 + 能力極限 |
 | [`harness/LETTER-TO-FUTURE-SESSIONS.md`](harness/LETTER-TO-FUTURE-SESSIONS.md) | 給未來 session 的信 + 未完成交接清單 |
-| `../.claude/rules/model-dispatch.md` | 模型調度守則（常駐） |
-| `../.claude/rules/judgment-rubrics.md` | 判斷力外化矩陣（常駐） |
+| `../.claude/tiers/README.md` | **實際生效的常駐規則**：依執行模型選出的 tier pack 如何決定與注入（F-003） |
+| `../.claude/rules/model-dispatch.md` | 模型調度守則 — tier pack 背後的全文參考檔，非自動載入 |
+| `../.claude/rules/judgment-rubrics.md` | 判斷力外化矩陣 — tier pack 背後的全文參考檔，非自動載入 |
 | `../.claude/templates/delegation-templates.md` | 派工 prompt 模板 ×6 |
 | `../.claude/protocols/harness-maintenance.md` | harness 檔案維護協議（權限分級／教訓格式／精簡觸發） |
+
+> F-003 之後只有 `.claude/rules/security.md` 自動載入。其餘規則檔原地保留但標記 `always: false`；真正抵達 session 的是 `.claude/tiers/` 下生成的 pack。邊界情況需要查判準背後的理由時才去讀規則全文檔。
 
 ---
 
@@ -71,3 +96,9 @@
 
 - `CLAUDE.md`：文件地圖（"文件總索引"）
 - `docs/plans/PLANS.md` §5
+
+---
+
+## 中文鏡像慣例
+
+自動探索目錄（agents／rules／commands）下檔案的中文人類可讀版放在 `agent_docs/zh/`。其餘檔案一律使用同目錄的 `*_zh.md` 後綴（例如 `CLAUDE_zh.md`）。

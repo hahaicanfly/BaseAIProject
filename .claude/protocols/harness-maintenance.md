@@ -61,6 +61,12 @@ When clearing Pending entries, there's no need to keep hash comments (`<!-- harv
      ```
 4. Verification fails → restore from backup, log the failure to ERRORS.md
 
+**Dump the real payload before writing hook logic.** Field names in the official docs have been wrong three times now (`SubagentStop`'s `transcript_path` is actually `agent_transcript_path`; `SessionStart` carries no `model` field at all despite the docs saying it may; `InstructionsLoaded`'s fields are named nothing like the documentation). A 20-line hook that writes `read_stdin_json()` to a file, plus one nested `claude -p` to trigger it, settles the question in minutes — far cheaper than discovering it after the logic is written.
+
+**Declare a hook's dependency on a document's wording.** If a hook decides something by testing for a literal string inside a markdown file, add a `# COUPLING: <path> -- <what the needle means>` comment beside it, so whoever edits that document can find the dependency with `grep -rn "COUPLING:" .claude/hooks/`. `scripts/check-hook-doc-coupling.py` fails on an undeclared one. This exists because CI once proposed rewording the exact CLAUDE.md line an activation check keys off — which would have gone green while silently switching the check off.
+
+**A content-scanning defense needs its exemptions designed alongside its rule.** Four times now a scanner has fired on content that merely *quoted* what it guards. When you add a pattern, ask immediately: what happens when this repo's own documentation describes this pattern? `pre-tool-use-guard.py` answers it by not scanning heredoc bodies bound for a data sink (`cat >`, `tee`, `git commit -F -`, `gh --body-file -`) while never exempting a body an interpreter will run. Exemptions follow security.md's allowlist rule, and each one ships with negative tests proving a real violation still blocks.
+
 **Reference implies verification**: before writing any path/tool name/skill name into a harness file, confirm it exists (`ls` or Glob). If you find an existing dead reference: fix it directly for Green/Yellow tier; for Red tier, log it to ERRORS.md and wait for human review.
 
 ## 5. Trim Triggers (preventing unbounded document growth)

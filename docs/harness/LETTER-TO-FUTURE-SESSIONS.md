@@ -13,7 +13,9 @@ Extended alert: the same-named hooks in the parent project `MenuProject/Menu-And
 The institution compounds via: mistake → ERRORS.md → human review → mechanization into invariants/guard. Menu-Android grew 693 lines of invariants and 81 lessons through this pipeline, proving it works. But this project's `stop-retro-logger.py` included the timestamp in its dedup hash, so nothing ever deduplicates, and ERRORS.md has been flooded with duplicate noise — **once the lessons file fills with noise, later models stop reading it, and the whole pipeline dies**. The fix is item 1 in the handoff checklist below; do it first.
 
 ### 3. The always-on load surface is a scarce budget; every added line taxes all future sessions
-`.claude/rules/*.md` (frontmatter `always: true`) + CLAUDE.md are injected into **every** session. You will keep feeling the urge to push new rules into the always-on surface ("this one is important!") — the vast majority of rules do not need to be standing; put them in agent_docs/ or templates/ and reach them by reference. The criterion: **only "needed for the very first decision of every session" earns standing status**. Anything past the trigger line in harness-maintenance.md §5 must be trimmed.
+CLAUDE.md + `.claude/rules/security.md` + the tier pack chosen for the running model (`strong.md`, `mid.md` or `light.md` under `.claude/tiers/`) are injected into **every** session. You will keep feeling the urge to push new rules into that surface ("this one is important!") — the vast majority of rules do not need to be standing; leave them in `.claude/rules/` as full-text reference and reach them by reference. The criterion: **only "needed for the very first decision of every session" earns standing status**.
+
+Since F-003 this is no longer a matter of judgment: `python3 scripts/context-budget.py --tier <tier>` measures the real injected volume against `.claude/tiers/budget.json` and fails the acceptance run when it is over. Add a line to a tier pack source and the gate tells you what it cost. Two things that surprise people: the budget counts **Unicode characters, not bytes** (CJK is 3 bytes per character, so `wc -c` overstates by ~50%), and a SKILL.md body is **not** part of this surface — only its frontmatter `description` is resident, so splitting a long skill saves nothing here and everything at invocation time.
 
 ## II. How this institution is most likely to decay, and prevention
 
@@ -25,6 +27,7 @@ The institution compounds via: mistake → ERRORS.md → human review → mechan
 | **Lessons-file noise** | duplicate ERRORS.md entries, missing dates, missing line numbers | dedup fix + §3 dedup rule; weekly review clears Pending Review |
 | **Dead-reference buildup** | documents reference paths/skills that don't exist; models chase empty paths or fabricate | "reference = verify" discipline; run a full `/harness-eval` checkup quarterly |
 | **Placeholder normalization** | new projects fork without filling {{}}; models habitually skip whole documents | CLAUDE.md "Activation Status" section defines skip semantics; the first task after forking is to fill in or delete |
+| **Mirror drift** | a `*_zh.md` mirror keeps describing a mechanism the English original has already replaced; no existing gate catches it, because path checks only prove a file exists, not that a sentence is still true | change a file and its mirror in the **same commit**; F-003 left `CLAUDE_zh.md` asserting a dismantled mechanism for 8 commits (ERRORS.md 2026-07-28) |
 
 The most insidious is the **rubber stamp**: it makes every other defense look like it still works. If you can only guard against one, guard against that.
 
@@ -35,6 +38,8 @@ The most insidious is the **rubber stamp**: it makes every other defense look li
 1. **skillopt-loop.md keep-or-delete decision** (needs user decision): already marked "unwired design draft" with fictitious references removed (2026-07-04 round 3). Options: (a) keep as a draft for future wiring (b) delete (red-tier deletion needs consent).
 2. **First-run verification of session-handoffs** (watch item): `state/session-handoffs/` is currently empty — this session never triggered PreCompact. Next time compaction happens, verify a new snapshot file appears in that directory; if not, pre-compact-snapshot.py may have an isomorphic failure (cf. the hooks smoke-test lesson).
 3. **Menu-Android guard fix done but not committed** (2026-07-04): the exit 2 fix passed its smoke test; the changes sit in that repo's `feat/ga-event-tracking` working tree — commit them along with that branch.
+4. **No gate for en/zh mirror parity** (design work): a script comparing the `##` heading list and order of each file against its `_zh` mirror would have caught the F-003 drift on the first run. Candidate homes: fold into `check-doc-refs.py`, or a standalone `check-mirror-parity.py` added to the acceptance block. Known outstanding instance: `docs/INDEX_zh.md` is missing two sections the English has ("Strategy & Market Research Reports", "Chinese Mirror Convention") — this predates F-003.
+5. **ERRORS.md Pending Review is over its threshold** (needs human weekly review): 23 entries against a trigger line of 20. `session-activation-check.py` announces this every session, and the announcement stops meaning anything if it is ignored.
 > All three optimization rounds of 2026-07-04 completed (details in §IV); 26 atomic commits on feat/harness-institution, not pushed.
 
 ## IV. Completed this session (for archaeology)

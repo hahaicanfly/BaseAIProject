@@ -1,14 +1,18 @@
 ---
 name: model-dispatch
-description: Model dispatch, the delegation trio, escalation/de-escalation path, verification-not-self-certified (single source of truth)
-always: true
+description: Model dispatch, the delegation trio, escalation/de-escalation path, verification-not-self-certified (full-text reference behind the tier packs)
+always: false
 ---
+
+> **Not auto-loaded.** Since F-003 this file is the full-text reference behind the
+> tier packs (`.claude/tiers/`), which are what actually gets injected each session.
+> Read this when a borderline case needs the reasoning or worked examples behind a criterion.
 
 # Model Dispatch Rules
 
 *白話:簡單瑣事用便宜快速的模型做,困難或有風險的判斷才升級用更貴、更強的模型,不要每件事都用最貴的那個。*
 
-> Always-on rule (auto-loaded every session); contains only criteria and hard rules.
+> Contains only criteria and hard rules.
 > Full delegation prompt templates: `.claude/templates/delegation-templates.md`; judgment rubrics: `.claude/rules/judgment-rubrics.md`.
 
 ## 0. Actually Available Local Tiers (2026-07 inventory, facts not assumptions)

@@ -131,7 +131,23 @@ INV-TEST-001  新增 interface method 後必須補所有 fakes/mocks
 
 ## INV-ARC-* — Architecture
 
-> 填入專案的架構 invariants。
+### INV-ARC-001 — 常駐 context 層必須待在各 tier 的預算內
+
+```
+RULE     CLAUDE.md + .claude/rules/security.md + 注入的 tier pack，合計不得超過
+         .claude/tiers/budget.json 中 active_mode 的行數與字元數上限。
+         以 Unicode 字元計，非位元組。要往常駐層加東西，就得塞得進預算，
+         或是擠掉已經在裡面的某樣東西。
+CHECK    python3 scripts/context-budget.py --tier strong  （mid、light 同理）
+HOOK     scripts/context-budget.py（enforce：超標即非零退出）；經 scripts/acceptance-run.py
+         接進每一份 ExecPlan 的 acceptance 區塊
+SOURCE   docs/harness/LETTER-TO-FUTURE-SESSIONS.md §I.3；由 F-003 機械化，
+         2026-07-29 經使用者同意升格
+```
+
+> 上限刻意做成**配置**而非常數：切換 `budget.json` 的 `active_mode`（`strict` / `balanced` / `generous`），或直接覆寫數值皆可。改模式是正常編輯；把檢查拿掉不是。
+
+> **採用本模板時**：本條屬 harness 層級，對每個 fork 一體適用。下方各節請填入你自己專案的架構規則。
 
 ---
 

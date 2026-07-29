@@ -71,7 +71,20 @@ sonnet → code generation, analysis, general review (default)
 opus   → architecture design, complex reasoning, deep analysis
 ```
 
-See `.claude/rules/cost-optimization.md` for details.
+Criteria and the escalation path: `.claude/rules/model-dispatch.md`.
+
+**Not to be confused with the harness tier.** The table above decides *which model runs a task*. The harness tier (`strong` / `mid` / `light`) decides *how much rule text that model is given* — it is derived from the `model` field above for subagents, and declared for the main conversation. See `.claude/tiers/README.md`.
+
+## Skills That Route Instead of Load
+
+These skills keep SKILL.md short and hold their bulk in `.claude/skills/<name>/references/`, loaded only when the task needs it. Follow the same shape when a SKILL.md grows past ~150 lines.
+
+| Skill | Reference files |
+|-------|-----------------|
+| `ui-ux-pro-max` | `search-cli.md`, `ux-rules.md`, `polish-checklist.md` |
+| `security-audit` | `domain1-web-api.md`, `domain2-mobile-android.md`, `domain3-cloud-infra.md`, `domain4-api-supplement.md`, `preflight.md`, `reporting.md`, `audit-scope.md` |
+| `frontend-design` | `design-principles.md`, `project-application.md` |
+| `skill-creator-plus` | `eval-loop.md` |
 
 ---
 

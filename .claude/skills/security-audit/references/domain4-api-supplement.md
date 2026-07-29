@@ -1,5 +1,7 @@
 # Domain 4 — API Security Supplement
 
+> Reference for `.claude/skills/security-audit/SKILL.md` — Phase 1 domain: API Supplement (API-1~10). Loaded for the scopes listed in that file's Phase 1 table.
+
 **Standard:** OWASP API Security Top 10 (2023)
 **Scope:** MaiNeu REST API (`api.maineu.com`) — both server and client perspectives
 **API Spec:** `../Menu-Superpower/contracts/openapi.yaml` (Source of Truth)

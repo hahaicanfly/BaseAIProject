@@ -1,5 +1,7 @@
 # Domain 3 — Cloud Infrastructure Security
 
+> Reference for `.claude/skills/security-audit/SKILL.md` — Phase 1 domain: Cloud Infrastructure (C01-C06). Loaded for the scopes listed in that file's Phase 1 table.
+
 **Standard:** OWASP Cloud-Native Application Security Top 10 + CIS Benchmarks
 **Platform:** Cloudflare Workers + D1 + R2 (Serverless Edge)
 **Last Updated:** 2026-04

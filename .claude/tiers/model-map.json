@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "_purpose": "Map a model identifier to a harness tier. Kept as data, not code, so a new model generation only needs an entry here (F-003 Phase 1).",
+  "_matching": "Case-insensitive substring match against the model id, rules evaluated in order, first hit wins. Handles 'opus[1m]', 'claude-haiku-4-5-20251001', 'claude-sonnet-5', bare 'sonnet'.",
+  "_fallback_is_light": "Unknown/absent model resolves to light (the FULL weak-model SOP). Under-loading rules is more dangerous than over-loading them (F-003 DEC-3).",
+  "fallback_tier": "light",
+  "rules": [
+    { "match": "fable", "tier": "strong" },
+    { "match": "opus", "tier": "strong" },
+    { "match": "sonnet", "tier": "mid" },
+    { "match": "haiku", "tier": "light" }
+  ]
+}

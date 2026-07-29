@@ -23,19 +23,30 @@ from _lib import REPO_ROOT, log_event, read_stdin_json  # noqa: E402
 HOOK_NAME = "session-activation-check"
 
 # (label, repo-relative path, predicate on file text -> unfilled?)
+#
+# Each entry below depends on the literal wording of someone else's file.
+# The COUPLING comments are what make that dependency findable from the
+# other end: an editor about to reword one of these documents can
+# `grep -rn "COUPLING:" .claude/hooks/` and see who is watching it.
+# scripts/check-hook-doc-coupling.py fails when a coupling has no such
+# declaration — added after CI proposed rewording exactly the CLAUDE.md
+# line the first entry keys off (ERRORS.md 2026-07-29).
 CHECKS = [
     (
-        "CLAUDE.md Quick Commands build/test/lint 指令未填",
+        "CLAUDE.md 產品層 build/test/lint 未填（harness 自檢指令已就緒）",
+        # COUPLING: CLAUDE.md -- the Quick Commands product build/test/lint slot must keep the literal "{{fill in"; rewording it silently disables this warning
         "CLAUDE.md",
         lambda t: "{{fill in" in t,
     ),
     (
         "docs/architecture/invariants.md 仍含未填佔位符",
+        # COUPLING: docs/architecture/invariants.md -- any remaining "{{" or a "> Fill in" blockquote means the INV sections are still template stubs
         "docs/architecture/invariants.md",
         lambda t: "{{" in t or "> Fill in" in t,
     ),
     (
         "agent_docs/TECHNICAL-REFERENCE.md 未活化",
+        # COUPLING: agent_docs/TECHNICAL-REFERENCE.md -- any remaining "{{" means the technical reference is unfilled and CLAUDE.md's Activation Status says to skip it
         "agent_docs/TECHNICAL-REFERENCE.md",
         lambda t: "{{" in t,
     ),
@@ -56,7 +67,7 @@ def main() -> int:
         print(
             f"[harness] 未活化槽位 {len(unfilled)} 項: "
             + "；".join(unfilled)
-            + " — 未填 Quick Commands 前，本 repo 沒有任何可執行驗證閘門"
+            + " — 未填的槽位一律視為未活化、直接略過，不要照字面執行也不要自行編造內容"
             "（CLAUDE.md Activation Status）。"
         )
         log_event(HOOK_NAME, "warn", reason="unactivated-slots", count=len(unfilled))

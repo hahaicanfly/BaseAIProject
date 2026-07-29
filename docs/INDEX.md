@@ -52,16 +52,30 @@
 
 ---
 
+## Plain-Language Layer (for non-developers)
+
+| File | Purpose |
+|------|------|
+| [`PLAIN/START-HERE.md`](PLAIN/START-HERE.md) | No-jargon entry point: what to type first, what happens next, what it will never do without asking |
+| [`PLAIN/claude-md-crib-sheet.md`](PLAIN/claude-md-crib-sheet.md) | One page on how "just do it" vs "write a plan first" is decided |
+
+> Derived layer, not canon. These are read-only translations of the rule files — where they disagree with a source file, the source file governs.
+
+---
+
 ## Harness Institution Documents (established 2026-07-04)
 
 | File | Purpose |
 |------|------|
 | [`harness/DIAGNOSIS.md`](harness/DIAGNOSIS.md) | Leak diagnosis: top-3 token leaks / focus loss / error-prone spots + fixes + capability limits |
 | [`harness/LETTER-TO-FUTURE-SESSIONS.md`](harness/LETTER-TO-FUTURE-SESSIONS.md) | Letter to future sessions + outstanding handoff checklist |
-| `../.claude/rules/model-dispatch.md` | Model dispatch rules (standing) |
-| `../.claude/rules/judgment-rubrics.md` | Judgment externalization matrix (standing) |
+| `../.claude/tiers/README.md` | **The operative standing rules**: how the tier pack matched to the running model is chosen and injected (F-003) |
+| `../.claude/rules/model-dispatch.md` | Model dispatch rules — full-text reference behind the tier packs, not auto-loaded |
+| `../.claude/rules/judgment-rubrics.md` | Judgment externalization matrix — full-text reference behind the tier packs, not auto-loaded |
 | `../.claude/templates/delegation-templates.md` | 6 delegation prompt templates |
 | `../.claude/protocols/harness-maintenance.md` | Harness file maintenance protocol (permission tiers / lesson format / pruning triggers) |
+
+> Since F-003, only `.claude/rules/security.md` is auto-loaded. The other rule files stayed in place but declare `always: false`; what actually reaches a session is the generated pack in `.claude/tiers/`. Read a rule file when a borderline case needs the reasoning behind a criterion.
 
 ---
 
