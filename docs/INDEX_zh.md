@@ -48,10 +48,13 @@
 |------|------|
 | [`harness/DIAGNOSIS.md`](harness/DIAGNOSIS.md) | 漏水診斷書：Top3 漏 token／失焦／易錯 + 修法 + 能力極限 |
 | [`harness/LETTER-TO-FUTURE-SESSIONS.md`](harness/LETTER-TO-FUTURE-SESSIONS.md) | 給未來 session 的信 + 未完成交接清單 |
-| `../.claude/rules/model-dispatch.md` | 模型調度守則（常駐） |
-| `../.claude/rules/judgment-rubrics.md` | 判斷力外化矩陣（常駐） |
+| `../.claude/tiers/README.md` | **實際生效的常駐規則**：依執行模型選出的 tier pack 如何決定與注入（F-003） |
+| `../.claude/rules/model-dispatch.md` | 模型調度守則 — tier pack 背後的全文參考檔，非自動載入 |
+| `../.claude/rules/judgment-rubrics.md` | 判斷力外化矩陣 — tier pack 背後的全文參考檔，非自動載入 |
 | `../.claude/templates/delegation-templates.md` | 派工 prompt 模板 ×6 |
 | `../.claude/protocols/harness-maintenance.md` | harness 檔案維護協議（權限分級／教訓格式／精簡觸發） |
+
+> F-003 之後只有 `.claude/rules/security.md` 自動載入。其餘規則檔原地保留但標記 `always: false`；真正抵達 session 的是 `.claude/tiers/` 下生成的 pack。邊界情況需要查判準背後的理由時才去讀規則全文檔。
 
 ---
 

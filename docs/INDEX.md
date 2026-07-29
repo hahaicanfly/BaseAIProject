@@ -58,10 +58,13 @@
 |------|------|
 | [`harness/DIAGNOSIS.md`](harness/DIAGNOSIS.md) | Leak diagnosis: top-3 token leaks / focus loss / error-prone spots + fixes + capability limits |
 | [`harness/LETTER-TO-FUTURE-SESSIONS.md`](harness/LETTER-TO-FUTURE-SESSIONS.md) | Letter to future sessions + outstanding handoff checklist |
-| `../.claude/rules/model-dispatch.md` | Model dispatch rules (standing) |
-| `../.claude/rules/judgment-rubrics.md` | Judgment externalization matrix (standing) |
+| `../.claude/tiers/README.md` | **The operative standing rules**: how the tier pack matched to the running model is chosen and injected (F-003) |
+| `../.claude/rules/model-dispatch.md` | Model dispatch rules — full-text reference behind the tier packs, not auto-loaded |
+| `../.claude/rules/judgment-rubrics.md` | Judgment externalization matrix — full-text reference behind the tier packs, not auto-loaded |
 | `../.claude/templates/delegation-templates.md` | 6 delegation prompt templates |
 | `../.claude/protocols/harness-maintenance.md` | Harness file maintenance protocol (permission tiers / lesson format / pruning triggers) |
+
+> Since F-003, only `.claude/rules/security.md` is auto-loaded. The other rule files stayed in place but declare `always: false`; what actually reaches a session is the generated pack in `.claude/tiers/`. Read a rule file when a borderline case needs the reasoning behind a criterion.
 
 ---
 
