@@ -78,18 +78,6 @@
   Session: 645b493e-20af-4689-9546-e5ddba056a8f
 
 
-
-
-
-
-<!-- harvest:8056eb8b94 -->
-- [2026-07-22T15:46:35+0000] [PR_RETRO] **本 session 有 11 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: 077d3a3f-6205-409d-99de-bf82c10d766e
-  ↳ 2026-07-23 /last-word 已完成本 session（PR #2+#3, 共 20 commits）的 retro：教訓見下方兩條 2026-07-23 條目；同 session 較早的 count=2/4 過時提醒與已解決的 C2 驗收三條目（VERIFY_FAILED/PROTOCOL_VIOLATION/ACCEPTANCE_FAIL，全文存 docs/reviews/2026-07-22-f001-phase-c2.md 與 commit 29b6663 訊息）已清理
-
-### [2026-07-23] 提案:harness-maintenance §6 增設「Standing Rule」第三類品質閘門(該檔 §8 為 Red tier 不得自行修改,依規記錄於此送人審)
-- ↳ 2026-07-23 人審裁決:同意採納,條文已寫入 harness-maintenance.md §6 第三類「Standing Rule」閘門(EN/zh 鏡像與 README 品質關卡列同步);提案全文見 git 歷史。本條已結案,下次週審可逕行刪除
-
 ### [2026-07-23] SubagentStop 的 transcript_path 指向主對話——hook payload 語意必須實證,不可從文件或直覺推定
 - 情境:PR #2 的 missing-marker 哨兵讀 payload 的 transcript_path 判定子代理結尾,造成系統性誤報(主對話文字被判違規)與漏報,已污染生產 ERRORS.md
 - 教訓:SubagentStop 的子代理輸出在 `agent_transcript_path` 欄位(官方 hooks 文件未記載;claude-code-guide 查文件還猜錯方向);修法前先在 hook 內 dump 一次真實 payload 再寫邏輯。同場加映:有 transcript 檔不存在的「幻影中間 stop」要跳過、最終 stop 偶有寫入競態要有界重試、每個子代理各觸發一次所以去重 hash 必含 agent_id、structured-output 型代理無結尾文字要豁免
@@ -100,35 +88,6 @@
 - 教訓:(a) 內容掃描類閘門設計時先問「這條規則掃到自己的實作/文件引用時會怎樣」,豁免面(路徑範圍、code-span 剝除、語法前綴)要跟規則一起設計;(b) 修 CI 後除了 YAML lint 還要看 Actions 實跑(或用 actionlint),0 秒失敗=workflow 檔問題;(c) 負向測試不可省——豁免加寬後要證明真違規仍會被抓
 - 建議去向:留在 ERRORS;若未來引入 actionlint 可將 (b) 機械化為 CI job
 - Recurred: 2026-07-26 — F-002 guided-start ExecPlan 的 §6 Progress Log 描述「這幾個死連結是既有問題」時,把 `session-handoffs/`、`docs/PLAIN-INDEX.md` 這類字串包在反引號裡當範例引用,結果 `scripts/check-doc-refs.py` 的 R1 規則把它們當成真實路徑引用,平白造出 2 個新 ERROR,讓實作者「淨新增 ERROR = 0」的自我報告變成假結論。修法同上(b):敘述死連結範例時避免用會被 R1 規則當真的反引號路徑語法,改用純文字描述。這是同一失效家族第三次出現(前兩次為 harness-gates CI 首跑、telemetry harvester 誤收自身引用標記),值得列入 §6 標準 Skill/Agent/Rule 品質閘門考慮是否該有通用「豁免引用性內容」檢查項。
-
-<!-- harvest:d62918f522 -->
-- [2026-07-23T14:29:56+0000] [PROTOCOL_VIOLATION] **subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker**
-  ```
-  No-op placeholder acknowledged — not executing.
-
-Per directive, taking no action and producing no changes.
-  ```
-  ↳ 2026-07-23 已釐清:主對話誤發 no-op 佔位子代理(操作失誤,非流程產物);哨兵判定正確。週審可逕行刪除
-
-<!-- harvest:3d1156c80d -->
-- [2026-07-23T14:46:51+0000] [VERIFY_FAILED] **criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)**
-  ```
-  nical literal-existence check and one of its five sub-paths fails; everything else passes cleanly.
-
-[VERIFY_FAILED: criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)]
-  ```
-  ↳ 2026-07-23 同日已解:帳本其後由 stop-retro-logger 惰性建立,複驗全項 PASS(HANDOFF 標記 acceptance PASS);過程證據見 commit 987a485 訊息。週審可逕行刪除
-
-<!-- harvest:bc8581467e -->
-- [2026-07-23T14:46:51+0000] [PROTOCOL_VIOLATION] **VERIFY_FAILED reason exceeds 80 chars (151) — protocol requires a short specific reason**
-  ```
-  *: none.
-
-Criterion 5 is a mechanical literal-existence check and one of its five sub-paths fails; everything else passes cleanly.
-
-[VERIFY_FAILED: criterion 5 — state/rule-events.jsonl referenced in the new §6 text does not exist on disk (implementation/schema exist, but the file itself is absent)]
-  ```
-  ↳ 2026-07-23 屬實(151 字元)但輕微;複驗輪結尾已改用合規短標記。週審可逕行刪除
 
 ### [2026-07-23] 遙測收割器把「引用性標記」當真實事件:rule-events.jsonl 首筆即污染
 - 情境:驗收代理報告中「引用」clarify-first 的示範標記字串(RULE_FIRED 語法、detail 為字面三點省略號),SubagentStop 收割時被當成真實規則命中寫入 state/rule-events.jsonl——帳本因此首次建立,首筆即假事件(hash 8f8af8ab88)
@@ -159,12 +118,6 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
 5. 反例:Claude Code的Plan Mode雖是最貼近本專案六階段的硬性關卡設計,但執行呈現仍以終端/diff為主,證明「計劃關卡」與「非技術友善執行呈現」是兩個需分開設計的問題。
 
 `[UNCONFIRMED: Replit Plan Mode是否支援計劃內逐步驟重排(僅查到「可見可審」,未查到重排功能證據)]`
-
-<!-- harvest:2066ff2b3d -->
-- [2026-07-24T08:06:35+0000] [PROTOCOL_VIOLATION] **subagent ended without a HANDOFF/VERIFY_FAILED/HUMAN_ATTENTION_REQUIRED marker**
-  ```
-  Good, 149 characters. Now compiling the final structured output with all capability entries.
-  ```
 
 <!-- harvest:9afdc30531 -->
 - [2026-07-24T08:45:50+0000] [UNCONFIRMED] **Grok Build 官方 headless flag 語法**
