@@ -147,7 +147,28 @@ SOURCE   docs/harness/LETTER-TO-FUTURE-SESSIONS.md §I.3; mechanized by F-003 an
 
 > The ceiling is deliberately a **configuration**, not a constant: switch `active_mode` in `budget.json` (`strict` / `balanced` / `generous`) or override the numbers directly. Changing the mode is a normal edit; deleting the check is not.
 
-> **When adopting this template**: this invariant is harness-level and applies as-is to every fork. Fill the sections below with your own project's architecture rules.
+### INV-ARC-002 — An ExecPlan's completion claim must agree with its own checkboxes
+
+```
+RULE     A plan whose Status is done must have zero unticked steps in §4 and must
+         live under docs/plans/completed/; a plan under completed/ must say done.
+         A plan that logs progress in §6 while §4 records none of it is flagged
+         (WARN) as the two accounts having stopped being reconciled.
+CHECK    python3 scripts/execplan-lint.py <plan.md>        (checks E7 / W2)
+HOOK     scripts/execplan-lint.py (enforce: non-zero exit on E7); already wired
+         into harness-gates.yml and every ExecPlan acceptance block
+SOURCE   2026-07-29 PR #14 retro — F-003 recorded twelve finished phases in §6 while
+         every step in §4 sat unticked, and one step genuinely had not been done;
+         it survived three sessions because nothing compared the plan's two
+         accounts of itself. Promoted 2026-07-29 with user consent
+```
+
+> Why an ERROR for `done` and only a WARN for the divergence: a plan may legitimately
+> log a decision before finishing step 1, so early divergence is normal. Claiming
+> completion while steps sit unticked is not — that is a plan asserting two
+> incompatible things about itself.
+
+> **When adopting this template**: both INV-ARC entries above are harness-level and apply as-is to every fork. Fill the sections below with your own project's architecture rules.
 
 ---
 

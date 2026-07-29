@@ -147,7 +147,26 @@ SOURCE   docs/harness/LETTER-TO-FUTURE-SESSIONS.md §I.3；由 F-003 機械化�
 
 > 上限刻意做成**配置**而非常數：切換 `budget.json` 的 `active_mode`（`strict` / `balanced` / `generous`），或直接覆寫數值皆可。改模式是正常編輯；把檢查拿掉不是。
 
-> **採用本模板時**：本條屬 harness 層級，對每個 fork 一體適用。下方各節請填入你自己專案的架構規則。
+### INV-ARC-002 — ExecPlan 的完成宣稱必須與自己的勾選狀態一致
+
+```
+RULE     Status 為 done 的計畫，§4 不得有任何未勾選步驟，且必須位於
+         docs/plans/completed/；位於 completed/ 的計畫必須標 done。
+         §6 有進度紀錄但 §4 一個勾都沒有時，以 WARN 標示——代表計畫對自己
+         的兩份敘述已經不再對帳。
+CHECK    python3 scripts/execplan-lint.py <plan.md>        （檢查項 E7 / W2）
+HOOK     scripts/execplan-lint.py（enforce：E7 觸發即非零退出）；已接入
+         harness-gates.yml 與每一份 ExecPlan 的 acceptance 區塊
+SOURCE   2026-07-29 PR #14 retro —— F-003 的 §6 記載十二個階段完成，而 §4 全部
+         未勾，其中真的有一個步驟沒做；因為沒有任何機制比對計畫對自己的兩份
+         敘述，這個狀態撐過了三個 session。2026-07-29 經使用者同意升格
+```
+
+> 為什麼 `done` 是 ERROR、分歧只是 WARN：計畫在完成步驟 1 之前就先記錄一個決策是
+> 合理的，早期分歧屬正常。但一邊宣稱完成、一邊留著未勾的步驟不是——那是一份計畫
+> 對自己主張了兩件互不相容的事。
+
+> **採用本模板時**：上方兩條 INV-ARC 都屬 harness 層級，對每個 fork 一體適用。下方各節請填入你自己專案的架構規則。
 
 ---
 

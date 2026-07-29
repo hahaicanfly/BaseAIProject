@@ -40,19 +40,7 @@
 - 建議去向：留在 ERRORS
 
 ### [2026-07-29] ExecPlan §4 勾選欄與 §6 進度紀錄可以長期互相矛盾，沒有任何閘門在看
-- 情境：F-003 收尾時發現 §4 的 23 個步驟全部未勾，而 §6 逐條記載它們做完了。逐項對帳後查出步驟 15（DEC-6 要求的 `docs/PLAIN` 引用提示）**真的沒做**，跨三個 session 沒被發現
-- 錯誤：`execplan-lint.py` 檢查的是結構（章節齊不齊），不檢查**內部一致性**。一份計畫可以同時宣稱「做完了」和「沒勾」，而所有閘門都是綠的
-- 教訓：進度敘述要能對回步驟編號，否則「哪一步沒做」無從查起。§6 條目應明確指出它關掉了哪幾個步驟編號
-- 建議去向：**Case D 候選**，可機械化 —— 見下方 INV 候選
-
-```
-[INV_CANDIDATE] INV-ARC-002  ExecPlan 的完成宣稱必須與勾選狀態一致
-  RULE     Status 為 done 的 ExecPlan 不得存在未勾選的步驟；§6 每條進度紀錄
-           應可對應到至少一個步驟編號
-  CHECK    python3 scripts/execplan-lint.py --consistency <plan.md>
-  HOOK     execplan-lint.py（需新增檢查項），已在 CI 與 acceptance
-  SOURCE   2026-07-29 F-003 收尾，步驟 15 未完成而跨三個 session 未被發現
-```
+- ↳ 2026-07-29 已升格為 **`INV-ARC-002`**（`docs/architecture/invariants.md`），機械化落在 `scripts/execplan-lint.py` 的 E7／W2 檢查項，已進 CI 與 acceptance。本條已結案，下次週審可逕行刪除
 
 ### [2026-07-29] `git checkout master && git checkout -b X` 前半失敗、後半照跑，分支從錯誤基底切出
 - 情境：收尾時要從 master 切 `chore/f-003-closeout`。`git checkout master` 因 hook 自動更新的 ERRORS.md 未提交而失敗，但同一個 Bash 呼叫裡後續的建分支指令仍然執行，結果分支是從 `feat/tiered-harness` 切出來的（即使加了 `set -e`）
@@ -115,7 +103,7 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:c4cbdfce60 -->
-- [2026-07-29T03:49:15+0000] [PR_RETRO] **本 session 有 10 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-29T13:29:53+0000] [PR_RETRO] **本 session 有 12 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
   ↳ 2026-07-29 已完成 PR #14 的 /pr-retro：分類分析產出 2 條 Case B + 1 條 Case D（INV-ARC-002 候選），見上方 retro 區塊；其餘模式本輪已即時記錄並 promote
 
