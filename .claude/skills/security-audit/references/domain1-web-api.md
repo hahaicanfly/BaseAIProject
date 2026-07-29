@@ -1,5 +1,7 @@
 # Domain 1 — Web Application & API Security
 
+> Reference for `.claude/skills/security-audit/SKILL.md` — Phase 1 domain: Web & API Security (A01-A10). Loaded for the scopes listed in that file's Phase 1 table.
+
 **Standard:** OWASP Top 10:2025 + OWASP API Security Top 10
 **Scope:** Backend API (Cloudflare Workers) + Client-side API consumption (Ktor)
 **Last Updated:** 2026-04

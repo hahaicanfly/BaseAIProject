@@ -1,5 +1,7 @@
 # Domain 2 — Mobile Application Security (Android)
 
+> Reference for `.claude/skills/security-audit/SKILL.md` — Phase 1 domain: Mobile Android (MASVS). Loaded for the scopes listed in that file's Phase 1 table.
+
 **Standard:** OWASP MASVS v2.x (2025) + OWASP MASTG
 **Profile:** MAS-L1 (standard) + selective MAS-L2/MAS-R checks
 **Platform:** Android (Kotlin, Jetpack Compose)
