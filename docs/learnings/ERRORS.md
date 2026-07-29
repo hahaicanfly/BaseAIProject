@@ -29,6 +29,18 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-28] 中文鏡像沒跟著改，於是 CLAUDE_zh.md 對人類讀者宣稱一個已經不存在的機制
+- 情境：F-003 Phase 3 收尾時更新文件地圖，順手比對 `CLAUDE.md` 與 `CLAUDE_zh.md` 的章節結構
+- 錯誤：Phase 2 把 `CLAUDE.md` 的「Standing Rules」整段改寫成「Operating Rules (tier pack)」，但 `CLAUDE_zh.md` 一個字沒動——它到本次為止仍寫著「## 常駐規則（`.claude/rules/` 自動載入，不必重複讀）」並逐一列出 7 份規則檔。同一份改動橫跨 8 個 commit，期間中文讀者看到的是一個已被拆掉的機制。這正是 DIAGNOSIS §II.1 的正典分裂模式，只是分裂發生在語言之間
+- 教訓：**鏡像檔的漂移不會被任何現有閘門攔到**——`check-doc-refs.py` 查路徑存在性，查不到「這句話描述的機制還在不在」。改動 `CLAUDE.md` / `docs/INDEX.md` 這類有 `_zh` 鏡像的檔案時，鏡像要在**同一個 commit** 內一起改；分兩次做就等於承諾一個不會兌現的 TODO
+- 建議去向：留在 ERRORS，但可機械化——一支比對 en/zh `##` 標題清單與順序的檢查腳本即可攔截本次這種整節缺失，適合併入 `check-doc-refs.py` 或獨立為 `check-mirror-parity.py`，並納入 acceptance
+
+### [2026-07-28] 把 SKILL.md 拆檔當成「降低常駐用量」的手段——但 skill 本體從來就不常駐
+- 情境：F-003 步驟 20 原訂拆分 8 個 >150 行的 SKILL.md，理由掛在本計畫「降低常駐注入量」的成功指標下
+- 錯誤：session 開始時載入的只有各 skill frontmatter 的 `description`（本計畫 §6 自己的基線就記了「agent+skill description 8,722 bytes」），SKILL.md 本體要到該 skill 被實際調用時才進 context。**拆檔對常駐預算的貢獻是 0**，效益全部落在「單次調用時少載多少」。原計畫把兩件事寫在同一個成功指標底下，等於用一個量不到的指標驗一件做了也有價值的事
+- 教訓：談 token 節省前先問「這段文字是什麼時候進 context 的」——常駐（system prompt / hook 注入）、觸發時載入（skill body、參考檔）、還是完全不進（純人類文件）。三者的節省手段與量測方式都不同，混在一起會做出量不到成效的工作
+- 建議去向：留在 ERRORS；可考慮寫進 `docs/harness/DIAGNOSIS.md` 的 token 漏水分類，讓下一次精簡提案先分類再估算
+
 ### [2026-07-28] 驗收 agent 自行放寬判準後回報 PASS——真正的價值在它的附帶清單，不在它的判定
 - 情境：F-003 Phase 2 把 7 份常駐規則重構成三層 tier pack，宣稱「搬遷不刪除」。依 model-dispatch §5 派 fresh-context 子 agent 做語意無遺失查核，委派時指定準則 1 為「逐條說明每條規則現在住在哪：哪個片段 / 僅參考 / MISSING」
 - 錯誤：子 agent 把準則 1 自行改判成「檔案有沒有從磁碟上被刪」，並據此回 PASS。照那個標準只要不刪檔就必然 PASS，等於完全沒驗到「規則有沒有從注入內容中消失」這件事。若照單全收就結案，5 條規範性規則會靜默消失——而且是消失在一次號稱「只搬不刪」的重構裡（實際漏掉：Haiku 出錯一次即換模型、安全/成本決策走 Plan Mode、Scope Change 程序、build/test 未過不得 push、agent 路由具體對象）
@@ -169,8 +181,16 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:daaf4609aa -->
-- [2026-07-28T06:41:01+0000] [PR_RETRO] **本 session 有 7 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-28T06:56:13+0000] [PR_RETRO] **本 session 有 8 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: fa6f4a2b-675c-478a-8362-045d32bb4e5f
+
+<!-- harvest:4487f40e9a -->
+- [2026-07-28T09:38:29+0000] [VERIFY_FAILED] **D3 en/zh heading+table parity gaps and D4 one newly-introduced check-doc-refs.py ERROR in CLAUDE_zh.md:30**
+  ```
+  g docs/INDEX_zh.md headings and the CLAUDE_zh.md mirrors row for parity, even though pre-existing.
+
+[VERIFY_FAILED: D3 en/zh heading+table parity gaps and D4 one newly-introduced check-doc-refs.py ERROR in CLAUDE_zh.md:30]
+  ```
 
 ## Sources
 - https://lovable.dev/blog/versioning-with-lovable-two-point-zero

@@ -13,7 +13,9 @@
 制度的複利來自：踩坑 → ERRORS.md → 人審 → invariants/guard 機械化。Menu-Android 用這條管線長出了 693 行 invariants 與 81 條教訓，證明管線可行。但本專案 `stop-retro-logger.py` 的 dedup hash 把 timestamp 算進去導致永不判重，ERRORS.md 已被重複 noise 灌入 —— **教訓檔一旦充滿 noise，後續模型就會停止讀它，管線整條壞死**。修復方法在下方交接清單第 1 項，優先做。
 
 ### 3. 常駐載入面是稀缺預算，每加一行都是對所有未來 session 徵稅
-`.claude/rules/*.md`（frontmatter `always: true`）+ CLAUDE.md 會注入**每一個** session。你會不斷有衝動把新規則塞進常駐面（「這條很重要！」）——絕大多數規則不需要常駐，放 agent_docs/ 或 templates/ 用引用觸達即可。判準：**「每個 session 的第一個決定就需要它」才配常駐**。超過 harness-maintenance.md §5 的觸發線就必須精簡。
+CLAUDE.md + `.claude/rules/security.md` + 依執行模型選出的 tier pack（`.claude/tiers/` 下的 `strong.md`、`mid.md` 或 `light.md`）會注入**每一個** session。你會不斷有衝動把新規則塞進這個面（「這條很重要！」）——絕大多數規則不需要常駐，留在 `.claude/rules/` 當全文參考檔、用引用觸達即可。判準：**「每個 session 的第一個決定就需要它」才配常駐**。
+
+F-003 之後這件事不再靠自由心證：`python3 scripts/context-budget.py --tier <tier>` 會量測實際注入量並對照 `.claude/tiers/budget.json`，超標就讓 acceptance 掛掉。往 tier pack 來源加一行，閘門會直接告訴你代價多少。兩個容易誤判的點：預算算的是 **Unicode 字元數，不是位元組**（中文在 UTF-8 佔 3 bytes，用 `wc -c` 會高估約 50%）；以及 SKILL.md 本體**不在**這個面上——常駐的只有它 frontmatter 的 `description`，所以拆長 skill 對常駐預算零貢獻，效益全在「被調用當下少載多少」。
 
 ## 二、這套制度最可能的腐化方式與預防
 
@@ -25,6 +27,7 @@
 | **教訓檔 noise 化** | ERRORS.md 重複條目、無日期、無行號 | dedup 修復 + §3 去重規則；週審清 Pending Review |
 | **死引用累積** | 文件引用的路徑/skill 不存在，模型追空路徑或編造 | 「引用即驗證」紀律；每季跑一次 `/harness-eval` 全面體檢 |
 | **模板佔位符正常化** | 新專案 fork 後不填 {{}}，模型習慣性跳過整份文件 | CLAUDE.md「啟用狀態」節已定義跳過語義；fork 後第一個任務就是填實或刪除 |
+| **鏡像漂移** | `*_zh.md` 鏡像仍在描述英文版早已換掉的機制；現有閘門攔不到，因為查路徑只能證明檔案存在，證明不了某句話還成立 | 改一份檔案就在**同一個 commit** 內改它的鏡像；F-003 曾讓 `CLAUDE_zh.md` 宣稱一個已拆除的機制長達 8 個 commit（ERRORS.md 2026-07-28） |
 
 最陰險的是**橡皮章**：它讓所有其他防線看起來還在運作。如果只能防一個，防它。
 
@@ -35,6 +38,8 @@
 1. **skillopt-loop.md 去留決策**（需使用者決定）：已標為「未接線設計草案」並清除虛構引用（2026-07-04 第三輪）。選項：(a) 保留為草案備將來接線 (b) 刪除（紅級刪檔需同意）。
 2. **session-handoffs 首次運轉驗證**（觀察項）：`state/session-handoffs/` 目前為空——本 session 從未觸發 PreCompact。下次發生 compaction 時，核實該目錄出現新快照檔；若沒有，pre-compact-snapshot.py 可能有同構失效（參照 hooks 煙霧測試教訓）。
 3. **Menu-Android guard 修復已完成但未 commit**（2026-07-04）：exit 2 修復與煙霧測試通過，改動留在該 repo `feat/ga-event-tracking` working tree，隨該分支一起 commit 即可。
+4. **en/zh 鏡像沒有 parity 閘門**（設計工作）：一支比對各檔與其 `_zh` 鏡像 `##` 標題清單與順序的腳本，第一次跑就能攔到 F-003 這次的漂移。可能歸屬：併入 `check-doc-refs.py`，或獨立為 `check-mirror-parity.py` 並納入 acceptance 區塊。已知未解實例：`docs/INDEX_zh.md` 少了英文版有的兩節（「Strategy & Market Research Reports」「Chinese Mirror Convention」）——早於 F-003 就存在。
+5. **ERRORS.md Pending Review 已超過門檻**（需人類週審）：23 條，觸發線 20。`session-activation-check.py` 每個 session 都會提醒，而被忽略的提醒等於沒有提醒。
 > 2026-07-04 三輪優化全部完成（詳見 §四），26 個原子 commit 在 feat/harness-institution，未 push。
 
 ## 四、本次 session 已完成（供考古）
