@@ -6,6 +6,8 @@ always: true
 
 # Security Rules
 
+> 白話版另存於 `docs/PLAIN/security-plain.md`
+
 ## 絕對禁止
 
 ### 1. 硬編碼機敏資訊

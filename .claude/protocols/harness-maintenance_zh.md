@@ -60,6 +60,12 @@
      ```
 4. 驗證失敗 → 還原備份，把失敗記進 ERRORS.md
 
+**寫 hook 邏輯之前先 dump 一次真實 payload。** 官方文件的欄位名已經錯了三次（`SubagentStop` 的 `transcript_path` 實際是 `agent_transcript_path`；`SessionStart` 文件說「可能帶」`model` 欄位，實際根本不存在；`InstructionsLoaded` 的欄位名跟文件完全不同）。寫一個 20 行、只把 `read_stdin_json()` 印進檔案的 hook，加一次巢狀 `claude -p` 觸發，幾分鐘就能定案——遠比照文件寫完才發現不對便宜。
+
+**hook 對文件用字的依賴要宣告出來。** 如果一個 hook 靠比對某份 markdown 裡的字面字串來做判斷，就在旁邊加一行 `# COUPLING: <path> -- <這個 needle 代表什麼>`，讓要改那份文件的人可以用 `grep -rn "COUPLING:" .claude/hooks/` 找到它。`scripts/check-hook-doc-coupling.py` 會擋下未宣告的耦合。這條規則的由來：CI 曾經要求改掉 CLAUDE.md 裡某一行，而那行正是一個活化檢查賴以判斷的字串——照改會讓 CI 變綠，同時把那個檢查靜默關掉。
+
+**內容掃描類防線的豁免面要跟規則同時設計。** 掃描器誤打自己「引用」的內容已經發生四次。新增樣式時當下就要問：這個 repo 自己的文件在描述這個樣式時會怎樣？`pre-tool-use-guard.py` 的答案是：寫入資料槽（`cat >`、`tee`、`git commit -F -`、`gh --body-file -`）的 heredoc body 不做指令掃描，但直譯器會執行的 body 絕不豁免。豁免依 security.md 用允許清單，而且每一條都附負向測試，證明真實違規仍然被擋。
+
 **引用即驗證**：在任何 harness 檔寫下路徑/工具名/skill 名之前，先確認它存在（`ls` 或 Glob）。發現既有死引用：綠黃級直接修，紅級記入 ERRORS.md 等人審。
 
 ## 5. 精簡觸發條件（防止文件無限膨脹）

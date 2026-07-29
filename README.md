@@ -48,7 +48,7 @@ AI-led development has three failure modes. Each gets a physical guardrail, not 
 | Skills | 17 | Trigger-based workflows; the largest route through `references/` instead of loading whole |
 | Hooks | 10 across 8 events + 2 shared modules | 1 enforce (exit 2, interception tested for real) + 9 sentinels |
 | Protocols | 5 | ExecPlan lifecycle, handoff markers, review SOP, harness maintenance, 1 unwired draft |
-| Mechanical gates | 7 scripts + 4-job CI | 6 checks + 1 read-only translator; `harness-gates.yml` re-checks every PR |
+| Mechanical gates | 9 scripts + 6-job CI | 8 checks + 1 read-only translator; `harness-gates.yml` re-checks every PR |
 | Hard rules | 9 invariants | 5 git + 3 security + 1 architecture, each with a CHECK command and an owning hook |
 | State ledgers | 8 JSONL + 2 JSON + 2 sub-dirs | Delegations, acceptance outcomes and rule hit-rates survive session context (`state/SCHEMA.md`) |
 | Knowledge system | 5 layers | Lessons / hard rules / ADRs / session snapshots / native memory, each with its own permissions |
@@ -118,7 +118,7 @@ Shared modules `_lib.py` and `tier_resolve.py` are imported by the hooks, not wi
 
 ### 6. Mechanical Gates
 
-Seven scripts make claims checkable on demand instead of on trust:
+Nine scripts make claims checkable on demand instead of on trust:
 
 | Script | What it settles |
 |---|---|
@@ -127,10 +127,12 @@ Seven scripts make claims checkable on demand instead of on trust:
 | `check-doc-refs.py` | Verifies every path and section reference in the canon exists (dead references are hallucination bait) |
 | `context-budget.py` | Measures the standing layer against `.claude/tiers/budget.json` — the enforcement behind `INV-ARC-001` |
 | `build-tier-packs.py` | Rebuilds the tier packs; `--check` fails when a pack has drifted from its sources |
+| `check-mirror-parity.py` | Compares each `_zh` mirror's section, subsection and table-row shape against its original — catches a mirror still describing a replaced mechanism |
+| `check-hook-doc-coupling.py` | Fails when a hook decides something by a literal string in a document without declaring the dependency |
 | `retro-status.py` | Computes the trim-trigger numbers by their literal definitions |
 | `translate-acceptance.py` | **Not a gate** — read-only, always exits 0, restates existing acceptance evidence in plain language |
 
-`.github/workflows/harness-gates.yml` re-runs the checkable subset on every PR (py-compile, secret-scan, execplan-lint, placeholder-gate).
+`.github/workflows/harness-gates.yml` re-runs the checkable subset on every PR (py-compile, secret-scan, execplan-lint, mirror-parity, hook-coupling, placeholder-gate).
 
 ### 7. Knowledge Management (map at `docs/INDEX.md`)
 
@@ -180,8 +182,8 @@ BaseAIProject/
 │   ├── learnings/ERRORS.md    # Lessons pipeline (Pending → Active → invariants)
 │   ├── PLAIN/                 # Plain-language layer: START-HERE, CLAUDE.md crib sheet
 │   └── plans/                 # ExecPlan spec + active/ + completed/
-├── scripts/                   # 6 mechanical gates + translate-acceptance (read-only, not a gate)
-├── .github/workflows/         # harness-gates.yml CI (4 jobs)
+├── scripts/                   # 8 mechanical gates + translate-acceptance (read-only, not a gate)
+├── .github/workflows/         # harness-gates.yml CI (6 jobs)
 ├── state/                     # runtime, gitignored: 8 JSONL ledgers + acceptance/ + session-handoffs/
 └── .claude/
     ├── settings.json          # Hook wiring (8 events) + HARNESS_TIER declaration

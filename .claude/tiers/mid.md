@@ -125,6 +125,10 @@ Before delivering, you must be able to answer all five:
 4. **No silent swallowing?** No empty catch blocks, no error downgraded to a log line and called handled.
 5. **No secrets?** The diff contains no key, token or password.
 
+## Where the plain-language versions live
+
+`docs/PLAIN/` restates these rules without jargon — `security-plain.md` for the security rule, `claude-md-crib-sheet.md` for the routing table, `START-HERE_zh.md` for a first-time overview. Derived, never canon: when one disagrees with its source file, the source file wins.
+
 ## Reporting back (subagents)
 
 Reports run ≤40 lines and carry conclusions, lists and `file:line` references — not narration. Anything longer than ~10 lines of code or raw text goes into a file; report the path instead. End with a handoff marker (`.claude/protocols/handoff-protocol.md`). Report failure honestly: where you're stuck and what you tried. "Mostly done" is not a report.

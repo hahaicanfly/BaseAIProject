@@ -48,7 +48,7 @@ AI 主導的開發有三種失效模式。每一種都配一道實體防線，�
 | Skills | 17 個 | 觸發式工作流；最大的幾個改走 `references/` 而非整份載入 |
 | Hooks | 橫跨 8 個事件的 10 個 + 2 個共用模組 | 1 個 enforce（exit 2，攔截經實測）+ 9 個 sentinel |
 | Protocols | 5 份 | ExecPlan 生命週期、交接標記、審查 SOP、harness 維護、1 份未接線草案 |
-| 機械閘門 | 7 支腳本 + 4 job CI | 6 支檢查 + 1 支唯讀翻譯器；`harness-gates.yml` 每個 PR 重跑 |
+| 機械閘門 | 9 支腳本 + 6 job CI | 8 支檢查 + 1 支唯讀翻譯器；`harness-gates.yml` 每個 PR 重跑 |
 | 硬規則 | 9 條 invariant | 5 git + 3 security + 1 architecture，每條都有 CHECK 指令與負責的 hook |
 | 狀態帳本 | 8 個 JSONL + 2 個 JSON + 2 個子目錄 | 派工、驗收結果、規則命中率不隨 session context 消失（`state/SCHEMA.md`） |
 | 知識系統 | 5 層 | 教訓／硬規則／ADR／session 快照／原生記憶，各有各的權限 |
@@ -101,7 +101,7 @@ AI 主導的開發有三種失效模式。每一種都配一道實體防線，�
 
 | Hook | 事件 | 模式 | 職責 |
 |---|---|---|---|
-| `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce**（exit 2） | 攔截：直接 commit 到 master/main、force-push、`reset --hard origin`、讀取**與 git add** 機密檔、把網路內容直接灌進 shell 執行的所有變體、`rm -rf /` |
+| `pre-tool-use-guard.py` | PreToolUse(Bash) | **enforce**（exit 2） | 攔截：直接 commit 到 master/main、force-push、`reset --hard origin`、讀取**與 git add** 機密檔、所有 `curl|sh` 變體、`rm -rf /` |
 | `post-edit-lint.py` | PostToolUse(write) | sentinel | INV 樣式快掃（fork 後填 `QUICK_CHECKS`） |
 | `pre-compact-snapshot.py` | PreCompact | sentinel | 把 session 快照寫進 `state/session-handoffs/` |
 | `delegation-ledger.py` | PreToolUse(Task/Agent) | sentinel | 記錄每一次派工，以及有沒有附驗收標準 |
@@ -118,7 +118,7 @@ AI 主導的開發有三種失效模式。每一種都配一道實體防線，�
 
 ### 6. 機械閘門
 
-七支腳本，讓宣稱可以被當場查證，而不是被相信：
+九支腳本，讓宣稱可以被當場查證，而不是被相信：
 
 | 腳本 | 它能一槌定音的事 |
 |---|---|
@@ -127,10 +127,12 @@ AI 主導的開發有三種失效模式。每一種都配一道實體防線，�
 | `check-doc-refs.py` | 驗證正典裡每個路徑與章節引用都存在（死引用是幻覺的餌） |
 | `context-budget.py` | 量測常駐層對照 `.claude/tiers/budget.json` —— `INV-ARC-001` 背後的執行者 |
 | `build-tier-packs.py` | 重建 tier pack；`--check` 在 pack 與來源漂移時失敗 |
+| `check-mirror-parity.py` | 比對每份 `_zh` 鏡像與原文的章節、子章節、表格列結構——抓出仍在描述已被替換機制的鏡像 |
+| `check-hook-doc-coupling.py` | hook 靠某份文件的字面字串做判斷卻未宣告該依賴時，讓它失敗 |
 | `retro-status.py` | 依字面定義計算精簡觸發線的各項數字 |
 | `translate-acceptance.py` | **不是閘門** —— 唯讀、永遠 exit 0，只把既有驗收證據翻成白話 |
 
-`.github/workflows/harness-gates.yml` 在每個 PR 重跑可檢查的子集（py-compile、secret-scan、execplan-lint、placeholder-gate）。
+`.github/workflows/harness-gates.yml` 在每個 PR 重跑可檢查的子集（py-compile、secret-scan、execplan-lint、mirror-parity、hook-coupling、placeholder-gate）。
 
 ### 7. 知識管理（地圖在 `docs/INDEX.md`）
 
@@ -180,8 +182,8 @@ BaseAIProject/
 │   ├── learnings/ERRORS.md    # 教訓管線（Pending → Active → invariants）
 │   ├── PLAIN/                 # 白話層：START-HERE、CLAUDE.md 對照卡
 │   └── plans/                 # ExecPlan 規格 + active/ + completed/
-├── scripts/                   # 6 支機械閘門 + translate-acceptance（唯讀，非閘門）
-├── .github/workflows/         # harness-gates.yml CI（4 個 job）
+├── scripts/                   # 8 支機械閘門 + translate-acceptance（唯讀，非閘門）
+├── .github/workflows/         # harness-gates.yml CI（6 個 job）
 ├── state/                     # 執行期，已 gitignore：8 個 JSONL 帳本 + acceptance/ + session-handoffs/
 └── .claude/
     ├── settings.json          # hook 接線（8 個事件）+ HARNESS_TIER 宣告
