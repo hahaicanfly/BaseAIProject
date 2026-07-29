@@ -54,36 +54,38 @@ Scope Baseline: target user=fork 本模板的新產品開發專案，其主對�
 
 ## 4. Step-by-step Plan
 
+> 勾選狀態於 2026-07-29 與 §6 Progress Log 逐項對帳後補齊——先前所有步驟都留在未勾狀態，與進度紀錄互相矛盾，正是本 repo 要防的「文件宣稱 ≠ 事實」。對帳依據是 §6 已記錄的證據，非重新執行；唯一查出真正未完成的是步驟 15（tier pack 內 `docs/PLAIN` 引用提示實際為 0 個，DEC-6 明文要求 light/mid 要有），已於同日補完。
+
 ### Phase 0 — 建立可執行閘門與量測基準（本 repo 目前零可執行驗證）
 
-1. [ ] 確認基線：於乾淨工作區記錄常駐層現況數值（行數、字元數）寫入 §6，作為後續 diff 的對照點
-2. [ ] 新增預算配置檔 `.claude/tiers/budget.json`：定義**可切換模式**，每個模式給三個 tier 各一組 `max_lines` / `max_chars`。內建至少三檔（`strict` / `balanced`（預設） / `generous`），`balanced` 沿用 strong 250 行 / 14,000 字元、mid 24,000 字元、light 不設上限。含 `active_mode` 欄位供使用者一行切換，數值亦可直接覆寫（Q1 裁決）
-3. [ ] 新增 `scripts/context-budget.py`：計算指定 tier 的實際行數與字元數並與配置比對，超標時 exit 非零並列出各檔佔比。門檻**一律讀 `budget.json`**，不硬編；`--max-chars` 僅作為臨時覆寫。另提供 `--self-test`（驗證 tier 偵測與配置解析）與 `--list-modes`
-4. [ ] 填寫 `CLAUDE.md` Quick Commands 區塊：本 repo 為文件型專案，build/lint/test 對應 `execplan-lint.py` / `check-doc-refs.py` / hook smoke test 與 `context-budget.py`（Red tier，需備份）
+1. [x] 確認基線：於乾淨工作區記錄常駐層現況數值（行數、字元數）寫入 §6，作為後續 diff 的對照點
+2. [x] 新增預算配置檔 `.claude/tiers/budget.json`：定義**可切換模式**，每個模式給三個 tier 各一組 `max_lines` / `max_chars`。內建至少三檔（`strict` / `balanced`（預設） / `generous`），`balanced` 沿用 strong 250 行 / 14,000 字元、mid 24,000 字元、light 不設上限。含 `active_mode` 欄位供使用者一行切換，數值亦可直接覆寫（Q1 裁決）
+3. [x] 新增 `scripts/context-budget.py`：計算指定 tier 的實際行數與字元數並與配置比對，超標時 exit 非零並列出各檔佔比。門檻**一律讀 `budget.json`**，不硬編；`--max-chars` 僅作為臨時覆寫。另提供 `--self-test`（驗證 tier 偵測與配置解析）與 `--list-modes`
+4. [x] 填寫 `CLAUDE.md` Quick Commands 區塊：本 repo 為文件型專案，build/lint/test 對應 `execplan-lint.py` / `check-doc-refs.py` / hook smoke test 與 `context-budget.py`（Red tier，需備份）
 5. [x] ~~修復規則遙測管線~~ → **改為：查證管線並定位真正缺口**。原假設「採收器壞掉」經 end-to-end 測試證偽：以合格 fixture 餵入 `stop-retro-logger.py`，`RULE_FIRED` 與 `ESCALATION` 兩類標記皆正常寫入 `state/rule-events.jsonl`。真正缺口在**發射端**——模型幾乎從不主動輸出這些標記，故帳本恆空。因採收器無需修改，本步驟不動 Red-tier 檔案；發射端的補救方案見 §8 Q6
-6. [ ] 驗收 Phase 0：`context-budget.py` 對現況執行必須 FAIL（證明門檻有效）；切換 `active_mode` 後門檻確實改變（證明可調式生效）；遙測修復後**立即進入 Phase 1，不設觀察期**（Q3 裁決）
+6. [x] 驗收 Phase 0：`context-budget.py` 對現況執行必須 FAIL（證明門檻有效）；切換 `active_mode` 後門檻確實改變（證明可調式生效）；遙測修復後**立即進入 Phase 1，不設觀察期**（Q3 裁決）
 
 ### Phase 1 — Spike：確定 tier 偵測機制
 
-7. [ ] 實測本環境 SessionStart hook 收到的原始 payload 是否實際帶 `model` 欄位（官方標示為 optional）：暫時性地將 `read_stdin_json()` 結果完整寫入 `state/` 一次性樣本檔後移除該暫時程式碼
-8. [ ] 依實測結果確定偵測來源優先序並寫入 §7 DEC-4：(a) SessionStart payload 的 `model` → (b) `~/.claude/settings.json` 的 `model` → (c) fallback light tier
-9. [ ] 定義 tier 對照表 `.claude/tiers/model-map.json`：`opus*` / `fable*` → strong；`sonnet*` → mid；`haiku*` → light；未知或缺值 → light。存為獨立資料檔（非硬編在 hook 內），未來模型世代更新時無需改程式
-10. [ ] 決定子 agent 的 tier 判定法：`SubagentStart` payload 只有 `agent_type`、不含模型，故由 `agent_type` 反查 `.claude/agents/<name>.md` frontmatter 的 `model` 欄位 → 套用同一張 `model-map.json`。**三個邊界情境必須明確定義**：(i) frontmatter 無 `model`（繼承主對話）→ 沿用當前 session tier；(ii) 內建 agent（`Explore` / `general-purpose` / `Plan`，無對應檔案）→ light；(iii) 檔案讀取失敗 → light
-11. [ ] 驗收 Phase 1：以偽造的 model 值餵入偵測函式，確認回傳 strong/mid/light；餵入空值、亂碼、不存在的 agent_type，確認全數回傳 light
+7. [x] 實測本環境 SessionStart hook 收到的原始 payload 是否實際帶 `model` 欄位（官方標示為 optional）：暫時性地將 `read_stdin_json()` 結果完整寫入 `state/` 一次性樣本檔後移除該暫時程式碼
+8. [x] 依實測結果確定偵測來源優先序並寫入 §7 DEC-4：(a) SessionStart payload 的 `model` → (b) `~/.claude/settings.json` 的 `model` → (c) fallback light tier
+9. [x] 定義 tier 對照表 `.claude/tiers/model-map.json`：`opus*` / `fable*` → strong；`sonnet*` → mid；`haiku*` → light；未知或缺值 → light。存為獨立資料檔（非硬編在 hook 內），未來模型世代更新時無需改程式
+10. [x] 決定子 agent 的 tier 判定法：`SubagentStart` payload 只有 `agent_type`、不含模型，故由 `agent_type` 反查 `.claude/agents/<name>.md` frontmatter 的 `model` 欄位 → 套用同一張 `model-map.json`。**三個邊界情境必須明確定義**：(i) frontmatter 無 `model`（繼承主對話）→ 沿用當前 session tier；(ii) 內建 agent（`Explore` / `general-purpose` / `Plan`，無對應檔案）→ light；(iii) 檔案讀取失敗 → light
+11. [x] 驗收 Phase 1：以偽造的 model 值餵入偵測函式，確認回傳 strong/mid/light；餵入空值、亂碼、不存在的 agent_type，確認全數回傳 light
 
 ### Phase 2 — 建立 tier packs 並執行常駐層搬遷
 
-12. [ ] 建立 `.claude/tiers/{strong,mid,light}.md` 三份 tier pack，以及三者共用的常駐核心
-13. [ ] 重劃常駐層：`.claude/rules/` 僅保留「每個 session 第一個決策就需要」者（初步判定：`security.md` + CLAUDE.md 決策樹），其餘 5 檔的 `always: true` 降級，內容依重量搬入對應 tier pack
-14. [ ] 語氣分層改寫：`judgment-rubrics.md` §7（Red Flags 話術表）、§2.5（gate-softening 禁令）、literal-text clause 等**防禦性條款移入 light/mid pack**；strong pack 只保留「可觀測訊號 → 動作」骨架。此步為搬遷非刪除
-15. [ ] 白話註解外移（Q2 裁決）：常駐層內嵌的 26 處「白話:」註解全部搬到 `docs/PLAIN/`；**light 與 mid pack 於對應段落保留一行引用路徑提示**（指向 `docs/PLAIN/` 的具體檔案與錨點），strong pack 不含此提示
-16. [ ] 改寫 `session-activation-check.py`（或新增獨立 hook）：依 Phase 1 的偵測結果，以 `hookSpecificOutput.additionalContext` 注入對應 tier pack（優於現行純 stdout）。維持 sentinel 性質，一律 exit 0（Red tier，需 smoke test）
-17. [ ] 驗收 Phase 2：三個 tier 分別跑 `context-budget.py` 對照 `balanced` 模式門檻；light 不設上限但需以逐條對照表證明涵蓋現有 7 檔全部條款
+12. [x] 建立 `.claude/tiers/{strong,mid,light}.md` 三份 tier pack，以及三者共用的常駐核心
+13. [x] 重劃常駐層：`.claude/rules/` 僅保留「每個 session 第一個決策就需要」者（初步判定：`security.md` + CLAUDE.md 決策樹），其餘 5 檔的 `always: true` 降級，內容依重量搬入對應 tier pack
+14. [x] 語氣分層改寫：`judgment-rubrics.md` §7（Red Flags 話術表）、§2.5（gate-softening 禁令）、literal-text clause 等**防禦性條款移入 light/mid pack**；strong pack 只保留「可觀測訊號 → 動作」骨架。此步為搬遷非刪除
+15. [x] 白話註解外移（Q2 裁決）：常駐層內嵌的 26 處「白話:」註解全部搬到 `docs/PLAIN/`；**light 與 mid pack 於對應段落保留一行引用路徑提示**（指向 `docs/PLAIN/` 的具體檔案與錨點），strong pack 不含此提示
+16. [x] 改寫 `session-activation-check.py`（或新增獨立 hook）：依 Phase 1 的偵測結果，以 `hookSpecificOutput.additionalContext` 注入對應 tier pack（優於現行純 stdout）。維持 sentinel 性質，一律 exit 0（Red tier，需 smoke test）
+17. [x] 驗收 Phase 2：三個 tier 分別跑 `context-budget.py` 對照 `balanced` 模式門檻；light 不設上限但需以逐條對照表證明涵蓋現有 7 檔全部條款
 
 ### Phase 3 — 子 agent 動態分層與 skill 漸進揭露
 
-18. [ ] 新增 `.claude/hooks/subagent-tier-inject.py` 並掛載到 `settings.json` 的 `SubagentStart`（matcher `.*`）：依步驟 10 的判定法決定 tier，以 `additionalContext` 注入對應 pack。**sentinel 性質，所有路徑 exit 0**——此事件無法阻斷生成，且注入失敗不得影響子 agent 運作（Q4 裁決；Red tier，需 smoke test）
-19. [ ] `.claude/templates/delegation-templates.md` 同步調整：說明 SOP 摘要已由 SubagentStart 自動注入，委派 prompt 不需重複附帶（避免與官方「重複→單一來源」原則相悖，也避免雙重注入）
+18. [x] 新增 `.claude/hooks/subagent-tier-inject.py` 並掛載到 `settings.json` 的 `SubagentStart`（matcher `.*`）：依步驟 10 的判定法決定 tier，以 `additionalContext` 注入對應 pack。**sentinel 性質，所有路徑 exit 0**——此事件無法阻斷生成，且注入失敗不得影響子 agent 運作（Q4 裁決；Red tier，需 smoke test）
+19. [x] `.claude/templates/delegation-templates.md` 同步調整：說明 SOP 摘要已由 SubagentStart 自動注入，委派 prompt 不需重複附帶（避免與官方「重複→單一來源」原則相悖，也避免雙重注入）
 20. [x] 拆分最大的 3 個 SKILL.md 為路由（≤80 行）+ 同目錄參考檔（Yellow tier）：`ui-ux-pro-max` 394→55、`security-audit` 306→69、`frontend-design` 281→79。範圍經使用者 2026-07-28 裁定縮減，其餘 5 檔（168–190 行）留在原地，理由見 DEC-12
 20b. [x] `.claude/settings.json` `env` 區塊出廠帶 `HARNESS_TIER: "auto"`（宣告哨兵值，等同不宣告→落回猜測），`tier_resolve.py` 以 `NO_DECLARATION` 常數明文化此語意。使用者裁定：讓 fork 本模板的人一眼看得到這個旋鈕在哪、怎麼改（Red tier，8 種取值 + 9 情境 hook smoke test 全通過）
 21. [x] 更新 `agent_docs/AI-TEAM-REGISTRY.md`（模型分派 vs harness tier 的區別、routing skill 對照表）、`docs/INDEX.md` + `docs/INDEX_zh.md`（`rules/*.md` 的「（常駐）」標註已成假敘述，改為「全文參考檔，非自動載入」並新增 `.claude/tiers/README.md` 列）、`CLAUDE.md` + `CLAUDE_zh.md` 文件地圖；`CLAUDE.md` 記載「tier 於 session 開始時決定一次，中途 `/model` 切換需開新 session 才生效」此一已知限制
@@ -95,6 +97,8 @@ Scope Baseline: target user=fork 本模板的新產品開發專案，其主對�
 ```acceptance
 plan-lint: python3 scripts/execplan-lint.py docs/plans/active/F-003-tiered-harness.md
 doc-refs: python3 scripts/check-doc-refs.py
+mirror-parity: python3 scripts/check-mirror-parity.py
+hook-coupling: python3 scripts/check-hook-doc-coupling.py
 budget-strong: python3 scripts/context-budget.py --tier strong
 budget-mid: python3 scripts/context-budget.py --tier mid
 modes: python3 scripts/context-budget.py --list-modes
@@ -113,6 +117,8 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 - 依 `model-dispatch.md` §5，本計畫的驗收不得自證：Phase 2 與 Phase 3 的 read-back 由 fresh-context agent 執行。
 
 ## 6. Progress Log
+
+- [2026-07-29 --:--] dev **PR #14 開出後的硬化回合**：把本計畫過程中三度撞到、但一直沒被機械化的失效家族補上閘門。(a) `scripts/check-mirror-parity.py` 比對每組 `_zh` 鏡像與原文的章節／子章節／表格列結構——跨語言比不了文字，但比得了形狀，第一次跑就精準命中唯一已知缺口（`docs/INDEX_zh.md` 少兩節），79 對鏡像其餘全數同步。(b) `scripts/check-hook-doc-coupling.py` 以 AST 抽出 hook 對文件的字面依賴，強制加 `# COUPLING:` 宣告——刻意**不**檢查 needle 是否仍存在，因為這些 needle 偵測的是「未填」，在正常活化的 fork 裡本來就該消失，要求它存在會在每個下游專案誤報（同一條「規則對模板自己成不成立」的教訓，反過來用一次）。(c) `pre-tool-use-guard.py` 不再把寫入資料槽的 heredoc body 當指令掃描；直譯器會執行的 body 絕不豁免，依 security.md 用允許清單。18 情境黑箱測試全過，其中 12 個是負向案例。acceptance 12→**14/14 PASS**，CI 4→6 job。ERRORS.md 週審 promote 11 條到 Active Lessons，Pending 20→9。
 
 - [2026-07-28 --:--] dev Phase 3 步驟 20-23 完成（新 session 續作，主對話實地收到 tier pack）。步驟 20 依 DEC-12 縮減為 3 檔並全數落在 ≤80 行：`ui-ux-pro-max` 394→55、`security-audit` 306→**80**、`frontend-design` 281→79，新增 14 份 `.claude/skills/<name>/references/` 參考檔（中英各一）。**內容守恆以逐行比對機械驗證**（對 `git show HEAD:` 版本的每一非空行檢查是否仍存在於「新 SKILL.md + 全部 references」聯集）：ui-ux-pro-max 與 frontend-design 除一段被路由表取代的 stub 外 0 遺漏；security-audit 8 行為刻意改寫（`Reference File`→`Domain File` 正名，因該目錄現同時放 domain 檔與支援檔；「per the output format below」改為指向 `references/reporting.md`；末段重複的 domain 清單刪除）。首輪比對抓到一處實質退化——Phase 0/1/2 標題被降級為粗體、5 步 Per-Item Assessment Protocol 被壓成一句散文——已還原為 `###` 標題與編號清單。另完成步驟 20b（`HARNESS_TIER: "auto"` 出廠哨兵值）。
 - [2026-07-28 --:--] dev **文件層發現兩處假敘述並修正**：(a) `CLAUDE_zh.md` 自 Phase 2 起未跟改，仍寫著「## 常駐規則（`.claude/rules/` 自動載入）」並列出 7 檔——中文讀者看到的是一個已拆除的機制，歷時 8 個 commit；(b) `docs/INDEX.md` / `INDEX_zh.md` 把 `model-dispatch.md`、`judgment-rubrics.md` 標為「(standing) / （常駐）」。兩者皆已改正，並以 grep 對照 7 份規則檔 frontmatter `always:` 的實際值逐條複驗（僅 `security.md` 為 true）。教訓已記入 ERRORS.md，並在 LETTER §II 腐化模式表新增「鏡像漂移」列、§III 交接清單新增 parity 閘門待辦。順帶查出一項早於本計畫的既有缺口：`docs/INDEX_zh.md` 少了英文版的兩個章節，記入 LETTER §III 未自行補譯（超出本計畫非目標）。
