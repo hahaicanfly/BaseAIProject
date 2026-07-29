@@ -52,6 +52,17 @@
 
 ---
 
+## Plain-Language Layer (for non-developers)
+
+| File | Purpose |
+|------|------|
+| [`PLAIN/START-HERE.md`](PLAIN/START-HERE.md) | No-jargon entry point: what to type first, what happens next, what it will never do without asking |
+| [`PLAIN/claude-md-crib-sheet.md`](PLAIN/claude-md-crib-sheet.md) | One page on how "just do it" vs "write a plan first" is decided |
+
+> Derived layer, not canon. These are read-only translations of the rule files — where they disagree with a source file, the source file governs.
+
+---
+
 ## Harness Institution Documents (established 2026-07-04)
 
 | File | Purpose |

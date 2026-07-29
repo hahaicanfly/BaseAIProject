@@ -40,6 +40,18 @@
 |------|------|
 | [`learnings/ERRORS.md`](learnings/ERRORS.md) | AI 犯錯紀錄（Pending Review → Active Lessons） |
 
+
+## 白話層（給非技術背景使用者）
+
+| 檔案 | 用途 |
+|------|------|
+| [`PLAIN/START-HERE_zh.md`](PLAIN/START-HERE_zh.md) | 無術語入口：第一句話該打什麼、接下來會發生什麼、它絕對不會擅自做的事 |
+| [`PLAIN/claude-md-crib-sheet.md`](PLAIN/claude-md-crib-sheet.md) | 一頁講清楚「直接做」與「先寫計畫」是怎麼分的 |
+
+> 衍生層，非正典。這些是規則檔的唯讀翻譯 —— 與來源檔牴觸時，以來源檔為準。
+
+---
+
 ---
 
 ## Harness 制度文件（2026-07-04 建立）
