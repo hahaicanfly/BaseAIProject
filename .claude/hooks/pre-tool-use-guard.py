@@ -187,6 +187,94 @@ STATIC_DENIES: list[tuple[re.Pattern, str, str]] = _build_secret_deny_patterns()
 ]
 
 
+# --- Heredoc bodies: data, not commands -------------------------------------
+#
+# A heredoc that writes a file carries DATA. Scanning it for command patterns
+# means this guard blocks documentation that merely *describes* what it blocks
+# — which is exactly what happened when the README's hook table, whose job is
+# to name the things this guard stops, was itself stopped (ERRORS.md
+# 2026-07-29, fourth occurrence of "the scanner does not exempt quoted
+# content"). Prose about `curl | sh` is not `curl | sh`.
+#
+# This is a false-positive fix, not a hole. Writing text to a file was never
+# blocked by this guard — the same bytes go through the Write tool, which this
+# hook never even sees (it only inspects tool_name == "Bash"). What must never
+# be exempted is a heredoc feeding an INTERPRETER, where the body really is
+# code about to run.
+#
+# Per security.md ("use allowlists rather than denylists") the exemption is an
+# allowlist of data sinks, not a blocklist of interpreters: an unknown command
+# gets its body scanned. Extending it is a deliberate act, and the negative
+# tests in the §4 smoke test must be extended with it.
+_HEREDOC_RE = re.compile(r"<<(-?)\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\2")
+
+_DATA_SINKS = (
+    # cat/tee writing to a file — the body lands on disk, nothing executes it
+    re.compile(r"^\s*cat\s*>>?\s*[^|<>\s]+\s*$"),
+    re.compile(r"^\s*tee\s+(?:-a\s+)?[^|<>\s]+\s*$"),
+    # message bodies read from stdin by a non-interpreter
+    re.compile(r"^\s*git\s+(?:commit|tag)\b.*?(?:-F|--file)\s+-\s*$"),
+    re.compile(r"^\s*gh\s+\S+.*?--body-file\s+-\s*$"),
+)
+
+_SEGMENT_SPLIT_RE = re.compile(r"\|\||&&|[;&]")
+
+
+def _is_data_sink(header_line: str, marker: re.Match) -> bool:
+    """Does this heredoc's body land somewhere inert?
+
+    Conservative on every unclear case: a pipe anywhere on the header line
+    means the body could still reach an interpreter, more than one heredoc
+    marker on a line means we cannot tell which owns what, and any command
+    outside the allowlist is treated as capable of executing its input.
+    """
+    without_marker = header_line[:marker.start()] + header_line[marker.end():]
+    if "|" in without_marker:
+        return False
+    if len(_HEREDOC_RE.findall(header_line)) != 1:
+        return False
+    owning = _SEGMENT_SPLIT_RE.split(header_line[:marker.start()])[-1]
+    return any(sink.match(owning) for sink in _DATA_SINKS)
+
+
+def scannable_text(command: str) -> str:
+    """The part of a Bash command that is actually a command.
+
+    Bodies of heredocs feeding an allowlisted data sink are blanked out.
+    Header lines and terminators stay, so `cat > .env <<EOF` is still caught
+    by the secret-file rules, and anything after the heredoc is still scanned.
+    """
+    if "<<" not in command:
+        return command
+
+    lines = command.split("\n")
+    out = list(lines)
+    i = 0
+    while i < len(lines):
+        marker = _HEREDOC_RE.search(lines[i])
+        if not marker:
+            i += 1
+            continue
+        dash, _, delim = marker.groups()
+        exempt = _is_data_sink(lines[i], marker)
+
+        end = None
+        for j in range(i + 1, len(lines)):
+            candidate = lines[j].lstrip("\t") if dash else lines[j]
+            if candidate.strip() == delim:
+                end = j
+                break
+        if end is None:
+            # Unterminated: we cannot tell where the body stops, so scan it all.
+            return command
+        if exempt:
+            for j in range(i + 1, end):
+                out[j] = ""
+        i = end + 1
+
+    return "\n".join(out)
+
+
 def is_protected_branch(branch: str) -> bool:
     return branch in ("master", "main")
 
@@ -233,9 +321,12 @@ def main() -> int:
         log_event(HOOK_NAME, "pass", tool=tool)
         return 0
 
+    # Heredoc bodies bound for a data sink are content, not commands.
+    scannable = scannable_text(command)
+
     # 1) static patterns
     for pat, code, reason in STATIC_DENIES:
-        if pat.search(command):
+        if pat.search(scannable):
             log_event(
                 HOOK_NAME,
                 "enforced_block",
@@ -250,7 +341,7 @@ def main() -> int:
             return 2
 
     # 2) dynamic: git commit on master/main
-    hit = check_git_commit_on_master(command)
+    hit = check_git_commit_on_master(scannable)
     if hit:
         code, reason = hit
         log_event(
