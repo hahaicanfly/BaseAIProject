@@ -180,6 +180,40 @@ jobs:
           printf '%s\n' "$active_files"
           printf '%s\n' "$active_files" | xargs -r python3 scripts/execplan-lint.py
 
+  mirror-parity:
+    name: mirror-parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fail when a _zh mirror has drifted structurally from its original
+        run: |
+          set -uo pipefail
+          if [ ! -f scripts/check-mirror-parity.py ]; then
+            echo "::notice::scripts/check-mirror-parity.py not on this branch yet; skipping."
+            exit 0
+          fi
+          python3 scripts/check-mirror-parity.py
+
+  hook-coupling:
+    name: hook-coupling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fail on a hook depending on a document's wording without declaring it
+        run: |
+          set -uo pipefail
+          if [ ! -f scripts/check-hook-doc-coupling.py ]; then
+            echo "::notice::scripts/check-hook-doc-coupling.py not on this branch yet; skipping."
+            exit 0
+          fi
+          python3 scripts/check-hook-doc-coupling.py
+
   placeholder-gate:
     name: placeholder-gate
     runs-on: ubuntu-latest

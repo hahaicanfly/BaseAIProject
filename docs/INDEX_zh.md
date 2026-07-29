@@ -29,8 +29,18 @@
 | 檔案 | 狀態 | 摘要 |
 |------|------|------|
 | [`decisions/ADR-template.md`](decisions/ADR-template.md) | Template | ADR 撰寫範本 |
+| [`decisions/PDR-template.md`](decisions/PDR-template.md) | Template | 產品決策記錄撰寫範本（產品／功能決策，非架構決策——何時強制寫 PDR 見該檔檔頭） |
 
 > 新增 ADR 時：`decisions/ADR-NNNN-<short-slug>.md`，並在此表新增一行。
+> 新增 PDR 時：`decisions/PDR-NNNN-<short-slug>.md`，並在此表新增一行。
+
+---
+
+## 策略與市場研究報告
+
+| 檔案／目錄 | 用途 |
+|------------|------|
+| [`research/README.md`](research/README.md) | pm ／ market-researcher ／ competitive-analyst ／ data-analyst 產出的歸檔點與命名規則（`docs/research/<YYYY-MM-DD>-<slug>.md`）；每份報告都必須有假設-證據表與 Sources 章節，並依 review-protocol.md 的 Document Reviewer Checklist 審查 |
 
 ---
 
@@ -86,3 +96,9 @@
 
 - `CLAUDE.md`：文件地圖（"文件總索引"）
 - `docs/plans/PLANS.md` §5
+
+---
+
+## 中文鏡像慣例
+
+自動探索目錄（agents／rules／commands）下檔案的中文人類可讀版放在 `agent_docs/zh/`。其餘檔案一律使用同目錄的 `*_zh.md` 後綴（例如 `CLAUDE_zh.md`）。
