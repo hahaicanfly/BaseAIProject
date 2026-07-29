@@ -29,6 +29,37 @@
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
+### [2026-07-29] retro | PR #14 feat/tiered-harness
+
+以下三條是 PR #14 合併後 `/pr-retro` 分類分析的產出。本輪多數教訓已於過程中即時記錄並 promote，這三條是**當時沒被記下來的**。
+
+### [2026-07-29] 子 agent 進入 idle 但沒回報，被誤判成「交件失敗」
+- 情境：三個 fresh-context 查核 agent 派出後，只收到 idle 通知、沒有報告內容。我向使用者回報「委派的 agent 沒交報告」，改用機械腳本自行取證；兩次催收後三份報告全數送達，且指出 4 個真實 FAIL
+- 錯誤：「還沒回報」與「回報失敗」是兩件事，我把前者當成後者，並且**已經對使用者說出口**。雖然改走機械驗證的產出本身有價值，但那是誤判之後的補救，不是當下的最佳選擇
+- 教訓：agent 完成訊號不可靠時，先用 `SendMessage` 明確催收並等待，再判定失敗；在真的確認失敗之前，不要對使用者敘述成失敗。附帶：機械腳本與 agent 判斷是互補而非替代——本輪機械腳本抓到內容守恆，agent 抓到「路由檔沒有起手指示」這種只有讀者才看得出來的問題
+- 建議去向：留在 ERRORS
+
+### [2026-07-29] ExecPlan §4 勾選欄與 §6 進度紀錄可以長期互相矛盾，沒有任何閘門在看
+- 情境：F-003 收尾時發現 §4 的 23 個步驟全部未勾，而 §6 逐條記載它們做完了。逐項對帳後查出步驟 15（DEC-6 要求的 `docs/PLAIN` 引用提示）**真的沒做**，跨三個 session 沒被發現
+- 錯誤：`execplan-lint.py` 檢查的是結構（章節齊不齊），不檢查**內部一致性**。一份計畫可以同時宣稱「做完了」和「沒勾」，而所有閘門都是綠的
+- 教訓：進度敘述要能對回步驟編號，否則「哪一步沒做」無從查起。§6 條目應明確指出它關掉了哪幾個步驟編號
+- 建議去向：**Case D 候選**，可機械化 —— 見下方 INV 候選
+
+```
+[INV_CANDIDATE] INV-ARC-002  ExecPlan 的完成宣稱必須與勾選狀態一致
+  RULE     Status 為 done 的 ExecPlan 不得存在未勾選的步驟；§6 每條進度紀錄
+           應可對應到至少一個步驟編號
+  CHECK    python3 scripts/execplan-lint.py --consistency <plan.md>
+  HOOK     execplan-lint.py（需新增檢查項），已在 CI 與 acceptance
+  SOURCE   2026-07-29 F-003 收尾，步驟 15 未完成而跨三個 session 未被發現
+```
+
+### [2026-07-29] `git checkout master && git checkout -b X` 前半失敗、後半照跑，分支從錯誤基底切出
+- 情境：收尾時要從 master 切 `chore/f-003-closeout`。`git checkout master` 因 hook 自動更新的 ERRORS.md 未提交而失敗，但同一個 Bash 呼叫裡後續的建分支指令仍然執行，結果分支是從 `feat/tiered-harness` 切出來的（即使加了 `set -e`）
+- 錯誤：`INV-GIT-005` 要求新分支必須從 master 切出，而這個違規**沒有任何機制會發現**——分支建立成功、沒有錯誤訊息，只有主動去查基底才看得到
+- 教訓：`git checkout -b` 之後立刻驗證基底（`git log --oneline -1` 或與 `origin/master` 比對 tree），不要相信指令串的成功假象。本次是靠主動查證發現並修正（`git checkout -B <branch> origin/master`）
+- 建議去向：留在 ERRORS；可機械化為 PreToolUse 對 `git checkout -b` 的 sentinel 提示，但會增加 Red-tier 改動，先送人審
+
 <!-- harvest:5fbf09ba9a -->
 - [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 645b493e-20af-4689-9546-e5ddba056a8f
@@ -84,8 +115,9 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:c4cbdfce60 -->
-- [2026-07-29T02:25:36+0000] [PR_RETRO] **本 session 有 5 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-29T03:49:15+0000] [PR_RETRO] **本 session 有 10 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
+  ↳ 2026-07-29 已完成 PR #14 的 /pr-retro：分類分析產出 2 條 Case B + 1 條 Case D（INV-ARC-002 候選），見上方 retro 區塊；其餘模式本輪已即時記錄並 promote
 
 ## Sources
 - https://lovable.dev/blog/versioning-with-lovable-two-point-zero

@@ -42,4 +42,4 @@ From the second turn onward the transcript carries the true model id — includi
 | `model-map.json` | Model id → tier, plus the fallback |
 | `{strong,mid,light}.md` | **Generated.** Do not edit |
 
-Related: `../hooks/tier_resolve.py` (shared resolution), `session-tier-inject.py`, `subagent-tier-inject.py`, `tier-drift-check.py`. Design record: `docs/plans/active/F-003-tiered-harness.md`.
+Related: `../hooks/tier_resolve.py` (shared resolution), `session-tier-inject.py`, `subagent-tier-inject.py`, `tier-drift-check.py`. Design record: `docs/plans/completed/F-003-tiered-harness.md`.

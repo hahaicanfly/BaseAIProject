@@ -2,12 +2,12 @@
 
 | Field | Value |
 |------|-----|
-| Status | in_progress |
+| Status | done |
 | Owner Agent | dev (main conversation) |
 | Branch | feat/tiered-harness |
 | Created | 2026-07-28 |
-| Last Updated | 2026-07-28 |
-| Linked PR | (filled in at merge time) |
+| Last Updated | 2026-07-29 |
+| Linked PR | [#14](https://github.com/hahaicanfly/BaseAIProject/pull/14) — merged 2026-07-29 as `b777d98` |
 
 ## 1. Goal
 
@@ -95,7 +95,7 @@ Scope Baseline: target user=fork 本模板的新產品開發專案，其主對�
 ## 5. Verification Strategy
 
 ```acceptance
-plan-lint: python3 scripts/execplan-lint.py docs/plans/active/F-003-tiered-harness.md
+plan-lint: python3 scripts/execplan-lint.py docs/plans/completed/F-003-tiered-harness.md
 doc-refs: python3 scripts/check-doc-refs.py
 mirror-parity: python3 scripts/check-mirror-parity.py
 hook-coupling: python3 scripts/check-hook-doc-coupling.py
@@ -117,6 +117,8 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 - 依 `model-dispatch.md` §5，本計畫的驗收不得自證：Phase 2 與 Phase 3 的 read-back 由 fresh-context agent 執行。
 
 ## 6. Progress Log
+
+- [2026-07-29 --:--] dev **結案**。PR [#14](https://github.com/hahaicanfly/BaseAIProject/pull/14) 於 2026-07-29 03:03 UTC 合併進 master（merge commit `b777d98`），23 個 commit、6 個 CI job 全綠、無審查留言。合併後的硬化回合連同本體一起進 master：兩支新閘門（`check-mirror-parity.py` / `check-hook-doc-coupling.py`）、guard 的資料/指令分離、DEC-6 補完、11 條教訓 promote 到 Active Lessons。最終量測（balanced 模式）：strong **245 行 / 13,669 字元**（基線 635 行 / 33,164 → 減 **59%**）、mid 324 行 / 19,002、light 389 行 / 23,160，三者皆在門檻內。acceptance 14/14 PASS。§4 全部 23 個步驟已勾選，勾選依據見該節開頭的對帳說明。
 
 - [2026-07-29 --:--] dev **PR #14 開出後的硬化回合**：把本計畫過程中三度撞到、但一直沒被機械化的失效家族補上閘門。(a) `scripts/check-mirror-parity.py` 比對每組 `_zh` 鏡像與原文的章節／子章節／表格列結構——跨語言比不了文字，但比得了形狀，第一次跑就精準命中唯一已知缺口（`docs/INDEX_zh.md` 少兩節），79 對鏡像其餘全數同步。(b) `scripts/check-hook-doc-coupling.py` 以 AST 抽出 hook 對文件的字面依賴，強制加 `# COUPLING:` 宣告——刻意**不**檢查 needle 是否仍存在，因為這些 needle 偵測的是「未填」，在正常活化的 fork 裡本來就該消失，要求它存在會在每個下游專案誤報（同一條「規則對模板自己成不成立」的教訓，反過來用一次）。(c) `pre-tool-use-guard.py` 不再把寫入資料槽的 heredoc body 當指令掃描；直譯器會執行的 body 絕不豁免，依 security.md 用允許清單。18 情境黑箱測試全過，其中 12 個是負向案例。acceptance 12→**14/14 PASS**，CI 4→6 job。ERRORS.md 週審 promote 11 條到 Active Lessons，Pending 20→9。
 
@@ -166,7 +168,7 @@ budget-negative: python3 scripts/context-budget.py --tier light --max-chars 100 
 ## 9. Handoff Manifest
 
 - Next agent: dev（續作 Phase 3 步驟 20-23），完成後轉 code-reviewer
-- Required reading before resuming: `docs/plans/active/F-003-tiered-harness.md`（本檔 §4 Phase 3、§7 DEC-1~11、§8 Q5/Q6）、`.claude/tiers/README.md`（分層機制與已知限制）、`.claude/protocols/harness-maintenance.md` §1 與 §4（Red/Yellow tier 改動程序）
+- Required reading before resuming: `docs/plans/completed/F-003-tiered-harness.md`（本檔 §4 Phase 3、§7 DEC-1~11、§8 Q5/Q6）、`.claude/tiers/README.md`（分層機制與已知限制）、`.claude/protocols/harness-maintenance.md` §1 與 §4（Red/Yellow tier 改動程序）
 - 剩餘工作（§4 未打勾者）：步驟 20（拆分 8 個 >150 行 SKILL.md）、步驟 21（AI-TEAM-REGISTRY / INDEX / CLAUDE.md 文件地圖）、步驟 22（全量 read-back，本次已做過一輪並補回 5 條缺漏，Phase 3 完成後需再跑一次）、步驟 23（LETTER §3 交接清單 + ERRORS）
 - 續作前必知：本 session 的改動要**開新 session 才生效**——舊 session 載入的仍是重構前的 7 份常駐規則。續作時應已在新 session，屆時主對話會收到 tier pack，可順便實地檢驗注入品質
 - 環境注意：本機殘留 `HARNESS_TIER=mid`（Phase 1 探測所致）。新 session 若未顯式宣告，預期走 `guessed:settings.json` 路徑；若看到 tier=mid 而非 strong，先查該變數是否仍在環境中
