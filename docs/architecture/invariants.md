@@ -131,7 +131,23 @@ INV-TEST-001  Every new interface method must have all fakes/mocks updated
 
 ## INV-ARC-* — Architecture
 
-> Fill in project architecture invariants.
+### INV-ARC-001 — The standing context layer must stay inside its per-tier budget
+
+```
+RULE     CLAUDE.md + .claude/rules/security.md + the injected tier pack must not exceed
+         the line and character ceilings of the active mode in .claude/tiers/budget.json.
+         Counted in Unicode characters, not bytes. Anything added to the standing layer
+         must either fit the budget or displace something already there.
+CHECK    python3 scripts/context-budget.py --tier strong   (likewise mid, light)
+HOOK     scripts/context-budget.py (enforce: non-zero exit over budget); wired into every
+         ExecPlan acceptance block via scripts/acceptance-run.py
+SOURCE   docs/harness/LETTER-TO-FUTURE-SESSIONS.md §I.3; mechanized by F-003 and promoted
+         2026-07-29 with user consent
+```
+
+> The ceiling is deliberately a **configuration**, not a constant: switch `active_mode` in `budget.json` (`strict` / `balanced` / `generous`) or override the numbers directly. Changing the mode is a normal edit; deleting the check is not.
+
+> **When adopting this template**: this invariant is harness-level and applies as-is to every fork. Fill the sections below with your own project's architecture rules.
 
 ---
 
