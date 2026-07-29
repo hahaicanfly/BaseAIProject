@@ -33,14 +33,17 @@
 
 以下三條是 PR #14 合併後 `/pr-retro` 分類分析的產出。本輪多數教訓已於過程中即時記錄並 promote，這三條是**當時沒被記下來的**。
 
+### [2026-07-29] hook 每個 session 都改寫一份「被版控追蹤」的檔案，於是工作區永遠不乾淨
+- 情境：`stop-retro-logger.py` 把 PR_RETRO 提醒（含時間戳與 commit 計數）就地更新在 `docs/learnings/ERRORS.md`。這是一份 tracked 檔案，所以每次 session 結束後 `git status` 必然有未提交變更
+- 錯誤：本次收尾**兩度被它擋下**。第一次 `git checkout master` 失敗，但同一個 Bash 呼叫的後半照跑，害分支從錯誤基底切出（見上一條）；第二次 `git pull` 直接中止，讓我誤以為 master 沒收到 PR #16。兩次都不是嚴重故障，但都造成診斷繞路，而且第一次還連帶違反了 INV-GIT-005
+- 教訓：**自動化寫入的易變狀態不該放進 tracked 檔案**。同樣的內容放在 `state/`（已 gitignore）就完全沒有這個問題——那正是 `state/` 存在的理由。判準：這行字每個 session 都會變嗎？會的話它是 state 不是 doc
+- 建議去向：留在 ERRORS，但可機械化——把 PR_RETRO 提醒改寫進 `state/`（例如 `state/retro-reminders.jsonl`），ERRORS.md 只留人寫的教訓。改動涉及 `stop-retro-logger.py`（Red tier）與 `retro-status.py` 的計數來源，需人審後另開工作
+
 ### [2026-07-29] 子 agent 進入 idle 但沒回報，被誤判成「交件失敗」
 - 情境：三個 fresh-context 查核 agent 派出後，只收到 idle 通知、沒有報告內容。我向使用者回報「委派的 agent 沒交報告」，改用機械腳本自行取證；兩次催收後三份報告全數送達，且指出 4 個真實 FAIL
 - 錯誤：「還沒回報」與「回報失敗」是兩件事，我把前者當成後者，並且**已經對使用者說出口**。雖然改走機械驗證的產出本身有價值，但那是誤判之後的補救，不是當下的最佳選擇
 - 教訓：agent 完成訊號不可靠時，先用 `SendMessage` 明確催收並等待，再判定失敗；在真的確認失敗之前，不要對使用者敘述成失敗。附帶：機械腳本與 agent 判斷是互補而非替代——本輪機械腳本抓到內容守恆，agent 抓到「路由檔沒有起手指示」這種只有讀者才看得出來的問題
 - 建議去向：留在 ERRORS
-
-### [2026-07-29] ExecPlan §4 勾選欄與 §6 進度紀錄可以長期互相矛盾，沒有任何閘門在看
-- ↳ 2026-07-29 已升格為 **`INV-ARC-002`**（`docs/architecture/invariants.md`），機械化落在 `scripts/execplan-lint.py` 的 E7／W2 檢查項，已進 CI 與 acceptance。本條已結案，下次週審可逕行刪除
 
 ### [2026-07-29] `git checkout master && git checkout -b X` 前半失敗、後半照跑，分支從錯誤基底切出
 - 情境：收尾時要從 master 切 `chore/f-003-closeout`。`git checkout master` 因 hook 自動更新的 ERRORS.md 未提交而失敗，但同一個 Bash 呼叫裡後續的建分支指令仍然執行，結果分支是從 `feat/tiered-harness` 切出來的（即使加了 `set -e`）
@@ -103,7 +106,7 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   ```
 
 <!-- harvest:c4cbdfce60 -->
-- [2026-07-29T13:29:53+0000] [PR_RETRO] **本 session 有 12 個 git commit，建議執行 `/pr-retro` 萃取教訓**
+- [2026-07-29T13:55:21+0000] [PR_RETRO] **本 session 有 13 個 git commit，建議執行 `/pr-retro` 萃取教訓**
   Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
   ↳ 2026-07-29 已完成 PR #14 的 /pr-retro：分類分析產出 2 條 Case B + 1 條 Case D（INV-ARC-002 候選），見上方 retro 區塊；其餘模式本輪已即時記錄並 promote
 
