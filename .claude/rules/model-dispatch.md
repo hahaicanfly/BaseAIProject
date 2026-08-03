@@ -80,3 +80,48 @@ When escalating, emit `[ESCALATION: <from>-><to>|<task>]` inline (handoff-protoc
   - High-risk judgment (architecture selection, security, irreversible operations) → second opinion: dispatch a second agent with a different model or a different angle to answer independently, then compare conclusions; escalate or ask the user on disagreement
 - An acceptance agent's report can only be: `PASS` (list each acceptance criterion with evidence) or `FAIL` (list unmet items with evidence). "Looks fine" is not accepted.
 - Acceptance review boundary: FAIL may only be based on acceptance criteria stated at delegation time that are mechanically checkable; style/writing/opinion-type feedback goes into a "Suggestions (non-blocking)" section and must not block delivery — this prevents reviewer overreach causing wasted rework cycles.
+
+## 6. Handling Subagent Idle State
+
+*白話：子 agent 進入 idle 時的明確催收協議，避免「尚未回報」被誤判為「回報失敗」。*
+
+**Context**: When a subagent is dispatched and receives an idle notification (tool completed but no agent output detected), the main conversation must distinguish between two scenarios:
+1. **Not yet reported** — the agent is still thinking or has experienced a delay; needs active collection
+2. **Genuinely failed** — the agent encountered a terminal error or became unreachable
+
+**Protocol**:
+
+1. **On receiving idle signal** (from the task system):
+   - Do NOT immediately report failure to the user
+   - Record the time of the idle notification
+
+2. **Wait period 1** (5–10 seconds):
+   - Let the agent continue without intervention
+   - Mechanical outputs (scripts, file reads) may still be arriving
+
+3. **Active collection** (if still no output after wait 1):
+   - Use `SendMessage` with `to: <agent_id>` to explicitly request the report
+   - Message content: one-line summary like "Agent still waiting for your final report: [goal summary]. Please output your result now."
+   - Include a deadline: "Waiting 10 more seconds for your response."
+
+4. **Wait period 2** (10–15 seconds after SendMessage):
+   - The agent has now received explicit notice
+   - Most agents will respond with their final output in this window
+
+5. **Judgment** (if still no output after wait 2):
+   - Now you may assume genuine failure
+   - Do NOT say to the user: "The subagent failed to deliver a report"
+   - Instead, use `[HUMAN_ATTENTION_REQUIRED: subagent-timeout]` and explain:
+     - Which subagent, which task
+     - How long you waited
+     - What was the expected output
+     - Suggest fallback: mechanical verification, alternate agent, or escalation
+
+**Anti-pattern**:
+- ❌ "Agent A went idle, so I'll declare it failed and tell the user"
+- ✅ "Agent A went idle. I'll wait, then actively collect, then only if truly silent will I report a timeout (not failure)"
+
+**Complementarity with mechanical verification**:
+- Mechanical scripts (lint, tests, acceptance runs) and agent judgment are **complementary**, not interchangeable
+- If an agent fails to report but mechanical verification passes: report the mechanical evidence, not "agent failed"
+- If mechanical verification fails but agent says "looks fine": use the mechanical evidence; agent judgment alone is not proof

@@ -99,6 +99,18 @@ Any other ending from a sub-agent that did real work (at least one tool call) is
 [HUMAN_ATTENTION_REQUIRED: fix approach requires human choice between a or b]
 ```
 
+**Idle-subagent scenario** (`subagent-timeout`): a subagent going idle without a report is *not yet* a failure. The dispatching conversation must first attempt active collection (SendMessage + two wait windows — full protocol in `.claude/rules/model-dispatch.md` §6) before concluding anything. Only after the agent stays silent through both windows does it mark:
+
+```
+⚠ security-reviewer idle for >30s after explicit collection request
+   Waited: 10s initial + SendMessage + 15s post-request
+   Expected: PASS/FAIL acceptance report for F-NNN §5
+→ Fallback options: rerun mechanical acceptance, re-dispatch fresh agent, or escalate
+[HUMAN_ATTENTION_REQUIRED: subagent-timeout]
+```
+
+Before that point, do not describe the situation to the user as "the agent failed" — "not yet reported" and "failed to report" are different facts.
+
 ---
 
 ## Inline Auxiliary Markers
