@@ -54,11 +54,11 @@ Scope Baseline: target user=本模板專案的 harness 維護流程（所有未�
 5. [x] `check-mirror-parity.py` PASS（0 ERROR）；`check-doc-refs.py` 本次改動檔案零新增 ERROR（既存 9 ERROR 均在未觸碰檔案）
 
 ### Phase B — 課題 1：PR_RETRO 易變狀態遷移
-6. [ ] 修改 `stop-retro-logger.py`（Red tier）：`_append_retro_suggestion*` 改寫 `state/retro-reminders.jsonl`（session id 為 key 就地更新）；PR_RETRO 不再進 ERRORS.md 也不再記 retro-hashes.jsonl；docstring 與 COUPLING 註解同步
-7. [ ] 修改 `retro-status.py`：計數合併兩源（ERRORS.md 非 PR_RETRO 條目 + reminders.jsonl 條目）
-8. [ ] 清理 ERRORS.md：僅移除 PR_RETRO 類 harvest 區塊，其餘 harvest 與人寫課題保留
-9. [ ] `state/SCHEMA.md` + `SCHEMA_zh.md` 登記 retro-reminders.jsonl；handoff-protocol.md:19,63 措辭修正
-10. [ ] Smoke test：fixture 餵 stop-retro-logger → ERRORS.md 無變更（git status 乾淨）+ reminders.jsonl 有條目 + retro-status.py 計數一致
+6. [x] 修改 `stop-retro-logger.py`（Red tier）：`_append_retro_suggestion*` 改寫 `state/retro-reminders.jsonl`（session id 為 key 就地更新）；PR_RETRO 不再進 ERRORS.md 也不再記 retro-hashes.jsonl；docstring 與 COUPLING 註解同步
+7. [x] 修改 `retro-status.py`：計數新增 reminders.jsonl 來源（獨立欄位 retro_reminders，Pending 計數維持 ERRORS.md）
+8. [x] 清理 ERRORS.md：僅移除 4 個 PR_RETRO harvest 區塊，其餘 harvest 與人寫課題保留；Pending Review 頭注說明新去向
+9. [x] `state/SCHEMA.md` + `SCHEMA_zh.md` 登記 retro-reminders.jsonl（§3f）；handoff-protocol.md:19,63 經查描述的是 VERIFY_FAILED/PROTOCOL_VIOLATION 收割（選項 A 下仍走 ERRORS.md）無需修改；另補 state/.gitignore 白名單 SCHEMA_zh.md（既存不一致）
+10. [x] Smoke test 三情境 PASS：同 session 就地更新（count 2→3 單行）、新 session 新增行、ERRORS.md md5 不變；殘留 `_ledger_record` 呼叫由 smoke test 抓出並修除；retro-status.py 顯示「retro 提醒 N 條 (state/)」
 
 ### Phase C — 課題 3：Git 基底驗證
 11. [ ] 新建 `scripts/verify-branch-base.py`：fork-point ancestor 檢查 + PASS/FAIL/WARN 三態 + 領先/落後距離輸出；master 已前進的正常分支不誤報
@@ -90,6 +90,7 @@ verify-tool-selftest: python3 scripts/verify-branch-base.py --self-test
 ## 6. Progress Log
 - [2026-08-03] dev 分支 feat/f-004-retro-triple-fix 自 master(e0f379d) 切出並驗證基底；ExecPlan 建立
 - [2026-08-03] dev Phase A 完成：tier pack 骨架 + model-dispatch §6（en/zh）+ handoff-protocol idle 場景；budget 13988/14000、mirror-parity 0 ERROR
+- [2026-08-03] dev Phase B 完成：PR_RETRO 遷移至 state/retro-reminders.jsonl；smoke test 三情境 PASS 且抓出一個殘留呼叫；§6 精簡後 rules 576/600 行回到預算內
 
 ## 7. Decision Log
 - DEC-1: 遷移範圍採選項 A（只遷 PR_RETRO），使用者 2026-08-03 裁定——一次性 harvest 留 ERRORS.md 供週審，避免改造週審與 pr-retro skill

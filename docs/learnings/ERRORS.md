@@ -26,6 +26,7 @@
 
 > 此區由 `stop-retro-logger.py` 自動 append 新 lesson candidate（Phase D 後）。
 > 人類於每週收尾時手動 review，promote 到下方 `## Active Lessons`，或直接刪除無關的 noise。
+> 週審提醒（/pr-retro 待辦）自 F-004 起改存 `state/retro-reminders.jsonl`（見 `state/SCHEMA.md` §3f），不再出現在本區。
 
 （空 — 2026-07-04 週審已清空：PR_RETRO 提醒以手動 retro 處理，教訓 promote 至下方；hash f18510c79c 已記入 state/retro-hashes.jsonl 帳本，不會重生）
 
@@ -47,16 +48,6 @@
 - 錯誤：`INV-GIT-005` 要求新分支必須從 master 切出，而這個違規**沒有任何機制會發現**——分支建立成功、沒有錯誤訊息，只有主動去查基底才看得到
 - 教訓：`git checkout -b` 之後立刻驗證基底（`git log --oneline -1` 或與 `origin/master` 比對 tree），不要相信指令串的成功假象。本次是靠主動查證發現並修正（`git checkout -B <branch> origin/master`）
 - 建議去向：留在 ERRORS；可機械化為 PreToolUse 對 `git checkout -b` 的 sentinel 提示，但會增加 Red-tier 改動，先送人審
-
-<!-- harvest:5fbf09ba9a -->
-- [2026-07-21T15:04:20+0000] [PR_RETRO] **本 session 有 6 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: 645b493e-20af-4689-9546-e5ddba056a8f
-
-
-<!-- harvest:0eae05c6d0 -->
-- [2026-07-25T16:53:59+0000] [PR_RETRO] **本 session 有 13 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: f5a5eb32-ebfb-4a8c-93c4-5cb175e899a9
-  ↳ 條目已遷移至 per-session 穩定 hash(原 479f0ed722 含 commit 數);此後同 session 的 commit 數成長只就地更新本條,不再新增條目
 
 <!-- harvest:2eba92ba59 -->
 - [2026-07-24T01:18:37+0000] [PROTOCOL_VIOLATION] **invalid handoff target 'acceptance PASS'**
@@ -90,10 +81,6 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
   https://forum.cursor.com/t/cursor-cli-the-non-interactive-mode-cannot-be-used/143045
   ```
 
-<!-- harvest:daaf4609aa -->
-- [2026-07-28T06:56:13+0000] [PR_RETRO] **本 session 有 8 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: fa6f4a2b-675c-478a-8362-045d32bb4e5f
-
 <!-- harvest:4487f40e9a -->
 - [2026-07-28T09:38:29+0000] [VERIFY_FAILED] **D3 en/zh heading+table parity gaps and D4 one newly-introduced check-doc-refs.py ERROR in CLAUDE_zh.md:30**
   ```
@@ -101,11 +88,6 @@ Non-blocking suggestion: consider updating the acceptance-criteria snapshot time
 
 [VERIFY_FAILED: D3 en/zh heading+table parity gaps and D4 one newly-introduced check-doc-refs.py ERROR in CLAUDE_zh.md:30]
   ```
-
-<!-- harvest:c4cbdfce60 -->
-- [2026-07-29T13:29:53+0000] [PR_RETRO] **本 session 有 12 個 git commit，建議執行 `/pr-retro` 萃取教訓**
-  Session: 6ea97cf3-07b2-461b-aa8c-8eb64b29a874
-  ↳ 2026-07-29 已完成 PR #14 的 /pr-retro：分類分析產出 2 條 Case B + 1 條 Case D（INV-ARC-002 候選），見上方 retro 區塊；其餘模式本輪已即時記錄並 promote
 
 ## Sources
 - https://lovable.dev/blog/versioning-with-lovable-two-point-zero

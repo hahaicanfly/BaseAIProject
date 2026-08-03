@@ -88,15 +88,32 @@
 ## 3a. `state/retro-hashes.jsonl` — Weekly-review tombstone ledger
 
 **Nature**: JSON Lines, append-only.
-**Writer**: `.claude/hooks/stop-retro-logger.py` — every time it successfully appends a finding/reminder to `ERRORS.md` `## Pending Review`, it also writes that hash into this file.
+**Writer**: `.claude/hooks/stop-retro-logger.py` — every time it successfully appends a finding to `ERRORS.md` `## Pending Review`, it also writes that hash into this file.
 **Purpose**: dedup uses the union of "hashes currently in `ERRORS.md` ∪ hashes in this ledger" — after a human weekly review deletes an entry from `## Pending Review`, its hash remains in the ledger, so the next Stop event will not re-append the same finding (the same hash always maps to the same transcript content).
 **Rotation policy**: 90-day rotate, sharing the same `.last-rotate` gate as `hook-events.jsonl`.
 **If the file does not exist**: the hook creates it automatically (on first append).
+**Note (F-004)**: PR_RETRO reminders no longer pass through this ledger — they live in `retro-reminders.jsonl` (§3f) and never touch `ERRORS.md`.
 
 ### Schema (per line)
 
 ```json
 { "hash": "<10 hex chars>", "ts": "ISO 8601" }
+```
+
+---
+
+## 3f. `state/retro-reminders.jsonl` — Pending /pr-retro reminders (volatile)
+
+**Nature**: JSON Lines, whole-file rewrite; one entry per session, refreshed in place as the session's commit count grows.
+**Writer**: `.claude/hooks/stop-retro-logger.py` (`_append_retro_suggestion`).
+**Reader**: `scripts/retro-status.py` (reports the pending-reminder count).
+**Purpose**: F-004 moved PR_RETRO reminders here from `ERRORS.md` `## Pending Review` — the reminder's timestamp refreshes on every Stop event, and volatile machine state inside a tracked file left the work tree permanently dirty (blocked `git checkout`/`git pull` twice on 2026-07-29). `ERRORS.md` now holds only durable, human-reviewed content.
+**Consumption**: after running `/pr-retro` (or deciding to skip it) for a session, delete that session's line — or clear the file — during weekly review; there is no tombstone, deletion is final for a finished session.
+
+### Schema (per line)
+
+```json
+{ "ts": "ISO 8601", "session": "<claude session id>", "commit_count": <int> }
 ```
 
 ---

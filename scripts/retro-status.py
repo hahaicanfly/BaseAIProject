@@ -6,6 +6,8 @@ Computes, per the LITERAL definitions in harness-maintenance.md §5
 see ERRORS.md 2026-07-07):
 - ERRORS.md total lines (trigger > 300) and Pending Review entry count
   (trigger > 20)
+- pending /pr-retro reminder count from state/retro-reminders.jsonl
+  (PR_RETRO entries moved out of ERRORS.md in F-004)
 - CLAUDE.md lines (trigger > 100) — measured alone, NOT part of rules
 - .claude/rules/*.md combined lines (trigger > 600, excludes CLAUDE.md)
 - last 30 days of notable hook events (missing-marker, ACCEPTANCE FAIL,
@@ -57,6 +59,29 @@ def _pending_entries(errors_path: str) -> int:
     )
 
 
+def _retro_reminders() -> int:
+    """Count pending /pr-retro reminders in state/retro-reminders.jsonl
+    (PR_RETRO entries live there since F-004, not in ERRORS.md —
+    COUPLING: written by .claude/hooks/stop-retro-logger.py)."""
+    path = os.path.join(STATE_DIR, "retro-reminders.jsonl")
+    if not os.path.isfile(path):
+        return 0
+    count = 0
+    try:
+        for line in open(path, "r", encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                json.loads(line)
+                count += 1
+            except ValueError:
+                continue
+    except OSError:
+        return 0
+    return count
+
+
 def main() -> int:
     errors_md = os.path.join(REPO_ROOT, "docs", "learnings", "ERRORS.md")
     claude_md = os.path.join(REPO_ROOT, "CLAUDE.md")
@@ -67,6 +92,7 @@ def main() -> int:
         "errors_md_budget": 300,
         "pending_review_entries": _pending_entries(errors_md),
         "pending_review_budget": 20,
+        "retro_reminders": _retro_reminders(),
         "claude_md_lines": _count_lines(claude_md),
         "claude_md_budget": 100,
         "rules_total_lines": sum(_count_lines(p) for p in rules),
@@ -125,9 +151,11 @@ def main() -> int:
     else:
         print(
             "retro-status: ERRORS.md {e}/300 行 | Pending {p}/20 條 | "
+            "retro 提醒 {rm} 條 (state/) | "
             "CLAUDE.md {c}/100 行 | rules {r}/600 行 | 上次週審 {w} | "
             "30 天事件 {n}".format(
                 e=status["errors_md_lines"], p=status["pending_review_entries"],
+                rm=status["retro_reminders"],
                 c=status["claude_md_lines"], r=status["rules_total_lines"],
                 w=last_review, n=json.dumps(notable, ensure_ascii=False),
             )

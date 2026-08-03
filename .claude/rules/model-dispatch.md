@@ -85,43 +85,13 @@ When escalating, emit `[ESCALATION: <from>-><to>|<task>]` inline (handoff-protoc
 
 *白話：子 agent 進入 idle 時的明確催收協議，避免「尚未回報」被誤判為「回報失敗」。*
 
-**Context**: When a subagent is dispatched and receives an idle notification (tool completed but no agent output detected), the main conversation must distinguish between two scenarios:
-1. **Not yet reported** — the agent is still thinking or has experienced a delay; needs active collection
-2. **Genuinely failed** — the agent encountered a terminal error or became unreachable
+An idle notification (tool completed, no agent output detected) means **not yet reported** — it does not mean **failed**. Those are different facts; never narrate the former to the user as the latter.
 
-**Protocol**:
+**Protocol** (in order; only the last step may conclude failure):
+1. **Idle signal arrives** → do NOT report failure; note the time. Wait 5–10s — mechanical output may still be arriving.
+2. **Still nothing** → active collection: `SendMessage` to the agent, one-line request ("Still waiting for your final report: [goal]. Please output now — 10 more seconds."). Wait 10–15s; most agents respond in this window.
+3. **Silent through both windows** → now treat as timeout. Do NOT say "the subagent failed" — mark `[HUMAN_ATTENTION_REQUIRED: subagent-timeout]` stating: which agent/task, how long you waited, what output was expected, and a fallback (mechanical verification, re-dispatch, or escalation).
 
-1. **On receiving idle signal** (from the task system):
-   - Do NOT immediately report failure to the user
-   - Record the time of the idle notification
+**Anti-pattern**: ❌ "Agent went idle → declare failure to the user." ✅ "Wait → collect → only if truly silent, report a timeout (not a failure)."
 
-2. **Wait period 1** (5–10 seconds):
-   - Let the agent continue without intervention
-   - Mechanical outputs (scripts, file reads) may still be arriving
-
-3. **Active collection** (if still no output after wait 1):
-   - Use `SendMessage` with `to: <agent_id>` to explicitly request the report
-   - Message content: one-line summary like "Agent still waiting for your final report: [goal summary]. Please output your result now."
-   - Include a deadline: "Waiting 10 more seconds for your response."
-
-4. **Wait period 2** (10–15 seconds after SendMessage):
-   - The agent has now received explicit notice
-   - Most agents will respond with their final output in this window
-
-5. **Judgment** (if still no output after wait 2):
-   - Now you may assume genuine failure
-   - Do NOT say to the user: "The subagent failed to deliver a report"
-   - Instead, use `[HUMAN_ATTENTION_REQUIRED: subagent-timeout]` and explain:
-     - Which subagent, which task
-     - How long you waited
-     - What was the expected output
-     - Suggest fallback: mechanical verification, alternate agent, or escalation
-
-**Anti-pattern**:
-- ❌ "Agent A went idle, so I'll declare it failed and tell the user"
-- ✅ "Agent A went idle. I'll wait, then actively collect, then only if truly silent will I report a timeout (not failure)"
-
-**Complementarity with mechanical verification**:
-- Mechanical scripts (lint, tests, acceptance runs) and agent judgment are **complementary**, not interchangeable
-- If an agent fails to report but mechanical verification passes: report the mechanical evidence, not "agent failed"
-- If mechanical verification fails but agent says "looks fine": use the mechanical evidence; agent judgment alone is not proof
+**Complementarity**: mechanical checks and agent judgment are complementary, not interchangeable. Agent silent but mechanical verification passes → report the mechanical evidence, not "agent failed". Mechanical verification fails but agent says "looks fine" → the mechanical evidence wins; agent judgment alone is not proof.

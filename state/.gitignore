@@ -3,5 +3,6 @@
 
 # But keep this schema doc and the directory structure
 !SCHEMA.md
+!SCHEMA_zh.md
 !.gitignore
 !session-handoffs/.gitkeep

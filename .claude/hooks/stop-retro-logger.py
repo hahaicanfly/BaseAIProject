@@ -14,7 +14,10 @@ When the session (or a subagent) ends:
    subagent's final text ends with a handoff marker.
 3. Append harvested entries to docs/learnings/ERRORS.md
    `## Pending Review` section, dedup by content hash.
-4. Always log to state/hook-events.jsonl.
+4. Record volatile PR_RETRO reminders in state/retro-reminders.jsonl
+   (one entry per session, refreshed in place — deliberately NOT in
+   ERRORS.md, so tracked files stay clean across sessions; F-004).
+5. Always log to state/hook-events.jsonl.
 
 Why dedup?
 - A single failure may surface multiple times across SubagentStop and
@@ -51,6 +54,10 @@ HOOK_NAME = "stop-retro-logger"
 # does not cause the same finding to be re-harvested (it's still present
 # in the transcript on the next Stop event).
 RETRO_HASHES_LEDGER = STATE_DIR / "retro-hashes.jsonl"
+# PR_RETRO reminders (volatile, per-session, refreshed in place) — kept out
+# of ERRORS.md so tracked files stay clean across sessions (F-004).
+# COUPLING: consumed by scripts/retro-status.py; schema in state/SCHEMA.md.
+RETRO_REMINDERS = STATE_DIR / "retro-reminders.jsonl"
 VERIFICATIONS_LEDGER = STATE_DIR / "verifications.jsonl"
 RULE_EVENTS_LEDGER = STATE_DIR / "rule-events.jsonl"
 METRICS_MONTHLY = STATE_DIR / "metrics-monthly.jsonl"
@@ -647,9 +654,16 @@ def _detect_git_commits(parsed: dict | None) -> list[str]:
 
 
 def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
-    """Append or update (in place) a /pr-retro reminder in ERRORS.md
-    Pending Review — one entry per session, refreshed as the session's
-    commit count grows.
+    """Record a /pr-retro reminder in state/retro-reminders.jsonl —
+    one entry per session, refreshed in place as the commit count grows.
+
+    F-004 migration: this used to write into ERRORS.md Pending Review,
+    which made every session end with a dirty tracked file (the reminder
+    carries a fresh timestamp on each Stop event). Volatile machine state
+    now lives under state/ (gitignored); ERRORS.md keeps only durable,
+    human-reviewed content. PR_RETRO entries no longer touch the
+    retro-hashes.jsonl tombstone ledger either — that ledger only serves
+    ERRORS.md dedup, and session-id keying makes reminders self-deduping.
 
     # PR_RETRO_HOOK — extend this function to trigger full pr-retro analysis.
     Currently only writes a lightweight reminder. To enable full automation:
@@ -657,87 +671,50 @@ def _append_retro_suggestion(session_id: str, commit_count: int) -> None:
     2. Pass git diff output as input to the retro analysis.
     3. Write Case B/C/D candidates directly to Pending Review.
     """
-    if not ERRORS_MD.is_file():
-        return
+    # Reuse the ERRORS.md lock purely as a cross-process mutex for the
+    # read-modify-write below (concurrently stopping sessions).
     with _errors_md_lock():
         _append_retro_suggestion_locked(session_id, commit_count)
 
 
 def _append_retro_suggestion_locked(session_id: str, commit_count: int) -> None:
-    try:
-        text = ERRORS_MD.read_text(encoding="utf-8")
-    except Exception:
-        return
+    ensure_state_dirs()
+    entries: list[dict] = []
+    if RETRO_REMINDERS.is_file():
+        try:
+            for line in RETRO_REMINDERS.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entries.append(json.loads(line))
+                except Exception:
+                    continue
+        except Exception:
+            return
 
     iso = now_iso()
-    # NOTE: hash must NOT include the timestamp, or every Stop event (which
-    # always has a fresh `iso`) produces a unique hash and dedup never fires.
-    # It must not include commit_count either (lesson: a count-bearing hash
-    # minted one NEW Pending entry per growth step — observed live as
-    # 6→11→22 producing three stacked reminders for one session). One
-    # session = one stable hash = one entry; a grown count refreshes that
-    # entry's bullet line in place.
-    reminder_hash = hashlib.sha1(
-        f"retro-reminder|{session_id}".encode("utf-8"),
-        usedforsecurity=False,
-    ).hexdigest()[:10]
-    marker = f"<!-- harvest:{reminder_hash} -->"
-
-    # Entry still present → refresh only its bullet line (timestamp + count);
-    # the Session line and any human ↳ annotations beneath are preserved.
-    if marker in text:
-        bullet_re = re.compile(
-            rf"({re.escape(marker)}\n)- \[[^\n\]]+\] \[PR_RETRO\] \*\*[^\n]*\*\*"
-        )
-        new_bullet = (
-            f"- [{iso}] [PR_RETRO] **本 session 有 {commit_count} 個 git commit，"
-            f"建議執行 `/pr-retro` 萃取教訓**"
-        )
-        new_text, n = bullet_re.subn(
-            lambda m: m.group(1) + new_bullet, text, count=1
-        )
-        if n and new_text != text:
-            try:
-                ERRORS_MD.write_text(new_text, encoding="utf-8")
-            except Exception:
-                pass
-        return
-
-    # Hash known to the tombstone ledger but absent from the file = a human
-    # deleted the entry during weekly review → it stays deleted, even if
-    # more commits land in this session.
-    if reminder_hash in existing_pending_hashes():
-        return
-
-    header_re = re.compile(rf"^{re.escape(PENDING_SECTION_HEADER)}\s*$", re.MULTILINE)
-    header_match = header_re.search(text)
-    if not header_match:
-        return
-
-    block = (
-        f"{marker}\n"
-        f"- [{iso}] [PR_RETRO] **本 session 有 {commit_count} 個 git commit，"
-        f"建議執行 `/pr-retro` 萃取教訓**\n"
-        f"  Session: {session_id or 'unknown'}\n"
-    )
-
-    section_start = header_match.start()
-    next_re = re.compile(r"^## ", re.MULTILINE)
-    next_match = next_re.search(text, header_match.end())
-    next_section = next_match.start() if next_match else len(text)
-    section = text[section_start:next_section]
-
-    if PENDING_SECTION_FALLBACK in section:
-        section = section.replace(PENDING_SECTION_FALLBACK, block)
+    key = session_id or "unknown"
+    for e in entries:
+        if e.get("session") == key:
+            # One session = one entry; a grown count refreshes it in place.
+            if e.get("commit_count") == commit_count:
+                return  # nothing changed — skip the rewrite
+            e["commit_count"] = commit_count
+            e["ts"] = iso
+            break
     else:
-        section = section.rstrip() + "\n\n" + block + "\n"
+        entries.append(
+            {"ts": iso, "session": key, "commit_count": commit_count}
+        )
 
-    new_text = text[:section_start] + section + text[next_section:]
     try:
-        ERRORS_MD.write_text(new_text, encoding="utf-8")
+        RETRO_REMINDERS.write_text(
+            "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries),
+            encoding="utf-8",
+        )
     except Exception:
         return
-    _ledger_record([reminder_hash])
 
 
 def _rollup_dropped(dropped: list[dict]) -> None:
