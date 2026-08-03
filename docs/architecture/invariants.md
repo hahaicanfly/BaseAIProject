@@ -70,9 +70,9 @@ SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
 
 ```
 RULE     Pull the latest master before git checkout -b feat/xxx
-CHECK    Confirm base branch before opening a PR
-HOOK     code-reviewer agent (manual)
-SOURCE   2026-07-04 harness institutionalization session (ADR-0001)
+CHECK    python3 scripts/verify-branch-base.py   (PASS/FAIL/WARN; run right after cutting, and before opening a PR)
+HOOK     pre-tool-use-guard.py (advisory additionalContext on checkout -b / switch -c) + code-reviewer agent
+SOURCE   2026-07-04 harness institutionalization session (ADR-0001); mechanized 2026-08-03 (F-004)
 ```
 
 ---

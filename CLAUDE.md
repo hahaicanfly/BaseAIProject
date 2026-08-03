@@ -18,6 +18,7 @@ python3 scripts/context-budget.py --tier strong      # always-on context budget 
 python3 scripts/execplan-lint.py docs/plans/active/*.md   # ExecPlan structure
 python3 scripts/check-doc-refs.py                    # dead-reference sweep
 python3 scripts/acceptance-run.py <plan.md>          # run an ExecPlan's acceptance block
+python3 scripts/verify-branch-base.py   # branch base = master? (INV-GIT-005)
 
 # --- Product build/test/lint: {{fill in after forking}} ---
 # Executable verification commands are the biggest lever on success rate.
@@ -70,7 +71,7 @@ NEVER: hardcode secrets / commit sensitive files (`.env`, `*.keystore`, …) / g
 | ExecPlan 10-stage lifecycle | `.claude/protocols/execplan-lifecycle.md` |
 | Harness diagnosis / letter to future sessions | `docs/harness/` |
 | UI three-phase workflow | `.claude/uiux/WORKFLOW.md` |
-| Mechanical verification tools | `scripts/` (acceptance-run / execplan-lint / check-doc-refs / retro-status) |
+| Mechanical verification tools | `scripts/` (acceptance-run / execplan-lint / check-doc-refs / retro-status / verify-branch-base) |
 | Runtime state format | `state/SCHEMA.md` |
 | Chinese human-readable mirrors | auto-discovered dirs (agents/rules/commands) → `agent_docs/zh/`; everything else → same-dir `*_zh.md` |
 

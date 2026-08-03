@@ -61,11 +61,11 @@ Scope Baseline: target user=本模板專案的 harness 維護流程（所有未�
 10. [x] Smoke test 三情境 PASS：同 session 就地更新（count 2→3 單行）、新 session 新增行、ERRORS.md md5 不變；殘留 `_ledger_record` 呼叫由 smoke test 抓出並修除；retro-status.py 顯示「retro 提醒 N 條 (state/)」
 
 ### Phase C — 課題 3：Git 基底驗證
-11. [ ] 新建 `scripts/verify-branch-base.py`：fork-point ancestor 檢查 + PASS/FAIL/WARN 三態 + 領先/落後距離輸出；master 已前進的正常分支不誤報
-12. [ ] 三情境實測：master 正常切出（PASS）、從 feat 分支切出（FAIL）、切出後 master 前進（PASS）
-13. [ ] Spike：實測 PreToolUse exit 0 的 stderr / JSON additionalContext / systemMessage 是否到達模型 context，結論記 §7；有效→guard 加提醒（Red tier 程序），無效→放棄 B 方案
-14. [ ] `invariants.md` INV-GIT-005 CHECK 改為可執行命令、HOOK 欄位依 spike 結果更新（+ invariants_zh.md 同步）
-15. [ ] `CLAUDE.md` Quick Commands 加 verify-branch-base 一行（+ 鏡像若涵蓋該段）
+11. [x] 新建 `scripts/verify-branch-base.py`：post-fork commit ownership 檢查 + PASS/FAIL/WARN 三態 + 領先/落後距離輸出；master 已前進的正常分支不誤報
+12. [x] 三情境以 `--self-test`（拋棄式 repo）機械驗證：fresh-cut=PASS / stacked=FAIL / aged=PASS；self-test 首輪即抓到「fork==tip 不代表 fresh cut」的演算法 bug 並修正；本 F-004 分支實跑 PASS（dogfooding）
+13. [x] Spike 完成：exit 0 三管道中**僅 hookSpecificOutput.additionalContext 到達模型 context**（permissionDecisionReason 與 stderr 皆否，實測記錄見 §7 DEC-5）→ guard 新增 advisory（allow + additionalContext，不 block）；五情境 fixture smoke test PASS（advisory 觸發 ×2、不觸發 ×1、既有 block 語意迴歸 ×2）
+14. [x] `invariants.md` INV-GIT-005 CHECK 改為 `python3 scripts/verify-branch-base.py`、HOOK 欄位更新為 guard advisory + code-reviewer（+ invariants_zh.md 同步）
+15. [x] `CLAUDE.md` Quick Commands + 文件地圖行加 verify-branch-base（+ CLAUDE_zh.md 工具列同步）
 
 ### Phase D — 收尾
 16. [ ] 全量驗收（§5 acceptance block）+ fresh-context read-back 驗收（Red tier 檔案）
@@ -81,7 +81,7 @@ mirror: python3 scripts/check-mirror-parity.py
 doc-refs: python3 scripts/check-doc-refs.py
 hook-coupling: python3 scripts/check-hook-doc-coupling.py
 idle-in-packs: grep -l "idle" .claude/tiers/strong.md .claude/tiers/mid.md .claude/tiers/light.md
-no-pr-retro-in-errors: grep -c "PR_RETRO" docs/learnings/ERRORS.md expect-fail
+no-pr-retro-in-errors: grep -c "\[PR_RETRO\]" docs/learnings/ERRORS.md expect-fail
 inv-git-005-check: grep "verify-branch-base" docs/architecture/invariants.md
 verify-tool-selftest: python3 scripts/verify-branch-base.py --self-test
 ```
@@ -91,13 +91,14 @@ verify-tool-selftest: python3 scripts/verify-branch-base.py --self-test
 - [2026-08-03] dev 分支 feat/f-004-retro-triple-fix 自 master(e0f379d) 切出並驗證基底；ExecPlan 建立
 - [2026-08-03] dev Phase A 完成：tier pack 骨架 + model-dispatch §6（en/zh）+ handoff-protocol idle 場景；budget 13988/14000、mirror-parity 0 ERROR
 - [2026-08-03] dev Phase B 完成：PR_RETRO 遷移至 state/retro-reminders.jsonl；smoke test 三情境 PASS 且抓出一個殘留呼叫；§6 精簡後 rules 576/600 行回到預算內
+- [2026-08-03] dev Phase C 完成：verify-branch-base.py（self-test 抓到並修正 fork==tip 誤判）；spike 確認 additionalContext 為唯一有效管道；guard advisory + INV-GIT-005 機械化 + 文檔同步
 
 ## 7. Decision Log
 - DEC-1: 遷移範圍採選項 A（只遷 PR_RETRO），使用者 2026-08-03 裁定——一次性 harvest 留 ERRORS.md 供週審，避免改造週審與 pr-retro skill
 - DEC-2: 三課題合併單一 ExecPlan F-004，使用者 2026-08-03 裁定
 - DEC-3: 課題 2 注入點為 tiers/src + 重建（rules 檔僅作全文參考）——F-003 後 rules 不再自動載入，寫錯層等於沒寫（Sonnet plan-review 確認）
 - DEC-4: verify-branch-base 演算法棄用「merge-base == HEAD」改用 fork-point ancestor 檢查（Sonnet plan-review 指出誤報情境）
-- DEC-5: （待 spike）hook 警告管道實測結論
+- DEC-5: hook 警告管道 spike 結論（2026-08-03 本 session 實測，方法：guard 加臨時分支對 SPIKE_F004_MARKER 同時發射三管道後實跑）——`hookSpecificOutput.additionalContext` 以 system-reminder 形式**到達模型 context**；`permissionDecisionReason` 與 exit 0 純 stderr **皆未到達**。故 B 方案採 additionalContext JSON 形式實作，非原計畫的 stderr（原計畫的 stderr 方案經證實無效，Sonnet 審查的質疑成立）
 
 ## 8. Open Questions
 - none（兩項範圍問題已由使用者 2026-08-03 裁定，見 DEC-1/DEC-2）

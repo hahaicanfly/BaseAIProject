@@ -70,9 +70,9 @@ SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
 
 ```
 RULE     git checkout -b feat/xxx 前必須在 master pull 完最新
-CHECK    PR 建立前確認 base branch
-HOOK     code-reviewer agent（手動）
-SOURCE   2026-07-04 harness 制度化 session（ADR-0001）
+CHECK    python3 scripts/verify-branch-base.py   （PASS/FAIL/WARN；切完分支立刻跑，PR 建立前再跑一次）
+HOOK     pre-tool-use-guard.py（checkout -b / switch -c 時注入 advisory additionalContext）+ code-reviewer agent
+SOURCE   2026-07-04 harness 制度化 session（ADR-0001）；2026-08-03 機械化（F-004）
 ```
 
 ---

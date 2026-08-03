@@ -12,6 +12,12 @@ unambiguously dangerous on this repo, with no expected false positives:
   -            curl|sh, wget|sh
   -            rm -rf /, rm -rf ~, sudo rm
 
+One ADVISORY (allow + additionalContext injection, never blocks):
+  INV-GIT-005  git checkout -b/-B, git switch -c/-C → remind the model to
+               run scripts/verify-branch-base.py after the cut. Spike-
+               verified (F-004): additionalContext is the ONLY exit-0
+               channel that reaches the model context.
+
 Designed to be FAST: pure regex + at most one `git branch --show-current`
 subprocess (cached via current_branch helper, 2s timeout).
 
@@ -23,6 +29,7 @@ Exit codes:
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 
@@ -283,6 +290,10 @@ _GIT_COMMIT_RE = re.compile(
     r"\bgit\s+(?:[^\s|;&]+\s+)*?commit(\s|$)"
 )
 _GIT_C_PATH_RE = re.compile(r"\bgit\s+(?:.*?\s+)?-C\s+(\S+)")
+# New-branch cuts: checkout -b/-B and switch -c/-C (INV-GIT-005 advisory).
+_GIT_BRANCH_CUT_RE = re.compile(
+    r"\bgit\s+(?:checkout\s+(?:\S+\s+)*-[bB]|switch\s+(?:\S+\s+)*-[cC])\s"
+)
 
 
 def check_git_commit_on_master(command: str) -> tuple[str, str] | None:
@@ -355,6 +366,36 @@ def main() -> int:
             f"Command preview: {command[:200]}\n"
         )
         return 2
+
+    # 3) advisory (allow + context injection, never blocks): cutting a new
+    # branch → remind the model to verify the base (INV-GIT-005). The
+    # half-failed `git checkout master && git checkout -b X` compound cut a
+    # branch from the wrong base with zero error output (2026-07-29).
+    # F-004 spike result: of the exit-0 channels, ONLY hookSpecificOutput
+    # .additionalContext reaches the model context (plain stdout/stderr and
+    # permissionDecisionReason do not) — so this must stay JSON-shaped.
+    if _GIT_BRANCH_CUT_RE.search(scannable):
+        log_event(
+            HOOK_NAME,
+            "sentinel",
+            reason="branch-cut-verify-advice",
+            command_preview=command[:120],
+        )
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "allow",
+                "additionalContext": (
+                    "New branch being cut — after it completes, verify the "
+                    "base is master (INV-GIT-005): run `python3 "
+                    "scripts/verify-branch-base.py` and check it prints "
+                    "PASS. A failed `git checkout master` earlier in a "
+                    "compound command does NOT stop the `-b` from running "
+                    "off the wrong base."
+                ),
+            }
+        }))
+        return 0
 
     log_event(HOOK_NAME, "pass", tool=tool, command_preview=command[:80])
     return 0

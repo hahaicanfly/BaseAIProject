@@ -26,7 +26,7 @@ Every delegation prompt carries three things — goal *and why*, mechanically ch
 
 Lightweight delegated work must set `model` explicitly, or it silently inherits the main conversation's expensive model.
 
-Subagent idle without a report ≠ failure. Signal: idle notice, no content → wait, send one SendMessage collection request, wait again; silent through both windows → `[HUMAN_ATTENTION_REQUIRED: subagent-timeout]`. Never tell the user "the agent failed" before that. Full protocol: `.claude/rules/model-dispatch.md` §6.
+Subagent idle ≠ failed: wait → one SendMessage collection → wait; only silence through both is a timeout (`[HUMAN_ATTENTION_REQUIRED: subagent-timeout]`) — never tell the user "failed" earlier. Details: model-dispatch.md §6.
 
 ## Escalating and stopping
 
