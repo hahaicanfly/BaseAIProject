@@ -39,6 +39,7 @@
 - 錯誤：「還沒回報」與「回報失敗」是兩件事，我把前者當成後者，並且**已經對使用者說出口**。雖然改走機械驗證的產出本身有價值，但那是誤判之後的補救，不是當下的最佳選擇
 - 教訓：agent 完成訊號不可靠時，先用 `SendMessage` 明確催收並等待，再判定失敗；在真的確認失敗之前，不要對使用者敘述成失敗。附帶：機械腳本與 agent 判斷是互補而非替代——本輪機械腳本抓到內容守恆，agent 抓到「路由檔沒有起手指示」這種只有讀者才看得出來的問題
 - 建議去向：留在 ERRORS
+- ↳ 2026-08-03 已由 **F-004** 制度化：催收協議進 tier pack 注入層（`.claude/tiers/src/00-core-criteria.md`）+ `model-dispatch.md` §6 全文版 + `handoff-protocol.md` idle 場景（`subagent-timeout` 標記）。本條已結案，下次週審可逕行刪除
 
 ### [2026-07-29] ExecPlan §4 勾選欄與 §6 進度紀錄可以長期互相矛盾，沒有任何閘門在看
 - ↳ 2026-07-29 已升格為 **`INV-ARC-002`**（`docs/architecture/invariants.md`），機械化落在 `scripts/execplan-lint.py` 的 E7／W2 檢查項，已進 CI 與 acceptance。本條已結案，下次週審可逕行刪除
@@ -48,6 +49,7 @@
 - 錯誤：`INV-GIT-005` 要求新分支必須從 master 切出，而這個違規**沒有任何機制會發現**——分支建立成功、沒有錯誤訊息，只有主動去查基底才看得到
 - 教訓：`git checkout -b` 之後立刻驗證基底（`git log --oneline -1` 或與 `origin/master` 比對 tree），不要相信指令串的成功假象。本次是靠主動查證發現並修正（`git checkout -B <branch> origin/master`）
 - 建議去向：留在 ERRORS；可機械化為 PreToolUse 對 `git checkout -b` 的 sentinel 提示，但會增加 Red-tier 改動，先送人審
+- ↳ 2026-08-03 已由 **F-004** 機械化：`scripts/verify-branch-base.py`（commit ownership 演算法 + `--self-test`）+ guard 對 checkout -b / switch -c 的 additionalContext advisory（spike 證實為唯一有效 exit-0 管道），INV-GIT-005 的 CHECK 欄位已可執行。本條已結案，下次週審可逕行刪除
 
 <!-- harvest:2eba92ba59 -->
 - [2026-07-24T01:18:37+0000] [PROTOCOL_VIOLATION] **invalid handoff target 'acceptance PASS'**

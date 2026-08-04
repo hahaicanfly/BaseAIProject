@@ -68,8 +68,8 @@ Scope Baseline: target user=本模板專案的 harness 維護流程（所有未�
 15. [x] `CLAUDE.md` Quick Commands + 文件地圖行加 verify-branch-base（+ CLAUDE_zh.md 工具列同步）
 
 ### Phase D — 收尾
-16. [ ] 全量驗收（§5 acceptance block）+ fresh-context read-back 驗收（Red tier 檔案）
-17. [ ] ERRORS.md 三個課題條目補「已解決→F-004」註記；feature-list.json 已登記 F-004
+16. [x] 全量驗收 9/9 PASS（§5 acceptance block）+ fresh-context read-back 驗收 10/10 PASS（code-reviewer/sonnet，含兩 hook 實跑）
+17. [x] ERRORS.md 課題條目補「已解決→F-004」註記（idle 與 checkout 兩條；易變狀態條文在未合併的 PR #17 分支上，master 無此條——PR #17 合併後由週審補註記或逕刪，見 §8 Q1）；feature-list.json 已登記 F-004
 18. [ ] 開 PR、CI 綠、回填 Linked PR
 
 ## 5. Verification Strategy
@@ -101,7 +101,7 @@ verify-tool-selftest: python3 scripts/verify-branch-base.py --self-test
 - DEC-5: hook 警告管道 spike 結論（2026-08-03 本 session 實測，方法：guard 加臨時分支對 SPIKE_F004_MARKER 同時發射三管道後實跑）——`hookSpecificOutput.additionalContext` 以 system-reminder 形式**到達模型 context**；`permissionDecisionReason` 與 exit 0 純 stderr **皆未到達**。故 B 方案採 additionalContext JSON 形式實作，非原計畫的 stderr（原計畫的 stderr 方案經證實無效，Sonnet 審查的質疑成立）
 
 ## 8. Open Questions
-- none（兩項範圍問題已由使用者 2026-08-03 裁定，見 DEC-1/DEC-2）
+- Q1（非阻斷，交接給週審）：「易變狀態」課題的 ERRORS.md 條文只存在於 PR #17（chore/session-wrapup）分支，master 上沒有；F-004 已解決其描述的問題本身。PR #17 與本 PR 先後合併時 ERRORS.md Pending Review 區可能衝突——後合併者以「保留人寫課題、移除 PR_RETRO harvest 區塊」為解衝突原則，並替該條補上「已由 F-004 解決」註記
 
 ## 9. Handoff Manifest
 - Next agent: dev（main conversation 續行 Phase A）
