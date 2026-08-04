@@ -1,4 +1,4 @@
-# SESSION-HANDOFF — 2026-07-29
+# SESSION-HANDOFF — 2026-07-29（/last-word 收尾更新）
 
 > F-003 已結案。這份不是「未完成工作的交接」，是「**現在這套 harness 長什麼樣**」的落地說明，寫給下一個 session。
 > 下次 `/last-word` 會覆寫本檔。
@@ -23,8 +23,9 @@
 | `build-tier-packs.py --check` | tier pack 與 `src/` 片段漂移 |
 | `check-mirror-parity.py` | `_zh` 鏡像與原文的章節／子章節／表格列結構不符 |
 | `check-hook-doc-coupling.py` | hook 靠某份文件的字面字串做判斷卻未加 `# COUPLING:` 宣告 |
+| `execplan-lint.py` E7／W2 | ExecPlan 宣稱完成卻有未勾步驟、或 §6 有進度而 §4 全空（`INV-ARC-002`） |
 
-acceptance **14/14**，CI **6 job**。改 harness 檔之前先讀 `.claude/protocols/harness-maintenance.md` §1（紅黃綠分級）與 §4（安全改動程序，本輪新增三條 hook 撰寫規則）。
+acceptance **14/14**，CI **6 job**，invariants **10 條**（新增 `INV-ARC-001` 常駐層預算、`INV-ARC-002` 完成宣稱一致性）。改 harness 檔之前先讀 `.claude/protocols/harness-maintenance.md` §1（紅黃綠分級）與 §4（安全改動程序，本輪新增三條 hook 撰寫規則）。
 
 ## 三個容易踩的坑（都已寫進 §4，這裡只提醒存在）
 
@@ -35,7 +36,7 @@ acceptance **14/14**，CI **6 job**。改 harness 檔之前先讀 `.claude/proto
 ## 待人類裁決（沒有時效壓力，但沒人做就一直在）
 
 - `docs/harness/LETTER-TO-FUTURE-SESSIONS.md` §III 剩 3 項：skillopt-loop 去留、session-handoffs 首次運轉驗證、Menu-Android guard 修復未 commit
-- `docs/learnings/ERRORS.md` Pending Review 13 條：其中 3 條是 PR #14 retro 的新產出（含 `INV-ARC-002` 候選：ExecPlan 完成宣稱與勾選狀態必須一致），其餘是 `/pr-retro` 提醒與外部工具待查證事實
+- `docs/learnings/ERRORS.md` Pending Review 13 條：多數是 `/pr-retro` 提醒與外部工具待查證事實，另有 3 條本 session 的判斷型教訓（子 agent idle ≠ 交件失敗、分支從錯誤基底切出、hook 改寫 tracked 檔案害工作區永不乾淨）。最後一條附可機械化方向：把 PR_RETRO 提醒移出 ERRORS.md 改寫進 `state/`
 - `agent_docs/TECHNICAL-REFERENCE.md` 仍全檔未填 → 依 CLAUDE.md「Activation Status」跳過
 
 ## 非技術使用者入口
