@@ -15,7 +15,9 @@ https://hahaicanfly.github.io/BaseAIProject/share/ai-journey-story/
 
 1. **Fork 後填實** —— 替換 `{{PROJECT_NAME}}` 這類佔位符，把你的 build/test/lint 指令填進 `CLAUDE.md` Quick Commands（環境初始化範本：`.claude/templates/init.sh.template`）。可執行的驗證指令是成功率最大的單一槓桿。
 2. **啟用防線** —— `chmod +x .claude/hooks/*.py`，然後照 `.claude/protocols/harness-maintenance.md` §4 跑煙霧測試。攔截情境**和**放行情境都要測。
-3. **試車驗收** —— 照 `docs/harness/NEW-PROJECT-VALIDATION.md` 用一個 30 分鐘的小任務走完整流程（開分支 → 計畫 → 派工 → 審查 → 寫回教訓）。這一趟過了，才算能真的拿來用。
+3. **試車驗收** —— 照 `docs/harness/NEW-PROJECT-VALIDATION.md` 用一個 30 分鐘的小任務走完整流程
+
+   （開分支 → 計畫 → 派工 → 審查 → 寫回教訓）。這一趟過了，才算能真的拿來用。
 
 語言慣例：AI 會讀的制度檔一律是**英文正典**；給人看的繁體中文版放在同目錄的 `_zh` 檔，或鏡像在 `agent_docs/zh/`。
 
